@@ -1,5 +1,7 @@
 package com.example.dao;
 
+import com.example.database.ConexionDB;
+import com.example.model.Ruta;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,9 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.example.database.ConexionDB;
-import com.example.model.Ruta;
 
 public class RutaDAO {
 
@@ -19,9 +18,8 @@ public class RutaDAO {
                 + "WHERE nombre = ? COLLATE NOCASE AND id <> ? LIMIT 1";
 
         try (
-            Connection conexion = ConexionDB.conectar();
-            PreparedStatement statement = conexion.prepareStatement(sql)
-        ) {
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setString(1, nombre);
             statement.setInt(2, idExcluido);
             return statement.executeQuery().next();
@@ -34,30 +32,33 @@ public class RutaDAO {
     public boolean insertar(Ruta ruta) {
 
         String sql = """
-            INSERT INTO rutas
-            (
-                nombre,
-                latitud_inicial,
-                longitud_inicial,
-                altitud_maxima,
-                tipo_terreno,
-                dificultad_tecnica,
-                dificultad_fisica
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """;
+                INSERT INTO rutas
+                (
+                    nombre,
+                    latitud_inicial,
+                    longitud_inicial,
+                    latitud_final,
+                    longitud_final,
+                    altitud_maxima,
+                    tipo_terreno,
+                    dificultad_tecnica,
+                    dificultad_fisica
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
 
         try (
-            Connection conexion = ConexionDB.conectar();
-            PreparedStatement statement = conexion.prepareStatement(sql)
-        ) {
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setString(1, ruta.getNombre());
             statement.setDouble(2, ruta.getLatitudInicial());
             statement.setDouble(3, ruta.getLongitudInicial());
-            statement.setDouble(4, ruta.getAltitudMaxima());
-            statement.setString(5, ruta.getTipoTerreno());
-            statement.setString(6, ruta.getDificultadTecnica());
-            statement.setString(7, ruta.getDificultadFisica());
+            statement.setDouble(4, ruta.getLatitudFinal());
+            statement.setDouble(5, ruta.getLongitudFinal());
+            statement.setDouble(6, ruta.getAltitudMaxima());
+            statement.setString(7, ruta.getTipoTerreno());
+            statement.setString(8, ruta.getDificultadTecnica());
+            statement.setString(9, ruta.getDificultadFisica());
             statement.executeUpdate();
 
             System.out.println("Ruta guardada correctamente.");
@@ -71,30 +72,33 @@ public class RutaDAO {
     public boolean actualizar(Ruta ruta) {
 
         String sql = """
-            UPDATE rutas
-            SET
-                nombre = ?,
-                latitud_inicial = ?,
-                longitud_inicial = ?,
-                altitud_maxima = ?,
-                tipo_terreno = ?,
-                dificultad_tecnica = ?,
-                dificultad_fisica = ?
-            WHERE id = ?
-            """;
+                UPDATE rutas
+                SET
+                    nombre = ?,
+                    latitud_inicial = ?,
+                    longitud_inicial = ?,
+                    latitud_final = ?,
+                    longitud_final = ?,
+                    altitud_maxima = ?,
+                    tipo_terreno = ?,
+                    dificultad_tecnica = ?,
+                    dificultad_fisica = ?
+                WHERE id = ?
+                """;
 
         try (
-            Connection conexion = ConexionDB.conectar();
-            PreparedStatement statement = conexion.prepareStatement(sql)
-        ) {
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setString(1, ruta.getNombre());
             statement.setDouble(2, ruta.getLatitudInicial());
             statement.setDouble(3, ruta.getLongitudInicial());
-            statement.setDouble(4, ruta.getAltitudMaxima());
-            statement.setString(5, ruta.getTipoTerreno());
-            statement.setString(6, ruta.getDificultadTecnica());
-            statement.setString(7, ruta.getDificultadFisica());
-            statement.setInt(8, ruta.getId());
+            statement.setDouble(4, ruta.getLatitudFinal());
+            statement.setDouble(5, ruta.getLongitudFinal());
+            statement.setDouble(6, ruta.getAltitudMaxima());
+            statement.setString(7, ruta.getTipoTerreno());
+            statement.setString(8, ruta.getDificultadTecnica());
+            statement.setString(9, ruta.getDificultadFisica());
+            statement.setInt(10, ruta.getId());
 
             int filasAfectadas = statement.executeUpdate();
             if (filasAfectadas > 0) {
@@ -112,12 +116,11 @@ public class RutaDAO {
 
     public boolean eliminar(int id) {
 
-        String sql = "DELETE FROM rutas WHERE id = ?";
+        String sql = "UPDATE rutas SET activo = 0 WHERE id = ?";
 
         try (
-            Connection conexion = ConexionDB.conectar();
-            PreparedStatement statement = conexion.prepareStatement(sql)
-        ) {
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setInt(1, id);
             int filasAfectadas = statement.executeUpdate();
             if (filasAfectadas > 0) {
@@ -137,23 +140,25 @@ public class RutaDAO {
 
         List<Ruta> rutas = new ArrayList<>();
         String sql = """
-            SELECT
-                id,
-                nombre,
-                latitud_inicial,
-                longitud_inicial,
-                altitud_maxima,
-                tipo_terreno,
-                dificultad_tecnica,
-                dificultad_fisica
-            FROM rutas
-            """;
+                SELECT
+                    id,
+                    nombre,
+                    latitud_inicial,
+                    longitud_inicial,
+                    latitud_final,
+                    longitud_final,
+                    altitud_maxima,
+                    tipo_terreno,
+                    dificultad_tecnica,
+                    dificultad_fisica
+                FROM rutas
+                WHERE activo = 1
+                """;
 
         try (
-            Connection conexion = ConexionDB.conectar();
-            Statement statement = conexion.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql)
-        ) {
+                Connection conexion = ConexionDB.conectar();
+                Statement statement = conexion.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {
                 rutas.add(mapRow(resultSet));
             }
@@ -164,12 +169,59 @@ public class RutaDAO {
         return rutas;
     }
 
+    public List<Ruta> obtenerTodasIncluyendoInactivas() {
+        String sql = """
+                 SELECT id, nombre, latitud_inicial, longitud_inicial,
+                     latitud_final, longitud_final,
+                       altitud_maxima, tipo_terreno, dificultad_tecnica,
+                       dificultad_fisica
+                FROM rutas
+                """;
+
+        List<Ruta> rutas = new ArrayList<>();
+
+        try (
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                rutas.add(mapRow(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(
+                    "Error al obtener todas las rutas: "
+                            + e.getMessage());
+        }
+
+        return rutas;
+    }
+
+    public boolean estaActiva(int id) {
+        String sql = "SELECT activo FROM rutas WHERE id = ?";
+
+        try (
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, id);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() && resultSet.getInt("activo") == 1;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al consultar estado de la ruta: " + e.getMessage());
+            return false;
+        }
+    }
+
     private Ruta mapRow(ResultSet rs) throws SQLException {
         return new Ruta(
                 rs.getInt("id"),
                 rs.getString("nombre"),
                 rs.getDouble("latitud_inicial"),
                 rs.getDouble("longitud_inicial"),
+                rs.getDouble("latitud_final"),
+                rs.getDouble("longitud_final"),
                 rs.getDouble("altitud_maxima"),
                 rs.getString("tipo_terreno"),
                 rs.getString("dificultad_tecnica"),
