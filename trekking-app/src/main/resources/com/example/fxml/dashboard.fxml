@@ -11,6 +11,7 @@
 <BorderPane
         xmlns="http://javafx.com/javafx/17"
         xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.example.controller.DashboardController"
         stylesheets="@styles.css">
 
     <!-- HEADER -->
@@ -61,6 +62,7 @@
                         text="Rutas"
                         prefWidth="180"
                         prefHeight="100"
+                        onAction="#abrirRutas"
                         styleClass="module-button"/>
 
                 <Button

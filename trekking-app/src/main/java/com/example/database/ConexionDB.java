@@ -21,22 +21,24 @@ public class ConexionDB {
 
     public static void crearTabla() {
         String sql = """
-            CREATE TABLE IF NOT EXISTS rutas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre TEXT NOT NULL COLLATE NOCASE UNIQUE,
-                latitud_inicial REAL NOT NULL,
-                longitud_inicial REAL NOT NULL,
-                altitud_maxima REAL NOT NULL,
-                tipo_terreno TEXT NOT NULL,
-                dificultad_tecnica TEXT NOT NULL,
-                dificultad_fisica TEXT NOT NULL
-            )
-            """;
+                            CREATE TABLE IF NOT EXISTS rutas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                    latitud_inicial REAL NOT NULL,
+                    longitud_inicial REAL NOT NULL,
+                    latitud_final REAL NOT NULL,
+                    longitud_final REAL NOT NULL,
+                    altitud_maxima REAL NOT NULL,
+                    tipo_terreno TEXT NOT NULL,
+                    dificultad_tecnica TEXT NOT NULL,
+                    dificultad_fisica TEXT NOT NULL,
+                    activo INTEGER NOT NULL DEFAULT 1
+                )
+                            """;
 
         try (
-            Connection conexion = conectar();
-            Statement statement = conexion.createStatement()
-        ) {
+                Connection conexion = conectar();
+                Statement statement = conexion.createStatement()) {
             statement.execute(sql);
 
             normalizarDatosExistentes(conexion);
@@ -53,8 +55,7 @@ public class ConexionDB {
         } catch (SQLException e) {
             System.out.println(
                     "Error al crear la tabla: "
-                            + e.getMessage()
-            );
+                            + e.getMessage());
         }
     }
 
@@ -66,18 +67,16 @@ public class ConexionDB {
         String consulta = "SELECT id, nombre FROM rutas ORDER BY id";
 
         try (
-            Statement statement = conexion.createStatement();
-            ResultSet resultSet = statement.executeQuery(consulta);
-            PreparedStatement actualizar = conexion.prepareStatement(
-                    "UPDATE rutas SET nombre = ? WHERE id = ?")
-        ) {
+                Statement statement = conexion.createStatement();
+                ResultSet resultSet = statement.executeQuery(consulta);
+                PreparedStatement actualizar = conexion.prepareStatement(
+                        "UPDATE rutas SET nombre = ? WHERE id = ?")) {
             while (resultSet.next()) {
 
                 int id = resultSet.getInt("id");
 
                 String nombre = Ruta.normalizarNombre(
-                        resultSet.getString("nombre")
-                );
+                        resultSet.getString("nombre"));
 
                 if (!Ruta.nombreValido(nombre)) {
                     nombre = "Ruta " + id;
