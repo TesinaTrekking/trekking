@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TableColumn?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
 <VBox alignment="TOP_CENTER"
       spacing="10.0"
@@ -15,76 +18,109 @@
       fx:controller="com.example.controller.RutaController"
       stylesheets="@styles.css">
 
-    <children>
-
-        <Label text="Listado de Rutas"
-               style="-fx-font-size: 24; -fx-font-weight: bold;" />
-
-        <TableView fx:id="tablaRutas"
-                   prefHeight="300.0"
-                   prefWidth="900.0">
-
-            <columns>
-
-                <TableColumn fx:id="colId"
-                             prefWidth="50.0"
-                             text="ID" />
-
-                <TableColumn fx:id="colNombre"
-                             prefWidth="150.0"
-                             text="Nombre" />
-
-                <TableColumn fx:id="colLatitudInicial"
-                             prefWidth="120.0"
-                             text="Latitud inicial" />
-
-                <TableColumn fx:id="colLongitudInicial"
-                             prefWidth="120.0"
-                             text="Longitud inicial" />
-
-                <TableColumn fx:id="colAltitudMaxima"
-                             prefWidth="120.0"
-                             text="Altitud máxima" />
-
-                <TableColumn fx:id="colTipoTerreno"
-                             prefWidth="130.0"
-                             text="Tipo de terreno" />
-
-                <TableColumn fx:id="colDificultadTecnica"
-                             prefWidth="130.0"
-                             text="Dificultad técnica" />
-
-                <TableColumn fx:id="colDificultadFisica"
-                             prefWidth="130.0"
-                             text="Dificultad física" />
-
-            </columns>
-
-        </TableView>
-
-        <HBox spacing="10.0" alignment="CENTER">
-
-            <Button text="Agregar ruta"
-                    onAction="#switchToForm"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-            <Button text="Editar"
-                    onAction="#editarRuta"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-            <Button text="Eliminar"
-                    onAction="#eliminarRuta"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-        </HBox>
-
-    </children>
-
     <padding>
-        <Insets bottom="20.0"
-                left="20.0"
+        <Insets top="20.0"
                 right="20.0"
-                top="20.0" />
+                bottom="20.0"
+                left="20.0"/>
     </padding>
+
+    <Label text="Listado de Rutas"
+           style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+
+    <HBox spacing="10.0"
+          alignment="CENTER">
+
+        <TextField fx:id="buscarField"
+                   promptText="Buscar por nombre"
+                   prefWidth="200.0"/>
+
+        <ComboBox fx:id="filtroTerrenoCombo"
+                  prefWidth="150.0"
+                  promptText="Terreno"/>
+
+        <ComboBox fx:id="filtroDificultadTecnicaCombo"
+                  prefWidth="150.0"
+                  promptText="Dificultad técnica"/>
+
+        <ComboBox fx:id="filtroDificultadFisicaCombo"
+                  prefWidth="150.0"
+                  promptText="Dificultad física"/>
+
+        <CheckBox fx:id="mostrarInactivasCheckBox"
+                  text="Mostrar inactivas"/>
+
+    </HBox>
+
+    <TableView fx:id="tablaRutas"
+               VBox.vgrow="ALWAYS"
+               prefHeight="500.0"
+               prefWidth="1100.0">
+
+        <columns>
+
+            <TableColumn fx:id="colId"
+                         prefWidth="50.0"
+                         text="ID"/>
+
+            <TableColumn fx:id="colNombre"
+                         prefWidth="150.0"
+                         text="Nombre"/>
+
+            <TableColumn fx:id="colLatitudInicial"
+                         prefWidth="120.0"
+                         text="Latitud inicial"/>
+
+            <TableColumn fx:id="colLongitudInicial"
+                         prefWidth="120.0"
+                         text="Longitud inicial"/>
+
+            <TableColumn fx:id="colLatitudFinal"
+                         prefWidth="120.0"
+                         text="Latitud final"/>
+
+            <TableColumn fx:id="colLongitudFinal"
+                         prefWidth="120.0"
+                         text="Longitud final"/>
+
+            <TableColumn fx:id="colAltitudMaxima"
+                         prefWidth="120.0"
+                         text="Altitud máxima"/>
+
+            <TableColumn fx:id="colTipoTerreno"
+                         prefWidth="130.0"
+                         text="Tipo de terreno"/>
+
+            <TableColumn fx:id="colDificultadTecnica"
+                         prefWidth="130.0"
+                         text="Dificultad técnica"/>
+
+            <TableColumn fx:id="colDificultadFisica"
+                         prefWidth="130.0"
+                         text="Dificultad física"/>
+
+        </columns>
+
+    </TableView>
+
+    <HBox spacing="10.0"
+          alignment="CENTER">
+
+        <Button text="Agregar ruta"
+                onAction="#nuevaRuta"
+                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+
+        <Button text="Editar"
+                onAction="#editarRuta"
+                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+
+        <Button fx:id="eliminarButton"
+                text="Eliminar"
+                onAction="#eliminarRuta"
+                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+        <Button text="Volver al inicio"
+                onAction="#volverDashboard"
+                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+    </HBox>
 
 </VBox>

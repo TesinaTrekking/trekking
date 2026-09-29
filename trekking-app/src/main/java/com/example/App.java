@@ -1,5 +1,7 @@
 package com.example;
 
+import com.example.database.ConexionDB;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -10,6 +12,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+        ConexionDB.crearTabla();
 
         FXMLLoader loader = new FXMLLoader(
                 App.class.getResource(
