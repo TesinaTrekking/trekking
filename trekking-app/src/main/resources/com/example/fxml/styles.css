@@ -1,0 +1,55 @@
+.dashboard-header {
+    -fx-background-color: white;
+    -fx-border-color: #dadce0;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.dashboard-title {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+}
+
+.dashboard-subtitle {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-text-fill: #5f6368;
+}
+
+.dashboard-module-area {
+    -fx-background-color: #f8f9fa;
+}
+
+.dashboard-section-title {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+}
+
+.module-button {
+    -fx-background-color: white;
+    -fx-text-fill: #202124;
+
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+
+    -fx-border-color: #dadce0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+
+    -fx-background-radius: 8px;
+
+    -fx-cursor: hand;
+}
+
+.module-button:hover {
+    -fx-background-color: #f1f3f4;
+    -fx-border-color: #bdc1c6;
+}
+
+.module-button:pressed {
+    -fx-background-color: #e8eaed;
+}
