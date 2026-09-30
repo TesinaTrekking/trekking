@@ -69,6 +69,7 @@
                         text="Checkpoints"
                         prefWidth="180"
                         prefHeight="100"
+                        onAction="#abrirCheckpoints"
                         styleClass="module-button"/>
 
                 <Button

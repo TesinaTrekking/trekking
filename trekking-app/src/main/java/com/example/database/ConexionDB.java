@@ -35,11 +35,23 @@ public class ConexionDB {
                     activo INTEGER NOT NULL DEFAULT 1
                 )
                             """;
+        String sqlCheckpoints = """
+                CREATE TABLE IF NOT EXISTS checkpoints (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    hora TEXT NOT NULL,
+                    latitud REAL NOT NULL,
+                    longitud REAL NOT NULL,
+                    descripcion TEXT
+                )
+                """;
 
         try (
                 Connection conexion = conectar();
                 Statement statement = conexion.createStatement()) {
             statement.execute(sql);
+            // Tabla de checkpoints
+            statement.execute(sqlCheckpoints);
 
             normalizarDatosExistentes(conexion);
 
