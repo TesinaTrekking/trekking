@@ -1,10 +1,13 @@
 package com.example.controller;
 
+import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.RutaDAO;
+import com.example.model.Checkpoint;
 import com.example.model.Ruta;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.collections.FXCollections;
@@ -19,14 +22,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 
 public class RutaController implements Initializable {
 
         private final RutaDAO rutaDAO = new RutaDAO();
+        private final RutaCheckpointDAO rutaCheckpointDAO = new RutaCheckpointDAO();
 
         private ObservableList<Ruta> rutas;
         private FilteredList<Ruta> rutasFiltradas;
@@ -82,6 +88,9 @@ public class RutaController implements Initializable {
         @FXML
         private Button eliminarButton;
 
+        @FXML
+        private ListView<Checkpoint> checkpointsRutaListView;
+
         @Override
         public void initialize(URL url, ResourceBundle rb) {
 
@@ -118,6 +127,7 @@ public class RutaController implements Initializable {
                 colDificultadFisica.setCellValueFactory(
                                 new PropertyValueFactory<>("dificultadFisica"));
 
+                configurarCheckpoints();
                 configurarFiltros();
                 cargarRutas();
 
@@ -126,7 +136,46 @@ public class RutaController implements Initializable {
 
                 tablaRutas.getSelectionModel()
                                 .selectedItemProperty()
-                                .addListener((observable, anterior, actual) -> actualizarEstadoBotonEliminar());
+                                .addListener((observable, anterior, actual) -> {
+                                        actualizarEstadoBotonEliminar();
+                                        cargarCheckpointsDeRuta(actual);
+                                });
+        }
+
+        private void configurarCheckpoints() {
+
+                checkpointsRutaListView.setCellFactory(listView -> new javafx.scene.control.ListCell<Checkpoint>() {
+
+                        @Override
+                        protected void updateItem(
+                                        Checkpoint checkpoint,
+                                        boolean empty) {
+
+                                super.updateItem(checkpoint, empty);
+
+                                if (empty || checkpoint == null) {
+                                        setText(null);
+                                } else {
+                                        setText(
+                                                        checkpoint.getNombre()
+                                                                        + " - "
+                                                                        + checkpoint.getHora());
+                                }
+                        }
+                });
+        }
+
+        private void cargarCheckpointsDeRuta(Ruta ruta) {
+
+                if (ruta == null) {
+                        checkpointsRutaListView.getItems().clear();
+                        return;
+                }
+
+                List<Checkpoint> checkpoints = rutaCheckpointDAO.obtenerPorRuta(ruta.getId());
+
+                checkpointsRutaListView.setItems(
+                                FXCollections.observableArrayList(checkpoints));
         }
 
         private void cargarRutas() {
@@ -148,10 +197,15 @@ public class RutaController implements Initializable {
 
                 aplicarFiltros();
                 actualizarEstadoBotonEliminar();
+
+                cargarCheckpointsDeRuta(
+                                tablaRutas.getSelectionModel().getSelectedItem());
         }
 
         @FXML
         private void nuevaRuta() throws IOException {
+
+                Stage stage = (Stage) tablaRutas.getScene().getWindow();
 
                 FXMLLoader loader = new FXMLLoader(
                                 getClass().getResource(
@@ -163,7 +217,12 @@ public class RutaController implements Initializable {
 
                 controller.setRutaEnEdicion(null);
 
-                tablaRutas.getScene().setRoot(root);
+                stage.setWidth(1100);
+                stage.setHeight(1250);
+                stage.setMinWidth(1000);
+                stage.setMinHeight(850);
+
+                stage.getScene().setRoot(root);
         }
 
         @FXML
@@ -172,13 +231,13 @@ public class RutaController implements Initializable {
                 Ruta rutaSeleccionada = tablaRutas.getSelectionModel().getSelectedItem();
 
                 if (rutaSeleccionada == null) {
-
                         mostrarAlerta(
                                         "Selecciona una ruta",
                                         "Selecciona una ruta para editar.");
-
                         return;
                 }
+
+                Stage stage = (Stage) tablaRutas.getScene().getWindow();
 
                 FXMLLoader loader = new FXMLLoader(
                                 getClass().getResource(
@@ -190,7 +249,12 @@ public class RutaController implements Initializable {
 
                 controller.setRutaEnEdicion(rutaSeleccionada);
 
-                tablaRutas.getScene().setRoot(root);
+                stage.setWidth(1100);
+                stage.setHeight(1250);
+                stage.setMinWidth(1000);
+                stage.setMinHeight(850);
+
+                stage.getScene().setRoot(root);
         }
 
         @FXML
@@ -220,6 +284,7 @@ public class RutaController implements Initializable {
 
                 confirmacion.setTitle("Confirmar eliminación");
                 confirmacion.setHeaderText("¿Estás seguro?");
+
                 confirmacion.setContentText(
                                 "¿Eliminar la ruta \""
                                                 + rutaSeleccionada.getNombre()
