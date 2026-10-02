@@ -9,131 +9,127 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER"
-      spacing="10.0"
-      prefWidth="1200.0"
-      prefHeight="800.0"
-      xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.example.controller.RutaController"
-      stylesheets="@styles.css">
 
-    <padding>
-        <Insets top="20.0"
-                right="20.0"
-                bottom="20.0"
-                left="20.0"/>
-    </padding>
+<ScrollPane fitToWidth="true"
+        hbarPolicy="NEVER"
+        vbarPolicy="AS_NEEDED"
+        styleClass="pantalla-scroll"
+        xmlns="http://javafx.com/javafx/17"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.example.controller.RutaController"
+        stylesheets="@styles.css">
 
-    <Label text="Listado de Rutas"
-           style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+        <content>
 
-    <HBox spacing="10.0"
-          alignment="CENTER">
+                <VBox alignment="TOP_CENTER"
+                        spacing="10.0"
+                        prefWidth="1200.0"
+                        prefHeight="800.0">
 
-        <TextField fx:id="buscarField"
-                   promptText="Buscar por nombre"
-                   prefWidth="200.0"/>
+                        <padding>
+                                <Insets top="20.0"
+                                        right="20.0"
+                                        bottom="20.0"
+                                        left="20.0" />
+                        </padding>
 
-        <ComboBox fx:id="filtroTerrenoCombo"
-                  prefWidth="150.0"
-                  promptText="Terreno"/>
+                        <Label text="Listado de Rutas"
+                                style="-fx-font-size: 24; -fx-font-weight: bold;" />
 
-        <ComboBox fx:id="filtroDificultadTecnicaCombo"
-                  prefWidth="150.0"
-                  promptText="Dificultad técnica"/>
+                        <HBox spacing="10.0"
+                                alignment="CENTER">
 
-        <ComboBox fx:id="filtroDificultadFisicaCombo"
-                  prefWidth="150.0"
-                  promptText="Dificultad física"/>
+                                <TextField fx:id="buscarField"
+                                        promptText="Buscar por nombre"
+                                        prefWidth="200.0" />
 
-        <CheckBox fx:id="mostrarInactivasCheckBox"
-                  text="Mostrar inactivas"/>
+                                <ComboBox fx:id="filtroTerrenoCombo"
+                                        prefWidth="150.0"
+                                        promptText="Terreno" />
 
-    </HBox>
+                                <ComboBox fx:id="filtroDificultadTecnicaCombo"
+                                        prefWidth="150.0"
+                                        promptText="Dificultad técnica" />
 
-    <TableView fx:id="tablaRutas"
-               VBox.vgrow="ALWAYS"
-               prefHeight="430.0"
-               prefWidth="1150.0">
+                                <ComboBox fx:id="filtroDificultadFisicaCombo"
+                                        prefWidth="150.0"
+                                        promptText="Dificultad física" />
 
-        <columns>
+                                <CheckBox fx:id="mostrarInactivasCheckBox"
+                                        text="Mostrar inactivas" />
 
-            <TableColumn fx:id="colId"
-                         prefWidth="50.0"
-                         text="ID"/>
+                        </HBox>
 
-            <TableColumn fx:id="colNombre"
-                         prefWidth="150.0"
-                         text="Nombre"/>
+                        <TableView fx:id="tablaRutas"
+                                VBox.vgrow="ALWAYS"
+                                prefHeight="430.0"
+                                prefWidth="1150.0">
 
-            <TableColumn fx:id="colLatitudInicial"
-                         prefWidth="120.0"
-                         text="Latitud inicial"/>
+                                <columns>
 
-            <TableColumn fx:id="colLongitudInicial"
-                         prefWidth="120.0"
-                         text="Longitud inicial"/>
+                                        <TableColumn fx:id="colId"
+                                                prefWidth="50.0"
+                                                text="ID" />
 
-            <TableColumn fx:id="colLatitudFinal"
-                         prefWidth="120.0"
-                         text="Latitud final"/>
+                                        <TableColumn fx:id="colNombre"
+                                                prefWidth="150.0"
+                                                text="Nombre" />
 
-            <TableColumn fx:id="colLongitudFinal"
-                         prefWidth="120.0"
-                         text="Longitud final"/>
+                                        <TableColumn fx:id="colAltitudMaxima"
+                                                prefWidth="120.0"
+                                                text="Altitud máxima" />
 
-            <TableColumn fx:id="colAltitudMaxima"
-                         prefWidth="120.0"
-                         text="Altitud máxima"/>
+                                        <TableColumn fx:id="colTipoTerreno"
+                                                prefWidth="130.0"
+                                                text="Tipo de terreno" />
 
-            <TableColumn fx:id="colTipoTerreno"
-                         prefWidth="130.0"
-                         text="Tipo de terreno"/>
+                                        <TableColumn fx:id="colDificultadTecnica"
+                                                prefWidth="130.0"
+                                                text="Dificultad técnica" />
 
-            <TableColumn fx:id="colDificultadTecnica"
-                         prefWidth="130.0"
-                         text="Dificultad técnica"/>
+                                        <TableColumn fx:id="colDificultadFisica"
+                                                prefWidth="130.0"
+                                                text="Dificultad física" />
 
-            <TableColumn fx:id="colDificultadFisica"
-                         prefWidth="130.0"
-                         text="Dificultad física"/>
+                                </columns>
 
-        </columns>
+                        </TableView>
 
-    </TableView>
+                        <Label text="Checkpoints de la ruta seleccionada"
+                                style="-fx-font-size: 16; -fx-font-weight: bold;" />
 
-    <Label text="Checkpoints de la ruta seleccionada"
-           style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+                        <ListView fx:id="checkpointsRutaListView"
+                                prefHeight="120.0"
+                                prefWidth="700.0"
+                                VBox.vgrow="NEVER" />
 
-    <ListView fx:id="checkpointsRutaListView"
-              prefHeight="120.0"
-              prefWidth="700.0"
-              VBox.vgrow="NEVER"/>
+                        <HBox spacing="10.0"
+                                alignment="CENTER">
 
-    <HBox spacing="10.0"
-          alignment="CENTER">
+                                <Button text="Agregar ruta"
+                                        onAction="#nuevaRuta"
+                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
 
-        <Button text="Agregar ruta"
-                onAction="#nuevaRuta"
-                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+                                <Button text="Editar"
+                                        onAction="#editarRuta"
+                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
 
-        <Button text="Editar"
-                onAction="#editarRuta"
-                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+                                <Button fx:id="eliminarButton"
+                                        text="Eliminar"
+                                        onAction="#eliminarRuta"
+                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
 
-        <Button fx:id="eliminarButton"
-                text="Eliminar"
-                onAction="#eliminarRuta"
-                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+                                <Button text="Volver al inicio"
+                                        onAction="#volverDashboard"
+                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
 
-        <Button text="Volver al inicio"
-                onAction="#volverDashboard"
-                style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
+                        </HBox>
 
-    </HBox>
+                </VBox>
+        </content>
 
-</VBox>
+</ScrollPane>
