@@ -28,7 +28,6 @@ import java.util.function.UnaryOperator;
 
 public class RutaFormController {
 
-        private static final int DECIMALES_COORDENADAS = 4;
 
         private final RutaDAO rutaDAO = new RutaDAO();
         private final CheckpointDAO checkpointDAO = new CheckpointDAO();
@@ -43,18 +42,6 @@ public class RutaFormController {
 
         @FXML
         private TextField nombreField;
-
-        @FXML
-        private TextField latitudInicialField;
-
-        @FXML
-        private TextField longitudInicialField;
-
-        @FXML
-        private TextField latitudFinalField;
-
-        @FXML
-        private TextField longitudFinalField;
 
         @FXML
         private TextField altitudMaximaField;
@@ -344,45 +331,6 @@ public class RutaFormController {
                         return;
                 }
 
-                Double latitudInicial = obtenerCoordenada(
-                                latitudInicialField,
-                                "Latitud inicial",
-                                -90,
-                                90);
-
-                if (latitudInicial == null) {
-                        return;
-                }
-
-                Double longitudInicial = obtenerCoordenada(
-                                longitudInicialField,
-                                "Longitud inicial",
-                                -180,
-                                180);
-
-                if (longitudInicial == null) {
-                        return;
-                }
-
-                Double latitudFinal = obtenerCoordenada(
-                                latitudFinalField,
-                                "Latitud final",
-                                -90,
-                                90);
-
-                if (latitudFinal == null) {
-                        return;
-                }
-
-                Double longitudFinal = obtenerCoordenada(
-                                longitudFinalField,
-                                "Longitud final",
-                                -180,
-                                180);
-
-                if (longitudFinal == null) {
-                        return;
-                }
 
                 Double altitudMaxima = obtenerAltitud();
 
@@ -399,10 +347,6 @@ public class RutaFormController {
                 Ruta ruta = rutaEnEdicion == null
                                 ? new Ruta(
                                                 nombre,
-                                                latitudInicial,
-                                                longitudInicial,
-                                                latitudFinal,
-                                                longitudFinal,
                                                 altitudMaxima,
                                                 tipoTerreno,
                                                 dificultadTecnica,
@@ -410,10 +354,6 @@ public class RutaFormController {
                                 : new Ruta(
                                                 rutaEnEdicion.getId(),
                                                 nombre,
-                                                latitudInicial,
-                                                longitudInicial,
-                                                latitudFinal,
-                                                longitudFinal,
                                                 altitudMaxima,
                                                 tipoTerreno,
                                                 dificultadTecnica,
@@ -533,70 +473,6 @@ public class RutaFormController {
                 return true;
         }
 
-        private Double obtenerCoordenada(
-                        TextField campo,
-                        String nombreCampo,
-                        double minimo,
-                        double maximo) {
-
-                String texto = campo.getText().trim();
-
-                if (texto.isEmpty()) {
-
-                        mostrarError(
-                                        nombreCampo,
-                                        "Este campo es obligatorio.");
-
-                        campo.requestFocus();
-
-                        return null;
-                }
-
-                try {
-
-                        double valor = Double.parseDouble(
-                                        texto.replace(',', '.'));
-
-                        if (!Double.isFinite(valor)) {
-
-                                mostrarError(
-                                                nombreCampo,
-                                                "Ingresa un valor numérico válido.");
-
-                                campo.requestFocus();
-
-                                return null;
-                        }
-
-                        if (valor < minimo || valor > maximo) {
-
-                                mostrarError(
-                                                nombreCampo,
-                                                "El valor debe estar entre "
-                                                                + minimo
-                                                                + " y "
-                                                                + maximo
-                                                                + ".");
-
-                                campo.requestFocus();
-
-                                return null;
-                        }
-
-                        return valor;
-
-                } catch (NumberFormatException e) {
-
-                        mostrarError(
-                                        nombreCampo,
-                                        "Ingresa un valor numérico válido.");
-
-                        campo.requestFocus();
-
-                        return null;
-                }
-        }
-
         private Double obtenerAltitud() {
 
                 String texto = altitudMaximaField.getText().trim();
@@ -679,69 +555,10 @@ public class RutaFormController {
                                 new Tooltip(
                                                 "Ingresa el nombre de la ruta."));
 
-                configurarCampoCoordenada(
-                                latitudInicialField,
-                                "Ejemplo: -31.4201");
-
-                configurarCampoCoordenada(
-                                longitudInicialField,
-                                "Ejemplo: -64.1888");
-
-                configurarCampoCoordenada(
-                                latitudFinalField,
-                                "Ejemplo: -31.4100");
-
-                configurarCampoCoordenada(
-                                longitudFinalField,
-                                "Ejemplo: -64.1800");
 
                 configurarCampoNumerico(
                                 altitudMaximaField,
                                 "Ejemplo: 1250");
-        }
-
-        private void configurarCampoCoordenada(
-                        TextField campo,
-                        String textoAyuda) {
-
-                UnaryOperator<TextFormatter.Change> filtro = change -> {
-
-                        String nuevoTexto = change.getControlNewText();
-
-                        if (nuevoTexto.isEmpty()) {
-                                return change;
-                        }
-
-                        if (!nuevoTexto.matches(
-                                        "-?\\d*[\\.,]?\\d*")) {
-
-                                return null;
-                        }
-
-                        String normalizado = nuevoTexto.replace(',', '.');
-
-                        int posicionPunto = normalizado.indexOf('.');
-
-                        if (posicionPunto >= 0) {
-
-                                int decimales = normalizado.length()
-                                                - posicionPunto
-                                                - 1;
-
-                                if (decimales > DECIMALES_COORDENADAS) {
-
-                                        return null;
-                                }
-                        }
-
-                        return change;
-                };
-
-                campo.setTextFormatter(
-                                new TextFormatter<>(filtro));
-
-                campo.setTooltip(
-                                new Tooltip(textoAyuda));
         }
 
         private void configurarCampoNumerico(
@@ -777,21 +594,6 @@ public class RutaFormController {
                 nombreField.setText(
                                 ruta.getNombre());
 
-                latitudInicialField.setText(
-                                formatearNumero(
-                                                ruta.getLatitudInicial()));
-
-                longitudInicialField.setText(
-                                formatearNumero(
-                                                ruta.getLongitudInicial()));
-
-                latitudFinalField.setText(
-                                formatearNumero(
-                                                ruta.getLatitudFinal()));
-
-                longitudFinalField.setText(
-                                formatearNumero(
-                                                ruta.getLongitudFinal()));
 
                 altitudMaximaField.setText(
                                 formatearNumero(
@@ -811,33 +613,6 @@ public class RutaFormController {
                 return String.valueOf(valor);
         }
 
-        private void limpiarFormulario() {
-
-                rutaEnEdicion = null;
-
-                tituloForm.setText("Nueva ruta");
-
-                nombreField.clear();
-                latitudInicialField.clear();
-                longitudInicialField.clear();
-                latitudFinalField.clear();
-                longitudFinalField.clear();
-                altitudMaximaField.clear();
-
-                tipoTerrenoCombo.getSelectionModel()
-                                .clearSelection();
-
-                dificultadTecnicaCombo.getSelectionModel()
-                                .clearSelection();
-
-                dificultadFisicaCombo.getSelectionModel()
-                                .clearSelection();
-
-                checkpointsSeleccionados.clear();
-
-                checkpointCombo.getSelectionModel()
-                                .clearSelection();
-        }
 
         private void mostrarError(
                         String titulo,

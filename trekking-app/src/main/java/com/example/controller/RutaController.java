@@ -47,18 +47,6 @@ public class RutaController implements Initializable {
         private TableColumn<Ruta, String> colNombre;
 
         @FXML
-        private TableColumn<Ruta, Double> colLatitudInicial;
-
-        @FXML
-        private TableColumn<Ruta, Double> colLongitudInicial;
-
-        @FXML
-        private TableColumn<Ruta, Number> colLatitudFinal;
-
-        @FXML
-        private TableColumn<Ruta, Number> colLongitudFinal;
-
-        @FXML
         private TableColumn<Ruta, Double> colAltitudMaxima;
 
         @FXML
@@ -102,18 +90,6 @@ public class RutaController implements Initializable {
 
                 colNombre.setComparator(String.CASE_INSENSITIVE_ORDER);
                 colNombre.setSortType(TableColumn.SortType.ASCENDING);
-
-                colLatitudInicial.setCellValueFactory(
-                                new PropertyValueFactory<>("latitudInicial"));
-
-                colLongitudInicial.setCellValueFactory(
-                                new PropertyValueFactory<>("longitudInicial"));
-
-                colLatitudFinal.setCellValueFactory(
-                                new PropertyValueFactory<>("latitudFinal"));
-
-                colLongitudFinal.setCellValueFactory(
-                                new PropertyValueFactory<>("longitudFinal"));
 
                 colAltitudMaxima.setCellValueFactory(
                                 new PropertyValueFactory<>("altitudMaxima"));

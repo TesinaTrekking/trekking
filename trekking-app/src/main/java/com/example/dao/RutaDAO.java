@@ -43,16 +43,12 @@ public class RutaDAO {
                 INSERT INTO rutas
                 (
                     nombre,
-                    latitud_inicial,
-                    longitud_inicial,
-                    latitud_final,
-                    longitud_final,
                     altitud_maxima,
                     tipo_terreno,
                     dificultad_tecnica,
                     dificultad_fisica
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
                 """;
 
         try (
@@ -62,14 +58,10 @@ public class RutaDAO {
                         Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setString(1, ruta.getNombre());
-            statement.setDouble(2, ruta.getLatitudInicial());
-            statement.setDouble(3, ruta.getLongitudInicial());
-            statement.setDouble(4, ruta.getLatitudFinal());
-            statement.setDouble(5, ruta.getLongitudFinal());
-            statement.setDouble(6, ruta.getAltitudMaxima());
-            statement.setString(7, ruta.getTipoTerreno());
-            statement.setString(8, ruta.getDificultadTecnica());
-            statement.setString(9, ruta.getDificultadFisica());
+            statement.setDouble(2, ruta.getAltitudMaxima());
+            statement.setString(3, ruta.getTipoTerreno());
+            statement.setString(4, ruta.getDificultadTecnica());
+            statement.setString(5, ruta.getDificultadFisica());
 
             statement.executeUpdate();
 
@@ -108,10 +100,6 @@ public class RutaDAO {
                 UPDATE rutas
                 SET
                     nombre = ?,
-                    latitud_inicial = ?,
-                    longitud_inicial = ?,
-                    latitud_final = ?,
-                    longitud_final = ?,
                     altitud_maxima = ?,
                     tipo_terreno = ?,
                     dificultad_tecnica = ?,
@@ -124,15 +112,11 @@ public class RutaDAO {
                 PreparedStatement statement = conexion.prepareStatement(sql)) {
 
             statement.setString(1, ruta.getNombre());
-            statement.setDouble(2, ruta.getLatitudInicial());
-            statement.setDouble(3, ruta.getLongitudInicial());
-            statement.setDouble(4, ruta.getLatitudFinal());
-            statement.setDouble(5, ruta.getLongitudFinal());
-            statement.setDouble(6, ruta.getAltitudMaxima());
-            statement.setString(7, ruta.getTipoTerreno());
-            statement.setString(8, ruta.getDificultadTecnica());
-            statement.setString(9, ruta.getDificultadFisica());
-            statement.setInt(10, ruta.getId());
+            statement.setDouble(2, ruta.getAltitudMaxima());
+            statement.setString(3, ruta.getTipoTerreno());
+            statement.setString(4, ruta.getDificultadTecnica());
+            statement.setString(5, ruta.getDificultadFisica());
+            statement.setInt(6, ruta.getId());
 
             int filasAfectadas = statement.executeUpdate();
 
@@ -200,10 +184,6 @@ public class RutaDAO {
                 SELECT
                     id,
                     nombre,
-                    latitud_inicial,
-                    longitud_inicial,
-                    latitud_final,
-                    longitud_final,
                     altitud_maxima,
                     tipo_terreno,
                     dificultad_tecnica,
@@ -237,10 +217,6 @@ public class RutaDAO {
                 SELECT
                     id,
                     nombre,
-                    latitud_inicial,
-                    longitud_inicial,
-                    latitud_final,
-                    longitud_final,
                     altitud_maxima,
                     tipo_terreno,
                     dificultad_tecnica,
@@ -302,10 +278,6 @@ public class RutaDAO {
         return new Ruta(
                 rs.getInt("id"),
                 rs.getString("nombre"),
-                rs.getDouble("latitud_inicial"),
-                rs.getDouble("longitud_inicial"),
-                rs.getDouble("latitud_final"),
-                rs.getDouble("longitud_final"),
                 rs.getDouble("altitud_maxima"),
                 rs.getString("tipo_terreno"),
                 rs.getString("dificultad_tecnica"),
