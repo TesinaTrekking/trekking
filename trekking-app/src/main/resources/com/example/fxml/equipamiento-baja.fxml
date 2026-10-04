@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            styleClass="pantalla-scroll"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.controller.EquipamientoBajaController"
+            stylesheets="@styles.css">
+
+    <content>
+
+        <VBox alignment="TOP_CENTER"
+              spacing="10.0"
+              prefWidth="1200.0"
+              prefHeight="800.0">
+
+            <Label text="Equipamiento dado de baja"/>
+
+            <TableView fx:id="tablaEquipamientoBaja"
+                       prefHeight="500.0"
+                       prefWidth="1150.0"
+                       VBox.vgrow="ALWAYS">
+
+                <columns>
+
+                    <TableColumn fx:id="colId"
+                                 text="ID"/>
+
+                    <TableColumn fx:id="colNombre"
+                                 text="Equipo"/>
+
+                    <TableColumn fx:id="colCategoria"
+                                 text="Categoría"/>
+
+                    <TableColumn fx:id="colCantidad"
+                                 text="Cantidad"/>
+
+                    <TableColumn fx:id="colEstado"
+                                 text="Estado"/>
+
+                </columns>
+
+            </TableView>
+
+            <HBox spacing="10.0"
+                  alignment="CENTER">
+
+                <Button text="Restaurar"
+                        onAction="#restaurarEquipamiento"/>
+
+                <Button text="Volver"
+                        onAction="#cerrarVentana"/>
+
+            </HBox>
+
+        </VBox>
+
+    </content>
+
+</ScrollPane>

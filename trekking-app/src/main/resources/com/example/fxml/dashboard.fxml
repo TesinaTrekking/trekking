@@ -76,7 +76,9 @@
                         text="Equipamiento"
                         prefWidth="180"
                         prefHeight="100"
+                        onAction="#abrirEquipamiento"
                         styleClass="module-button"/>
+
 
                 <Button
                         text="Clientes"
