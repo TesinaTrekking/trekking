@@ -3,8 +3,13 @@ package com.example.controller;
 import com.example.dao.CheckpointDAO;
 import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.RutaDAO;
+import com.example.dao.RutaEquipamientoDAO;
+import com.example.dao.EquipamientoDAO;
 import com.example.model.Checkpoint;
 import com.example.model.Ruta;
+import com.example.model.Equipamiento;
+import com.example.model.EquipamientoRequerido;
+import com.example.model.RutaEquipamiento;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,12 +33,14 @@ import java.util.function.UnaryOperator;
 
 public class RutaFormController {
 
-
         private final RutaDAO rutaDAO = new RutaDAO();
         private final CheckpointDAO checkpointDAO = new CheckpointDAO();
         private final RutaCheckpointDAO rutaCheckpointDAO = new RutaCheckpointDAO();
+        private final RutaEquipamientoDAO rutaEquipamientoDAO = new RutaEquipamientoDAO();
 
         private final ObservableList<Checkpoint> checkpointsSeleccionados = FXCollections.observableArrayList();
+        private final ObservableList<EquipamientoRequerido> equipamientosSeleccionados = FXCollections
+                        .observableArrayList();
 
         private Ruta rutaEnEdicion;
 
@@ -72,6 +79,17 @@ public class RutaFormController {
 
         @FXML
         private Button bajarCheckpointButton;
+        @FXML
+
+        private ComboBox<Equipamiento> equipamientoCombo;
+        @FXML
+        private TextField cantidadEquipamientoField;
+        @FXML
+        private ListView<EquipamientoRequerido> equipamientosListView;
+        @FXML
+        private Button agregarEquipamientoButton;
+        @FXML
+        private Button quitarEquipamientoButton;
 
         @FXML
         public void initialize() {
@@ -95,6 +113,7 @@ public class RutaFormController {
                                 "Alta");
 
                 configurarCheckpoints();
+                configurarEquipamiento();
 
                 rutaEnEdicion = null;
         }
@@ -158,14 +177,11 @@ public class RutaFormController {
                 checkpointsSeleccionados.clear();
 
                 if (ruta != null) {
-
                         tituloForm.setText("Editar ruta");
-
                         cargarRuta(ruta);
                         cargarCheckpointsDeRuta(ruta.getId());
-
+                        cargarEquipamientoDeRuta(ruta.getId());
                 } else {
-
                         tituloForm.setText("Nueva ruta");
                 }
         }
@@ -271,6 +287,189 @@ public class RutaFormController {
                                 .select(indice + 1);
         }
 
+
+        private void configurarCantidadEquipamiento() {
+
+                UnaryOperator<TextFormatter.Change> filtro = change -> {
+
+                        String texto = change.getControlNewText();
+
+                        if (texto.matches("\\d{0,4}")) {
+                                return change;
+                        }
+
+                        return null;
+                };
+
+                cantidadEquipamientoField.setTextFormatter(
+                                new TextFormatter<>(filtro));
+
+                cantidadEquipamientoField.setTooltip(
+                                new Tooltip("Ingrese una cantidad mayor o igual a 1"));
+        }
+
+        private void configurarEquipamiento() {
+
+                equipamientosListView.setItems(equipamientosSeleccionados);
+
+                equipamientosListView.setCellFactory(listView -> new ListCell<>() {
+
+                        @Override
+                        protected void updateItem(
+                                        EquipamientoRequerido requerido,
+                                        boolean empty) {
+
+                                super.updateItem(requerido, empty);
+
+                                if (empty || requerido == null) {
+                                        setText(null);
+                                } else {
+                                        setText(
+                                                        requerido.getEquipamiento().getNombre()
+                                                                        + " — "
+                                                                        + requerido.getCantidadRequerida());
+                                }
+                        }
+                });
+
+                equipamientoCombo.setItems(
+                                EquipamientoDAO.obtenerTodos());
+
+                equipamientoCombo.setCellFactory(listView -> new ListCell<>() {
+
+                        @Override
+                        protected void updateItem(
+                                        Equipamiento equipamiento,
+                                        boolean empty) {
+
+                                super.updateItem(equipamiento, empty);
+
+                                if (empty || equipamiento == null) {
+                                        setText(null);
+                                } else {
+                                        setText(equipamiento.getNombre());
+                                }
+                        }
+                });
+
+                equipamientoCombo.setButtonCell(
+                                new ListCell<>() {
+
+                                        @Override
+                                        protected void updateItem(
+                                                        Equipamiento equipamiento,
+                                                        boolean empty) {
+
+                                                super.updateItem(equipamiento, empty);
+
+                                                if (empty || equipamiento == null) {
+                                                        setText(null);
+                                                } else {
+                                                        setText(equipamiento.getNombre());
+                                                }
+                                        }
+                                });
+
+                configurarCantidadEquipamiento();
+        }
+
+        private void cargarEquipamientoDeRuta(int rutaId) {
+
+                equipamientosSeleccionados.clear();
+
+                List<RutaEquipamiento> relaciones = rutaEquipamientoDAO.obtenerPorRuta(rutaId);
+
+                for (RutaEquipamiento relacion : relaciones) {
+
+                        Equipamiento equipamiento = EquipamientoDAO.obtenerPorId(
+                                        relacion.getEquipamientoId());
+
+                        if (equipamiento != null) {
+
+                                equipamientosSeleccionados.add(
+                                                new EquipamientoRequerido(
+                                                                equipamiento,
+                                                                relacion.getCantidadRequerida()));
+                        }
+                }
+        }
+
+        @FXML
+        private void agregarEquipamiento() {
+
+                Equipamiento equipamiento = equipamientoCombo.getValue();
+
+                if (equipamiento == null) {
+                        mostrarError(
+                                        "Equipamiento requerido",
+                                        "Seleccione un equipamiento.");
+                        return;
+                }
+
+                String textoCantidad = cantidadEquipamientoField.getText().trim();
+
+                if (textoCantidad.isEmpty()) {
+                        mostrarError(
+                                        "Cantidad requerida",
+                                        "Ingrese la cantidad requerida.");
+                        return;
+                }
+
+                int cantidad;
+
+                try {
+                        cantidad = Integer.parseInt(textoCantidad);
+                } catch (NumberFormatException e) {
+                        mostrarError(
+                                        "Cantidad inválida",
+                                        "La cantidad debe ser un número entero.");
+                        return;
+                }
+
+                if (cantidad < 1) {
+                        mostrarError(
+                                        "Cantidad inválida",
+                                        "La cantidad requerida debe ser mayor o igual a 1.");
+                        return;
+                }
+
+                for (EquipamientoRequerido existente : equipamientosSeleccionados) {
+
+                        if (existente.getEquipamiento().getId() == equipamiento.getId()) {
+
+                                mostrarError(
+                                                "Equipamiento duplicado",
+                                                "Ese equipamiento ya está asociado a la ruta.");
+                                return;
+                        }
+                }
+
+                equipamientosSeleccionados.add(
+                                new EquipamientoRequerido(
+                                                equipamiento,
+                                                cantidad));
+
+                equipamientoCombo.getSelectionModel().clearSelection();
+                cantidadEquipamientoField.clear();
+        }
+
+        @FXML
+        private void quitarEquipamiento() {
+
+                EquipamientoRequerido seleccionado = equipamientosListView
+                                .getSelectionModel()
+                                .getSelectedItem();
+
+                if (seleccionado == null) {
+                        mostrarError(
+                                        "Equipamiento",
+                                        "Seleccione un equipamiento de la lista.");
+                        return;
+                }
+
+                equipamientosSeleccionados.remove(seleccionado);
+        }
+
         @FXML
         private void volverListado() throws IOException {
 
@@ -330,7 +529,6 @@ public class RutaFormController {
 
                         return;
                 }
-
 
                 Double altitudMaxima = obtenerAltitud();
 
@@ -555,7 +753,6 @@ public class RutaFormController {
                                 new Tooltip(
                                                 "Ingresa el nombre de la ruta."));
 
-
                 configurarCampoNumerico(
                                 altitudMaximaField,
                                 "Ejemplo: 1250");
@@ -594,7 +791,6 @@ public class RutaFormController {
                 nombreField.setText(
                                 ruta.getNombre());
 
-
                 altitudMaximaField.setText(
                                 formatearNumero(
                                                 ruta.getAltitudMaxima()));
@@ -612,7 +808,6 @@ public class RutaFormController {
         private String formatearNumero(double valor) {
                 return String.valueOf(valor);
         }
-
 
         private void mostrarError(
                         String titulo,

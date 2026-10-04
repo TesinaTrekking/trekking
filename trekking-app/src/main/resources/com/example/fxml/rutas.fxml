@@ -106,6 +106,13 @@
                                 prefHeight="120.0"
                                 prefWidth="700.0"
                                 VBox.vgrow="NEVER" />
+                        <Label text="Equipamiento minimo requerido"
+                                style="-fx-font-size: 16; -fx-font-weight: bold;" />
+
+                        <ListView fx:id="equipamientosListView"
+                                prefHeight="120.0"
+                                prefWidth="700.0"
+                                VBox.vgrow="NEVER" />
 
                         <HBox spacing="10.0"
                                 alignment="CENTER">

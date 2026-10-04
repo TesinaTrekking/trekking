@@ -117,8 +117,7 @@ public class EquipamientoDAO {
 
     public static ObservableList<Equipamiento> obtenerTodos() {
 
-        ObservableList<Equipamiento> equipamientos =
-                FXCollections.observableArrayList();
+        ObservableList<Equipamiento> equipamientos = FXCollections.observableArrayList();
 
         String sql = """
                 SELECT *
@@ -146,8 +145,7 @@ public class EquipamientoDAO {
 
     public static ObservableList<Equipamiento> obtenerDadosDeBaja() {
 
-        ObservableList<Equipamiento> equipamientos =
-                FXCollections.observableArrayList();
+        ObservableList<Equipamiento> equipamientos = FXCollections.observableArrayList();
 
         String sql = """
                 SELECT *
@@ -182,5 +180,35 @@ public class EquipamientoDAO {
                 resultSet.getString("categoria"),
                 resultSet.getInt("cantidad"),
                 resultSet.getString("estado"));
+    }
+
+    public static Equipamiento obtenerPorId(int id) {
+
+        String sql = """
+                SELECT *
+                FROM equipamiento
+                WHERE id = ?
+                """;
+
+        try (
+                Connection conexion = ConexionDB.conectar();
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
+
+            statement.setInt(1, id);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+
+                if (resultSet.next()) {
+                    return mapRow(resultSet);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println(
+                    "Error al obtener equipamiento por ID: "
+                            + e.getMessage());
+        }
+
+        return null;
     }
 }

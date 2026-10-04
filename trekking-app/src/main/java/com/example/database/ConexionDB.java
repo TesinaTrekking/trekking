@@ -62,6 +62,16 @@ public class ConexionDB {
                     activo INTEGER NOT NULL DEFAULT 1
                 )
                 """;
+        String sqlRutasEquipamiento = """
+                CREATE TABLE IF NOT EXISTS rutas_equipamiento (
+                    rutas_equipamiento_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ruta_id INTEGER NOT NULL,
+                    equipamiento_id INTEGER NOT NULL,
+                    cantidad_requerida INTEGER NOT NULL,
+                    FOREIGN KEY (ruta_id) REFERENCES rutas(id),
+                    FOREIGN KEY (equipamiento_id) REFERENCES equipamiento(id)
+                )
+                """;
         try (
                 Connection conexion = conectar();
                 Statement statement = conexion.createStatement()) {
@@ -70,6 +80,7 @@ public class ConexionDB {
             statement.execute(sqlCheckpoints);
             statement.execute(sqlRutaCheckpoints);
             statement.execute(sqlEquipamiento);
+            statement.execute(sqlRutasEquipamiento);
             normalizarDatosExistentes(conexion);
 
             statement.executeUpdate(
