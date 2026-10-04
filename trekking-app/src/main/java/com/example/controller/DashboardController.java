@@ -26,6 +26,20 @@ public class DashboardController {
     }
 
     @FXML
+    private void abrirEquipamiento(ActionEvent event) throws IOException {
+
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource(
+                        "/com/example/fxml/equipamiento.fxml"));
+
+        Parent root = loader.load();
+
+        Node source = (Node) event.getSource();
+
+        source.getScene().setRoot(root);
+    }
+
+    @FXML
     private void abrirCheckpoints(ActionEvent event) {
 
         Node source = (Node) event.getSource();

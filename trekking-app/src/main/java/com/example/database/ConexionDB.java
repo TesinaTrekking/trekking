@@ -52,7 +52,16 @@ public class ConexionDB {
                     FOREIGN KEY (checkpoint_id) REFERENCES checkpoints(id)
                 )
                 """;
-
+        String sqlEquipamiento = """
+                CREATE TABLE IF NOT EXISTS equipamiento (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    categoria TEXT NOT NULL,
+                    cantidad INTEGER NOT NULL,
+                    estado TEXT NOT NULL,
+                    activo INTEGER NOT NULL DEFAULT 1
+                )
+                """;
         try (
                 Connection conexion = conectar();
                 Statement statement = conexion.createStatement()) {
@@ -60,6 +69,7 @@ public class ConexionDB {
             // Tabla de checkpoints
             statement.execute(sqlCheckpoints);
             statement.execute(sqlRutaCheckpoints);
+            statement.execute(sqlEquipamiento);
             normalizarDatosExistentes(conexion);
 
             statement.executeUpdate(
