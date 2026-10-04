@@ -7,149 +7,192 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane fitToWidth="true"
-            hbarPolicy="NEVER"
-            vbarPolicy="AS_NEEDED"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.controller.RutaFormController"
-            stylesheets="@styles.css">
+       hbarPolicy="NEVER"
+       vbarPolicy="AS_NEEDED"
+       xmlns="http://javafx.com/javafx/17"
+       xmlns:fx="http://javafx.com/fxml/1"
+       fx:controller="com.example.controller.RutaFormController"
+       stylesheets="@styles.css">
 
-    <content>
+       <content>
 
-        <VBox alignment="TOP_CENTER"
-              spacing="20.0">
+              <VBox alignment="TOP_CENTER"
+                     spacing="20.0">
 
-            <Label fx:id="tituloForm"
-                   text="Agregar Nueva Ruta"
-                   style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+                     <Label fx:id="tituloForm"
+                            text="Agregar Nueva Ruta"
+                            style="-fx-font-size: 20; -fx-font-weight: bold;" />
 
-            <GridPane alignment="CENTER"
-                      hgap="10"
-                      vgap="15">
+                     <GridPane alignment="CENTER"
+                            hgap="10"
+                            vgap="15">
 
-                <Label text="Nombre:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="0"/>
+                            <Label text="Nombre:"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="0" />
 
-                <TextField fx:id="nombreField"
-                           promptText="Ingrese el nombre de la ruta"
-                           prefWidth="300.0"
-                           GridPane.columnIndex="1"
-                           GridPane.rowIndex="0"/>
+                            <TextField fx:id="nombreField"
+                                   promptText="Ingrese el nombre de la ruta"
+                                   prefWidth="300.0"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="0" />
 
-                <Label text="Altitud máxima:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="1"/>
+                            <Label text="Altitud máxima:"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="1" />
 
-                <TextField fx:id="altitudMaximaField"
-                           promptText="Ej: 1200"
-                           GridPane.columnIndex="1"
-                           GridPane.rowIndex="1"/>
-
-
-                <Label text="Tipo de terreno:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="2"/>
-
-                <ComboBox fx:id="tipoTerrenoCombo"
-                          prefWidth="300.0"
-                          promptText="Seleccione un tipo"
-                          GridPane.columnIndex="1"
-                          GridPane.rowIndex="2"/>
+                            <TextField fx:id="altitudMaximaField"
+                                   promptText="Ej: 1200"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="1" />
 
 
-                <Label text="Dificultad técnica:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="3"/>
+                            <Label text="Tipo de terreno:"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="2" />
 
-                <ComboBox fx:id="dificultadTecnicaCombo"
-                          prefWidth="300.0"
-                          promptText="Seleccione dificultad"
-                          GridPane.columnIndex="1"
-                          GridPane.rowIndex="3"/>
-
-
-                <Label text="Dificultad física:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="4"/>
-
-                <ComboBox fx:id="dificultadFisicaCombo"
-                          prefWidth="300.0"
-                          promptText="Seleccione dificultad"
-                          GridPane.columnIndex="1"
-                          GridPane.rowIndex="4"/>
-
-            </GridPane>
+                            <ComboBox fx:id="tipoTerrenoCombo"
+                                   prefWidth="300.0"
+                                   promptText="Seleccione un tipo"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="2" />
 
 
-            <Label text="Checkpoints de la ruta"
-                   style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+                            <Label text="Dificultad técnica:"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="3" />
+
+                            <ComboBox fx:id="dificultadTecnicaCombo"
+                                   prefWidth="300.0"
+                                   promptText="Seleccione dificultad"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="3" />
 
 
-            <HBox alignment="CENTER"
-                  spacing="10.0">
+                            <Label text="Dificultad física:"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="4" />
 
-                <ComboBox fx:id="checkpointCombo"
-                          prefWidth="350.0"
-                          promptText="Seleccione un checkpoint"/>
+                            <ComboBox fx:id="dificultadFisicaCombo"
+                                   prefWidth="300.0"
+                                   promptText="Seleccione dificultad"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="4" />
 
-                <Button fx:id="agregarCheckpointButton"
-                        text="Agregar"
-                        onAction="#agregarCheckpoint"/>
-
-            </HBox>
-
-
-            <ListView fx:id="checkpointsListView"
-                      prefWidth="500.0"
-                      prefHeight="250.0"/>
+                     </GridPane>
 
 
-            <HBox alignment="CENTER"
-                  spacing="10.0">
-
-                <Button fx:id="quitarCheckpointButton"
-                        text="Quitar"
-                        onAction="#quitarCheckpoint"/>
-
-                <Button fx:id="subirCheckpointButton"
-                        text="Subir"
-                        onAction="#subirCheckpoint"/>
-
-                <Button fx:id="bajarCheckpointButton"
-                        text="Bajar"
-                        onAction="#bajarCheckpoint"/>
-
-            </HBox>
+                     <Label text="Checkpoints de la ruta"
+                            style="-fx-font-size: 16; -fx-font-weight: bold;" />
 
 
-            <HBox alignment="CENTER"
-                  spacing="10.0">
+                     <HBox alignment="CENTER"
+                            spacing="10.0">
 
-                <Button text="Guardar"
-                        onAction="#guardarRuta"
-                        style="-fx-font-weight: bold;"/>
+                            <ComboBox fx:id="checkpointCombo"
+                                   prefWidth="350.0"
+                                   promptText="Seleccione un checkpoint" />
 
-                <Button text="Cancelar"
-                        onAction="#volverListado"/>
+                            <Button fx:id="agregarCheckpointButton"
+                                   text="Agregar"
+                                   onAction="#agregarCheckpoint" />
 
-            </HBox>
+                     </HBox>
 
 
-            <padding>
-                <Insets top="20.0"
-                        right="20.0"
-                        bottom="20.0"
-                        left="20.0"/>
-            </padding>
+                     <ListView fx:id="checkpointsListView"
+                            prefWidth="500.0"
+                            prefHeight="250.0" />
 
-        </VBox>
 
-    </content>
+                     <HBox alignment="CENTER"
+                            spacing="10.0">
+
+                            <Button fx:id="quitarCheckpointButton"
+                                   text="Quitar"
+                                   onAction="#quitarCheckpoint" />
+
+                            <Button fx:id="subirCheckpointButton"
+                                   text="Subir"
+                                   onAction="#subirCheckpoint" />
+
+                            <Button fx:id="bajarCheckpointButton"
+                                   text="Bajar"
+                                   onAction="#bajarCheckpoint" />
+
+                     </HBox>
+                     <TitledPane text="Equipamiento requerido"
+                            expanded="true"
+                            prefWidth="600.0">
+
+                            <content>
+
+                                   <VBox spacing="10.0">
+
+                                          <HBox alignment="CENTER"
+                                                 spacing="10.0">
+
+                                                 <ComboBox fx:id="equipamientoCombo"
+                                                        prefWidth="280.0"
+                                                        promptText="Seleccione equipamiento" />
+
+                                                 <TextField fx:id="cantidadEquipamientoField"
+                                                        prefWidth="100.0"
+                                                        promptText="Cantidad" />
+
+                                                 <Button fx:id="agregarEquipamientoButton"
+                                                        text="Agregar"
+                                                        onAction="#agregarEquipamiento" />
+
+                                          </HBox>
+
+                                          <ListView fx:id="equipamientosListView"
+                                                 prefHeight="180.0" />
+
+                                          <HBox alignment="CENTER"
+                                                 spacing="10.0">
+
+                                                 <Button fx:id="quitarEquipamientoButton"
+                                                        text="Quitar"
+                                                        onAction="#quitarEquipamiento" />
+
+                                          </HBox>
+
+                                   </VBox>
+
+                            </content>
+
+                     </TitledPane>
+
+
+                     <HBox alignment="CENTER"
+                            spacing="10.0">
+
+                            <Button text="Guardar"
+                                   onAction="#guardarRuta"
+                                   style="-fx-font-weight: bold;" />
+
+                            <Button text="Cancelar"
+                                   onAction="#volverListado" />
+
+                     </HBox>
+
+
+                     <padding>
+                            <Insets top="20.0"
+                                   right="20.0"
+                                   bottom="20.0"
+                                   left="20.0" />
+                     </padding>
+
+              </VBox>
+
+       </content>
 
 </ScrollPane>
