@@ -15,6 +15,7 @@
 <ScrollPane fitToWidth="true"
        hbarPolicy="NEVER"
        vbarPolicy="AS_NEEDED"
+       styleClass="pantalla-scroll"
        xmlns="http://javafx.com/javafx/17"
        xmlns:fx="http://javafx.com/fxml/1"
        fx:controller="com.example.controller.RutaFormController"
@@ -38,55 +39,81 @@
                                    GridPane.rowIndex="0" />
 
                             <TextField fx:id="nombreField"
-                                   promptText="Ingrese el nombre de la ruta"
+                                   promptText="Ej: Cerro Champaquí"
                                    prefWidth="300.0"
                                    GridPane.columnIndex="1"
                                    GridPane.rowIndex="0" />
 
-                            <Label text="Altitud máxima:"
-                                   GridPane.columnIndex="0"
-                                   GridPane.rowIndex="1" />
-
-                            <TextField fx:id="altitudMaximaField"
-                                   promptText="Ej: 1200"
+                            <Label text="Letras, números y espacios."
+                                   styleClass="field-help"
                                    GridPane.columnIndex="1"
                                    GridPane.rowIndex="1" />
 
 
-                            <Label text="Tipo de terreno:"
+                            <Label text="Altitud máxima:"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="2" />
+
+                            <TextField fx:id="altitudMaximaField"
+                                   promptText="Ej: 1200"
+                                   prefWidth="300.0"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="2" />
+
+                            <Label text="Metros. Debe ser mayor o igual que 0."
+                                   styleClass="field-help"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="3" />
+
+
+                            <Label text="Tipo de terreno:"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="4" />
 
                             <ComboBox fx:id="tipoTerrenoCombo"
                                    prefWidth="300.0"
                                    promptText="Seleccione un tipo"
                                    GridPane.columnIndex="1"
-                                   GridPane.rowIndex="2" />
+                                   GridPane.rowIndex="4" />
+
+                            <Label text="Seleccione una opción de la lista."
+                                   styleClass="field-help"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="5" />
 
 
                             <Label text="Dificultad técnica:"
                                    GridPane.columnIndex="0"
-                                   GridPane.rowIndex="3" />
+                                   GridPane.rowIndex="6" />
 
                             <ComboBox fx:id="dificultadTecnicaCombo"
                                    prefWidth="300.0"
                                    promptText="Seleccione dificultad"
                                    GridPane.columnIndex="1"
-                                   GridPane.rowIndex="3" />
+                                   GridPane.rowIndex="6" />
+
+                            <Label text="Seleccione Baja, Media o Alta."
+                                   styleClass="field-help"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="7" />
 
 
                             <Label text="Dificultad física:"
                                    GridPane.columnIndex="0"
-                                   GridPane.rowIndex="4" />
+                                   GridPane.rowIndex="8" />
 
                             <ComboBox fx:id="dificultadFisicaCombo"
                                    prefWidth="300.0"
                                    promptText="Seleccione dificultad"
                                    GridPane.columnIndex="1"
-                                   GridPane.rowIndex="4" />
+                                   GridPane.rowIndex="8" />
+
+                            <Label text="Seleccione Baja, Media o Alta."
+                                   styleClass="field-help"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="9" />
 
                      </GridPane>
-
 
                      <Label text="Checkpoints de la ruta"
                             style="-fx-font-size: 16; -fx-font-weight: bold;" />

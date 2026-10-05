@@ -259,11 +259,6 @@ public class RutaController implements Initializable {
 
                 controller.setRutaEnEdicion(null);
 
-                stage.setWidth(1100);
-                stage.setHeight(1250);
-                stage.setMinWidth(1000);
-                stage.setMinHeight(850);
-
                 stage.getScene().setRoot(root);
         }
 
@@ -291,10 +286,6 @@ public class RutaController implements Initializable {
 
                 controller.setRutaEnEdicion(rutaSeleccionada);
 
-                stage.setWidth(1100);
-                stage.setHeight(1250);
-                stage.setMinWidth(1000);
-                stage.setMinHeight(850);
 
                 stage.getScene().setRoot(root);
         }
