@@ -53,3 +53,7 @@
 .module-button:pressed {
     -fx-background-color: #e8eaed;
 }
+.text-field:error {
+    -fx-border-color: #d93025;
+    -fx-border-width: 2px;
+}

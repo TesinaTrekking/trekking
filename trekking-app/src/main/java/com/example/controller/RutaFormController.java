@@ -26,6 +26,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.stage.Stage;
+import javafx.css.PseudoClass;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.List;
@@ -287,7 +289,6 @@ public class RutaFormController {
                                 .select(indice + 1);
         }
 
-
         private void configurarCantidadEquipamiento() {
 
                 UnaryOperator<TextFormatter.Change> filtro = change -> {
@@ -480,11 +481,6 @@ public class RutaFormController {
                                                 "/com/example/fxml/rutas.fxml"));
 
                 Parent root = loader.load();
-
-                stage.setWidth(1250);
-                stage.setHeight(800);
-                stage.setMinWidth(1100);
-                stage.setMinHeight(750);
 
                 stage.getScene().setRoot(root);
         }
@@ -727,22 +723,47 @@ public class RutaFormController {
                 }
         }
 
+        private void marcarError(
+                        TextField campo,
+                        String mensaje) {
+
+                campo.pseudoClassStateChanged(
+                                PseudoClass.getPseudoClass("error"),
+                                true);
+
+                Tooltip tooltip = new Tooltip(mensaje);
+                tooltip.setShowDelay(Duration.millis(200));
+                tooltip.setShowDuration(Duration.seconds(5));
+                tooltip.setHideDelay(Duration.millis(100));
+
+                campo.setTooltip(tooltip);
+        }
+
+        private void limpiarError(TextField campo) {
+                campo.pseudoClassStateChanged(
+                                PseudoClass.getPseudoClass("error"),
+                                false);
+        }
+
         private void configurarCampos() {
-
                 UnaryOperator<TextFormatter.Change> filtroNombre = change -> {
-
                         String nuevoTexto = change.getControlNewText();
 
                         if (nuevoTexto.length() > 100) {
+                                marcarError(
+                                                nombreField,
+                                                "El nombre no puede superar los 100 caracteres.");
                                 return null;
                         }
 
-                        if (nuevoTexto.matches(
-                                        "[\\p{L}\\p{N} ]*")) {
-
+                        if (nuevoTexto.matches("[\\p{L}\\p{N} ]*")) {
+                                limpiarError(nombreField);
                                 return change;
                         }
 
+                        marcarError(
+                                        nombreField,
+                                        "El nombre solamente puede contener letras, números y espacios.");
                         return null;
                 };
 
@@ -763,18 +784,22 @@ public class RutaFormController {
                         String textoAyuda) {
 
                 UnaryOperator<TextFormatter.Change> filtro = change -> {
-
                         String nuevoTexto = change.getControlNewText();
 
                         if (nuevoTexto.isEmpty()) {
+                                limpiarError(campo);
                                 return change;
                         }
 
                         if (nuevoTexto.matches(
                                         "-?\\d*[\\.,]?\\d*")) {
-
+                                limpiarError(campo);
                                 return change;
                         }
+
+                        marcarError(
+                                        campo,
+                                        "Ingrese solamente un valor numérico válido.");
 
                         return null;
                 };
