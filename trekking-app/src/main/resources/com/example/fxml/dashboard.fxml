@@ -84,6 +84,7 @@
                         text="Clientes"
                         prefWidth="180"
                         prefHeight="100"
+                        onAction="#abrirClientes"
                         styleClass="module-button"/>
 
                 <Button

@@ -1,7 +1,5 @@
 package com.example.database;
 
-import com.example.model.Ruta;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,6 +8,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.example.model.Ruta;
 
 public class ConexionDB {
 
@@ -72,15 +72,29 @@ public class ConexionDB {
                     FOREIGN KEY (equipamiento_id) REFERENCES equipamiento(id)
                 )
                 """;
+        String sqlClientes = """  
+            CREATE TABLE IF NOT EXISTS clientes ( id INTEGER PRIMARY KEY AUTOINCREMENT, dni TEXT UNIQUE, nombre TEXT NOT NULL, apellido TEXT NOT NULL, fecha_nacimiento TEXT, email TEXT, telefono TEXT, sexo_id INTEGER, sexo TEXT NOT NULL, contacto_emergencia_nombre TEXT, contacto_emergencia_telefono TEXT, contacto_emergencia_relacion TEXT, autorizacion_menores INTEGER NOT NULL DEFAULT 0, tutor_nombre TEXT, tutor_apellido TEXT, tutor_dni TEXT, tutor_telefono TEXT, activo INTEGER NOT NULL DEFAULT 1, ficha_medica BLOB, nombre_ficha_medica TEXT, fecha_alta TEXT NOT NULL DEFAULT CURRENT_DATE, fecha_modificacion TEXT NOT NULL DEFAULT CURRENT_DATE )
+                """;
+        String sqlSexos = """ 
+            CREATE TABLE IF NOT EXISTS sexos ( id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE ) 
+                """;
+        String sqlContactosEmergencia = """ 
+            CREATE TABLE IF NOT EXISTS contactos_emergencia ( id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL UNIQUE, nombre TEXT NOT NULL, telefono TEXT NOT NULL, relacion TEXT NOT NULL, FOREIGN KEY (cliente_id) REFERENCES clientes(id) ) 
+                """;
         try (
-                Connection conexion = conectar();
-                Statement statement = conexion.createStatement()) {
+                Connection conexion = conectar(); Statement statement = conexion.createStatement()) {
             statement.execute(sql);
             // Tabla de checkpoints
             statement.execute(sqlCheckpoints);
             statement.execute(sqlRutaCheckpoints);
             statement.execute(sqlEquipamiento);
             statement.execute(sqlRutasEquipamiento);
+            statement.execute(sqlClientes);
+            statement.execute(sqlSexos);
+            statement.execute(sqlContactosEmergencia); // Valores iniciales de la tabla sexos 
+            statement.executeUpdate(""" 
+                INSERT OR IGNORE INTO sexos (nombre) VALUES ('Masculino'), ('Femenino'), ('No binario'), ('Otro'), ('Prefiero no decir') 
+                """);
             normalizarDatosExistentes(conexion);
 
             statement.executeUpdate(
@@ -88,14 +102,14 @@ public class ConexionDB {
 
             statement.executeUpdate(
                     "CREATE UNIQUE INDEX idx_rutas_nombre_unique "
-                            + "ON rutas(nombre COLLATE NOCASE)");
+                    + "ON rutas(nombre COLLATE NOCASE)");
 
             System.out.println("Tabla 'rutas' lista.");
 
         } catch (SQLException e) {
             System.out.println(
                     "Error al crear la tabla: "
-                            + e.getMessage());
+                    + e.getMessage());
         }
     }
 
@@ -107,10 +121,8 @@ public class ConexionDB {
         String consulta = "SELECT id, nombre FROM rutas ORDER BY id";
 
         try (
-                Statement statement = conexion.createStatement();
-                ResultSet resultSet = statement.executeQuery(consulta);
-                PreparedStatement actualizar = conexion.prepareStatement(
-                        "UPDATE rutas SET nombre = ? WHERE id = ?")) {
+                Statement statement = conexion.createStatement(); ResultSet resultSet = statement.executeQuery(consulta); PreparedStatement actualizar = conexion.prepareStatement(
+                "UPDATE rutas SET nombre = ? WHERE id = ?")) {
             while (resultSet.next()) {
 
                 int id = resultSet.getInt("id");
