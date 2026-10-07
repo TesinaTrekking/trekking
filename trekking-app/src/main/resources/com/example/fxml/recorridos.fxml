@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            styleClass="pantalla-scroll"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.controller.RecorridosController"
+            stylesheets="@styles.css">
+    <content>
+        <VBox alignment="TOP_CENTER" spacing="12.0">
+            <padding>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+            </padding>
+
+            <Label text="Gestión de recorridos"
+                   style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+
+            <TableView fx:id="tablaRecorridos" prefHeight="260.0">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="60.0"/>
+                    <TableColumn fx:id="colRuta" text="Ruta" prefWidth="250.0"/>
+                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="150.0"/>
+                    <TableColumn fx:id="colHoraInicio" text="Hora inicio" prefWidth="140.0"/>
+                    <TableColumn fx:id="colHoraFin" text="Hora fin" prefWidth="140.0"/>
+                </columns>
+            </TableView>
+
+            <Label text="Datos del recorrido"
+                   style="-fx-font-size: 17; -fx-font-weight: bold;"/>
+            <HBox spacing="12.0" alignment="CENTER_LEFT">
+                <VBox spacing="6.0">
+                    <Label text="Ruta *"/>
+                    <ComboBox fx:id="rutaComboBox" prefWidth="280.0"
+                              promptText="Seleccionar ruta"/>
+                </VBox>
+                <VBox spacing="6.0">
+                    <Label text="Fecha *"/>
+                    <DatePicker fx:id="fechaPicker" prefWidth="160.0"/>
+                </VBox>
+                <VBox spacing="6.0">
+                    <Label text="Hora inicio (HH:mm)"/>
+                    <TextField fx:id="horaInicioField" promptText="08:30"
+                               prefWidth="140.0"/>
+                </VBox>
+                <VBox spacing="6.0">
+                    <Label text="Hora fin (HH:mm)"/>
+                    <TextField fx:id="horaFinField" promptText="17:00"
+                               prefWidth="140.0"/>
+                </VBox>
+            </HBox>
+
+            <Label text="Clientes participantes (Ctrl+clic para seleccionar varios)"
+                   style="-fx-font-size: 15; -fx-font-weight: bold;"/>
+            <ListView fx:id="participantesListView" prefHeight="150.0"/>
+
+            <HBox spacing="10.0" alignment="CENTER">
+                <Button text="Nuevo recorrido" onAction="#nuevoRecorrido"
+                        styleClass="secondary-button"/>
+                <Button text="Guardar" onAction="#guardarRecorrido"
+                        styleClass="primary-button"/>
+                <Button text="Eliminar" onAction="#eliminarRecorrido"
+                        styleClass="danger-button"/>
+                <Button text="Volver al Dashboard" onAction="#volverDashboard"
+                        styleClass="secondary-button"/>
+            </HBox>
+        </VBox>
+    </content>
+</ScrollPane>
