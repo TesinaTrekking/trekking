@@ -81,6 +81,25 @@ public class ConexionDB {
         String sqlContactosEmergencia = """ 
             CREATE TABLE IF NOT EXISTS contactos_emergencia ( id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL UNIQUE, nombre TEXT NOT NULL, telefono TEXT NOT NULL, relacion TEXT NOT NULL, FOREIGN KEY (cliente_id) REFERENCES clientes(id) ) 
                 """;
+        String sqlRecorridos = """
+                CREATE TABLE IF NOT EXISTS recorridos (
+                    recorrido_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ruta_id INTEGER NOT NULL,
+                    fecha DATE NOT NULL,
+                    hora_inicio TIME,
+                    hora_fin TIME,
+                    FOREIGN KEY (ruta_id) REFERENCES rutas(id)
+                )
+                """;
+        String sqlRecorridoCliente = """
+                CREATE TABLE IF NOT EXISTS recorrido_cliente (
+                    recorrido_cliente_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    recorrido_id INTEGER NOT NULL,
+                    cliente_id INTEGER NOT NULL,
+                    FOREIGN KEY (recorrido_id) REFERENCES recorridos(recorrido_id),
+                    FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+                )
+                """;
         try (
                 Connection conexion = conectar(); Statement statement = conexion.createStatement()) {
             statement.execute(sql);
@@ -92,6 +111,12 @@ public class ConexionDB {
             statement.execute(sqlClientes);
             statement.execute(sqlSexos);
             statement.execute(sqlContactosEmergencia); // Valores iniciales de la tabla sexos 
+            statement.execute(sqlRecorridos);
+            statement.execute(sqlRecorridoCliente);
+            statement.executeUpdate("""
+                    CREATE UNIQUE INDEX IF NOT EXISTS idx_recorrido_cliente_unico
+                    ON recorrido_cliente (recorrido_id, cliente_id)
+                    """);
             statement.executeUpdate(""" 
                 INSERT OR IGNORE INTO sexos (nombre) VALUES ('Masculino'), ('Femenino'), ('No binario'), ('Otro'), ('Prefiero no decir') 
                 """);

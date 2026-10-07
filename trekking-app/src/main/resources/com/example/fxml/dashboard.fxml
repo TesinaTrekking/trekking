@@ -91,6 +91,7 @@
                         text="Recorridos"
                         prefWidth="180"
                         prefHeight="100"
+                        onAction="#abrirRecorridos"
                         styleClass="module-button"/>
 
             </FlowPane>
