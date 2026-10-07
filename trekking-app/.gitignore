@@ -4,3 +4,4 @@ target/
 .settings/
 *.class
 *.db
+fichas_medicas/
