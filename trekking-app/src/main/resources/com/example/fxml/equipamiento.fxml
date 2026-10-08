@@ -23,7 +23,7 @@
         <VBox alignment="TOP_CENTER"
               spacing="10.0"
               prefWidth="960.0"
-              prefHeight="800.0">
+              prefHeight="700.0">
 
             <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
                 <VBox spacing="3.0">
@@ -38,7 +38,7 @@
                     <Button text="Editar"
                             styleClass="action-edit"
                             onAction="#editarEquipamiento"/>
-                    <Button text="Dar de baja"
+                    <Button text="Eliminar"
                             styleClass="action-delete"
                             onAction="#eliminarEquipamiento"/>
                     <Button text="Dados de baja"
