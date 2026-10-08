@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.model.Checkpoint;
 import com.example.util.AlertUtils;
+import com.example.util.FormValidation;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -137,8 +138,8 @@ public class CheckpointDialog extends Dialog<Checkpoint> {
 
         btnConfirmar.setDefaultButton(true);
 
-        btnConfirmar.getStyleClass()
-                .add("btn-primary");
+        btnConfirmar.getStyleClass().add(
+                isEditing ? "action-edit" : "action-add");
 
         /*
          * Interceptamos el botón de confirmación.
@@ -321,6 +322,8 @@ public class CheckpointDialog extends Dialog<Checkpoint> {
                     checkpointToEdit.getDescripcion());
         }
 
+        configurarValidacionesEnTiempoReal();
+
         Platform.runLater(() -> {
 
             txtNombre.requestFocus();
@@ -423,6 +426,10 @@ public class CheckpointDialog extends Dialog<Checkpoint> {
     private boolean validateInput() {
 
         clearAllErrors();
+        FormValidation.validateNow(txtNombre);
+        FormValidation.validateNow(txtHora);
+        FormValidation.validateNow(txtLatitud);
+        FormValidation.validateNow(txtLongitud);
 
         String nombre =
                 txtNombre.getText().trim();
@@ -530,6 +537,43 @@ public class CheckpointDialog extends Dialog<Checkpoint> {
         }
 
         return true;
+    }
+
+    private void configurarValidacionesEnTiempoReal() {
+        FormValidation.watch(txtNombre, txtNombre.textProperty(),
+                () -> txtNombre.getText().trim().isEmpty()
+                        ? "Por favor ingrese un nombre para el Checkpoint."
+                        : null);
+        FormValidation.watch(txtHora, txtHora.textProperty(),
+                () -> isHoraValida(txtHora.getText().trim())
+                        ? null
+                        : "La hora debe tener el formato HH:mm (Ej. 14:30).");
+        FormValidation.watch(txtLatitud, txtLatitud.textProperty(),
+                () -> validarCoordenada(
+                        txtLatitud.getText(), LAT_MIN, LAT_MAX, "latitud"));
+        FormValidation.watch(txtLongitud, txtLongitud.textProperty(),
+                () -> validarCoordenada(
+                        txtLongitud.getText(), LON_MIN, LON_MAX, "longitud"));
+    }
+
+    private String validarCoordenada(
+            String texto,
+            double minimo,
+            double maximo,
+            String nombre) {
+        if (texto.trim().isEmpty()) {
+            return "Por favor ingrese la " + nombre + " del Checkpoint.";
+        }
+        try {
+            double valor = parseDecimal(texto.trim());
+            if (!Double.isFinite(valor) || valor < minimo || valor > maximo) {
+                return "La " + nombre + " debe estar entre "
+                        + minimo + " y " + maximo + ".";
+            }
+            return null;
+        } catch (NumberFormatException e) {
+            return "La " + nombre + " debe ser un valor numerico decimal.";
+        }
     }
 
     private Checkpoint buildCheckpointFromInputs() {

@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane fitToWidth="true"
@@ -21,14 +22,34 @@
 
         <VBox alignment="TOP_CENTER"
               spacing="10.0"
-              prefWidth="1200.0"
+              prefWidth="960.0"
               prefHeight="800.0">
 
-            <Label text="Inventario de Equipamiento"/>
+            <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
+                <VBox spacing="3.0">
+                    <Label text="Inventario de Equipamiento" styleClass="brand-title"/>
+                    <Label text="Administración de equipamiento" styleClass="brand-subtitle"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
+                    <Button text="Nuevo"
+                            styleClass="action-add"
+                            onAction="#nuevoEquipamiento"/>
+                    <Button text="Editar"
+                            styleClass="action-edit"
+                            onAction="#editarEquipamiento"/>
+                    <Button text="Dar de baja"
+                            styleClass="action-delete"
+                            onAction="#eliminarEquipamiento"/>
+                    <Button text="Dados de baja"
+                            styleClass="secondary-button"
+                            onAction="#mostrarEquipamientoBaja"/>
+                </HBox>
+            </HBox>
 
             <TableView fx:id="tablaEquipamiento"
                        prefHeight="500.0"
-                       prefWidth="1150.0"
+                       prefWidth="940.0"
                        VBox.vgrow="ALWAYS">
 
                 <columns>
@@ -51,26 +72,6 @@
                 </columns>
 
             </TableView>
-
-            <HBox spacing="10.0"
-                  alignment="CENTER">
-
-                <Button text="Nuevo"
-                        onAction="#nuevoEquipamiento"/>
-
-                <Button text="Editar"
-                        onAction="#editarEquipamiento"/>
-
-                <Button text="Dar de baja"
-                        onAction="#eliminarEquipamiento"/>
-
-                <Button text="Dados de baja"
-                        onAction="#mostrarEquipamientoBaja"/>
-
-                <Button text="Volver al Dashboard"
-                        onAction="#volverDashboard"/>
-
-            </HBox>
 
         </VBox>
 

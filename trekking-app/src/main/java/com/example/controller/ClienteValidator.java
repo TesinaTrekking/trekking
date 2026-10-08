@@ -14,6 +14,111 @@ public final class ClienteValidator {
     private ClienteValidator() {
     }
 
+    public static String validarDni(String dni) {
+        return dni.isEmpty() || !DNI_VALIDO.matcher(dni).matches()
+                ? "El DNI debe contener entre 7 y 8 numeros."
+                : null;
+    }
+
+    public static String validarNombre(String nombre, String etiqueta) {
+        if (nombre.isEmpty()) {
+            return etiqueta + " es obligatorio.";
+        }
+        if (nombre.length() > 50) {
+            return etiqueta + " no puede superar los 50 caracteres.";
+        }
+        return NOMBRE_VALIDO.matcher(nombre).matches()
+                ? null
+                : etiqueta
+                        + " solo puede contener letras, espacios, guiones o apostrofes.";
+    }
+
+    public static String validarFechaNacimiento(LocalDate fechaNacimiento) {
+        return fechaNacimiento == null
+                || fechaNacimiento.isAfter(LocalDate.now())
+                        ? "La fecha de nacimiento es obligatoria y no puede ser futura."
+                        : null;
+    }
+
+    public static String validarEmail(String email) {
+        return email.length() > 100
+                || (!email.isEmpty() && !EMAIL_VALIDO.matcher(email).matches())
+                        ? "Ingresa un email valido de hasta 100 caracteres."
+                        : null;
+    }
+
+    public static String validarTelefono(String telefono, String etiqueta) {
+        if (telefono.isEmpty()) {
+            return etiqueta + " es obligatorio.";
+        }
+        return TELEFONO_VALIDO.matcher(telefono).matches()
+                ? null
+                : etiqueta + " debe tener un formato valido.";
+    }
+
+    public static String validarSexo(String sexo) {
+        return sexo == null || sexo.isEmpty()
+                ? "Selecciona el sexo del cliente."
+                : null;
+    }
+
+    public static String validarContacto(
+            String valor,
+            String nombre,
+            String telefono,
+            String relacion,
+            String etiqueta) {
+        boolean iniciado = !nombre.isEmpty()
+                || !telefono.isEmpty()
+                || !relacion.isEmpty();
+        if (!iniciado) {
+            return null;
+        }
+        if (valor.isEmpty()) {
+            return "Completa los tres campos del contacto de emergencia.";
+        }
+        if ("telefono".equals(etiqueta)) {
+            return TELEFONO_VALIDO.matcher(valor).matches()
+                    ? null
+                    : "El telefono del contacto de emergencia no es valido.";
+        }
+        return null;
+    }
+
+    public static boolean esMenor(LocalDate fechaNacimiento) {
+        return fechaNacimiento != null
+                && Period.between(fechaNacimiento, LocalDate.now()).getYears() < 18;
+    }
+
+    public static String validarAutorizacionMenores(
+            LocalDate fechaNacimiento,
+            boolean autorizacionMenores) {
+        return esMenor(fechaNacimiento) && !autorizacionMenores
+                ? "Para menores de 18 anos debes marcar la autorizacion de menores."
+                : null;
+    }
+
+    public static String validarTutor(
+            String valor,
+            String etiqueta,
+            LocalDate fechaNacimiento) {
+        if (!esMenor(fechaNacimiento)) {
+            return null;
+        }
+        if (valor.isEmpty()) {
+            return "Completa los datos del tutor para un cliente menor de edad.";
+        }
+        if ("dni".equals(etiqueta)) {
+            return validarDni(valor);
+        }
+        if ("telefono".equals(etiqueta)) {
+            return validarTelefono(valor, "El telefono del tutor");
+        }
+        return NOMBRE_VALIDO.matcher(valor).matches()
+                ? null
+                : "El nombre y apellido del tutor no son validos.";
+    }
+
     public static String validar(String dni, String nombre, String apellido, LocalDate fechaNacimiento,
             String email, String telefono, String sexo, String contactoNombre, String contactoTelefono,
             String contactoRelacion) {

@@ -9,6 +9,7 @@ import com.example.model.EquipamientoRequerido;
 import com.example.model.Ruta;
 import com.example.model.RutaEquipamiento;
 import com.example.model.Equipamiento;
+import com.example.util.NavigationShell;
 
 import java.io.IOException;
 import java.net.URL;
@@ -259,7 +260,7 @@ public class RutaController implements Initializable {
 
                 controller.setRutaEnEdicion(null);
 
-                stage.getScene().setRoot(root);
+                NavigationShell.setRoot(stage.getScene(), root);
         }
 
         @FXML
@@ -287,7 +288,7 @@ public class RutaController implements Initializable {
                 controller.setRutaEnEdicion(rutaSeleccionada);
 
 
-                stage.getScene().setRoot(root);
+                NavigationShell.setRoot(stage.getScene(), root);
         }
 
         @FXML
@@ -456,6 +457,6 @@ public class RutaController implements Initializable {
 
                 Parent root = loader.load();
 
-                tablaRutas.getScene().setRoot(root);
+                NavigationShell.setRoot(tablaRutas.getScene(), root);
         }
 }

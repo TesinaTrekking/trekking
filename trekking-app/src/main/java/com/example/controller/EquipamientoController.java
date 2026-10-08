@@ -2,12 +2,12 @@ package com.example.controller;
 
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
+import com.example.util.NavigationShell;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
@@ -143,7 +143,7 @@ public class EquipamientoController {
                     .getScene()
                     .getWindow();
 
-            stage.getScene().setRoot(root);
+            NavigationShell.setRoot(stage.getScene(), root);
             stage.setTitle("Equipamiento dado de baja");
 
         } catch (IOException e) {
@@ -170,7 +170,7 @@ public class EquipamientoController {
                     .getScene()
                     .getWindow();
 
-            stage.setScene(new Scene(root));
+            NavigationShell.setRoot(stage.getScene(), root);
             stage.setTitle("Trekking");
 
         } catch (IOException e) {
@@ -201,7 +201,7 @@ public class EquipamientoController {
                     .getScene()
                     .getWindow();
 
-            stage.getScene().setRoot(root);
+            NavigationShell.setRoot(stage.getScene(), root);
             stage.setTitle(
                     equipamiento == null
                             ? "Nuevo equipamiento"

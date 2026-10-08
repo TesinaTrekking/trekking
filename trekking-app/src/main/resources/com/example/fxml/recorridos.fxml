@@ -11,6 +11,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane fitToWidth="true"
@@ -27,10 +28,23 @@
                 <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
             </padding>
 
-            <Label text="Gestión de recorridos"
-                   style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+            <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
+                <VBox spacing="3.0">
+                    <Label text="Gestión de recorridos" styleClass="brand-title"/>
+                    <Label text="Administración de recorridos" styleClass="brand-subtitle"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
+                    <Button text="Nuevo recorrido" onAction="#nuevoRecorrido"
+                            styleClass="action-add"/>
+                    <Button fx:id="guardarButton" text="Guardar" onAction="#guardarRecorrido"
+                            styleClass="action-edit"/>
+                    <Button text="Eliminar" onAction="#eliminarRecorrido"
+                            styleClass="action-delete"/>
+                </HBox>
+            </HBox>
 
-            <TableView fx:id="tablaRecorridos" prefHeight="260.0">
+            <TableView fx:id="tablaRecorridos" prefHeight="260.0" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colId" text="ID" prefWidth="60.0"/>
                     <TableColumn fx:id="colRuta" text="Ruta" prefWidth="250.0"/>
@@ -68,16 +82,6 @@
                    style="-fx-font-size: 15; -fx-font-weight: bold;"/>
             <ListView fx:id="participantesListView" prefHeight="150.0"/>
 
-            <HBox spacing="10.0" alignment="CENTER">
-                <Button text="Nuevo recorrido" onAction="#nuevoRecorrido"
-                        styleClass="secondary-button"/>
-                <Button text="Guardar" onAction="#guardarRecorrido"
-                        styleClass="primary-button"/>
-                <Button text="Eliminar" onAction="#eliminarRecorrido"
-                        styleClass="danger-button"/>
-                <Button text="Volver al Dashboard" onAction="#volverDashboard"
-                        styleClass="secondary-button"/>
-            </HBox>
         </VBox>
     </content>
 </ScrollPane>

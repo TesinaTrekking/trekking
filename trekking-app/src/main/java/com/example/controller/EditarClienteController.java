@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
+import com.example.util.FormValidation;
+import com.example.util.NavigationShell;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -138,6 +141,119 @@ public class EditarClienteController {
         } else {
             fichaMedicaLabel.setText("Sin ficha medica");
         }
+        configurarValidacionesEnTiempoReal();
+    }
+
+    private void configurarValidacionesEnTiempoReal() {
+        FormValidation.watch(dniField, dniField.textProperty(),
+                () -> ClienteValidator.validarDni(textoSeguro(dniField.getText()).trim()));
+        FormValidation.watch(nombreField, nombreField.textProperty(),
+                () -> ClienteValidator.validarNombre(
+                        textoSeguro(nombreField.getText()).trim(), "El nombre"));
+        FormValidation.watch(apellidoField, apellidoField.textProperty(),
+                () -> ClienteValidator.validarNombre(
+                        textoSeguro(apellidoField.getText()).trim(), "El apellido"));
+        FormValidation.watch(fechaNacimientoPicker,
+                fechaNacimientoPicker.getEditor().textProperty(),
+                this::validarFechaNacimientoEnTiempoReal);
+        FormValidation.watch(emailField, emailField.textProperty(),
+                () -> ClienteValidator.validarEmail(
+                        textoSeguro(emailField.getText()).trim()));
+        FormValidation.watch(telefonoField, telefonoField.textProperty(),
+                () -> ClienteValidator.validarTelefono(
+                        textoSeguro(telefonoField.getText()).trim(), "El telefono"));
+        FormValidation.watch(sexoComboBox, sexoComboBox.valueProperty(),
+                () -> ClienteValidator.validarSexo(sexoComboBox.getValue()));
+
+        FormValidation.watch(contactoNombreField,
+                contactoNombreField.textProperty(),
+                () -> ClienteValidator.validarContacto(
+                        textoSeguro(contactoNombreField.getText()).trim(),
+                        textoSeguro(contactoNombreField.getText()).trim(),
+                        textoSeguro(contactoTelefonoField.getText()).trim(),
+                        textoSeguro(contactoRelacionField.getText()).trim(),
+                        "nombre"));
+        FormValidation.watch(contactoTelefonoField,
+                contactoTelefonoField.textProperty(),
+                () -> ClienteValidator.validarContacto(
+                        textoSeguro(contactoTelefonoField.getText()).trim(),
+                        textoSeguro(contactoNombreField.getText()).trim(),
+                        textoSeguro(contactoTelefonoField.getText()).trim(),
+                        textoSeguro(contactoRelacionField.getText()).trim(),
+                        "telefono"));
+        FormValidation.watch(contactoRelacionField,
+                contactoRelacionField.textProperty(),
+                () -> ClienteValidator.validarContacto(
+                        textoSeguro(contactoRelacionField.getText()).trim(),
+                        textoSeguro(contactoNombreField.getText()).trim(),
+                        textoSeguro(contactoTelefonoField.getText()).trim(),
+                        textoSeguro(contactoRelacionField.getText()).trim(),
+                        "relacion"));
+
+        FormValidation.watch(autorizacionMenoresCheckBox,
+                autorizacionMenoresCheckBox.selectedProperty(),
+                () -> ClienteValidator.validarAutorizacionMenores(
+                        fechaNacimientoPicker.getValue(),
+                        autorizacionMenoresCheckBox.isSelected()));
+        FormValidation.watch(tutorNombreField, tutorNombreField.textProperty(),
+                () -> ClienteValidator.validarTutor(
+                        textoSeguro(tutorNombreField.getText()).trim(),
+                        "nombre", fechaNacimientoPicker.getValue()));
+        FormValidation.watch(tutorApellidoField,
+                tutorApellidoField.textProperty(),
+                () -> ClienteValidator.validarTutor(
+                        textoSeguro(tutorApellidoField.getText()).trim(),
+                        "apellido", fechaNacimientoPicker.getValue()));
+        FormValidation.watch(tutorDniField, tutorDniField.textProperty(),
+                () -> ClienteValidator.validarTutor(
+                        textoSeguro(tutorDniField.getText()).trim(),
+                        "dni", fechaNacimientoPicker.getValue()));
+        FormValidation.watch(tutorTelefonoField,
+                tutorTelefonoField.textProperty(),
+                () -> ClienteValidator.validarTutor(
+                        textoSeguro(tutorTelefonoField.getText()).trim(),
+                        "telefono", fechaNacimientoPicker.getValue()));
+
+        contactoNombreField.textProperty().addListener(
+                (observable, anterior, actual) -> validarContactoVinculado());
+        contactoTelefonoField.textProperty().addListener(
+                (observable, anterior, actual) -> validarContactoVinculado());
+        contactoRelacionField.textProperty().addListener(
+                (observable, anterior, actual) -> validarContactoVinculado());
+        fechaNacimientoPicker.valueProperty().addListener(
+                (observable, anterior, actual) -> {
+                    FormValidation.validateNow(fechaNacimientoPicker);
+                    validarTutorVinculado();
+                });
+        autorizacionMenoresCheckBox.selectedProperty().addListener(
+                (observable, anterior, actual) -> validarTutorVinculado());
+    }
+
+    private void validarContactoVinculado() {
+        FormValidation.validateNow(contactoNombreField);
+        FormValidation.validateNow(contactoTelefonoField);
+        FormValidation.validateNow(contactoRelacionField);
+    }
+
+    private void validarTutorVinculado() {
+        FormValidation.validateNow(autorizacionMenoresCheckBox);
+        FormValidation.validateNow(tutorNombreField);
+        FormValidation.validateNow(tutorApellidoField);
+        FormValidation.validateNow(tutorDniField);
+        FormValidation.validateNow(tutorTelefonoField);
+    }
+
+    private String validarFechaNacimientoEnTiempoReal() {
+        String texto = fechaNacimientoPicker.getEditor().getText().trim();
+        if (texto.isEmpty()) {
+            return "La fecha de nacimiento es obligatoria.";
+        }
+        try {
+            LocalDate fecha = fechaNacimientoPicker.getConverter().fromString(texto);
+            return ClienteValidator.validarFechaNacimiento(fecha);
+        } catch (DateTimeParseException e) {
+            return "Ingresa una fecha de nacimiento valida.";
+        }
     }
 
     @FXML
@@ -215,6 +331,7 @@ public class EditarClienteController {
 
     @FXML
     private void guardarCambios() {
+        validarFormularioVisualmente();
         String dni = textoSeguro(dniField.getText()).trim();
         String nombre = textoSeguro(nombreField.getText()).trim();
         String apellido = textoSeguro(apellidoField.getText()).trim();
@@ -318,7 +435,7 @@ public class EditarClienteController {
                 getClass().getResource(
                         "/com/example/fxml/lista-clientes.fxml"));
         Parent root = loader.load();
-        fichaMedicaLabel.getScene().setRoot(root);
+        NavigationShell.setRoot(fichaMedicaLabel.getScene(), root);
     }
 
     private boolean esPdfValido(byte[] contenido) {
@@ -329,6 +446,18 @@ public class EditarClienteController {
                 && contenido[2] == 'D'
                 && contenido[3] == 'F'
                 && contenido[4] == '-';
+    }
+
+    private void validarFormularioVisualmente() {
+        FormValidation.validateNow(dniField);
+        FormValidation.validateNow(nombreField);
+        FormValidation.validateNow(apellidoField);
+        FormValidation.validateNow(fechaNacimientoPicker);
+        FormValidation.validateNow(emailField);
+        FormValidation.validateNow(telefonoField);
+        FormValidation.validateNow(sexoComboBox);
+        validarContactoVinculado();
+        validarTutorVinculado();
     }
 
     private void mostrarAlerta(

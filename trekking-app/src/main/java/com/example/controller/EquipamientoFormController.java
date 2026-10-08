@@ -2,10 +2,14 @@ package com.example.controller;
 
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
+import com.example.util.FormValidation;
+import com.example.util.NavigationShell;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
@@ -22,6 +26,12 @@ public class EquipamientoFormController {
 
     @FXML
     private ComboBox<String> cmbEstado;
+
+    @FXML
+    private Button guardarButton;
+
+    @FXML
+    private Label tituloLabel;
 
     private Equipamiento equipamientoEditando;
 
@@ -49,12 +59,39 @@ public class EquipamientoFormController {
                 "Fuera de Servicio",
                 "Extraviado"
         );
+
+        FormValidation.watch(txtNombre, txtNombre.textProperty(),
+                () -> textoSeguro(txtNombre.getText()).trim().isEmpty()
+                        ? "El nombre es obligatorio."
+                        : null);
+        FormValidation.watch(cmbCategoria, cmbCategoria.valueProperty(),
+                () -> cmbCategoria.getValue() == null
+                        ? "Selecciona una categoria."
+                        : null);
+        FormValidation.watch(txtCantidad, txtCantidad.textProperty(),
+                this::validarCantidad);
+        FormValidation.watch(cmbEstado, cmbEstado.valueProperty(),
+                () -> cmbEstado.getValue() == null
+                        ? "Selecciona un estado."
+                        : null);
     }
 
     @FXML
     private void guardarEquipamiento() {
 
-        String nombre = txtNombre.getText().trim();
+        boolean valido = FormValidation.validateNow(txtNombre);
+        valido = FormValidation.validateNow(cmbCategoria) && valido;
+        valido = FormValidation.validateNow(txtCantidad) && valido;
+        valido = FormValidation.validateNow(cmbEstado) && valido;
+        if (!valido) {
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Revisa los campos",
+                    "Completa los datos requeridos y corrige los campos marcados.");
+            return;
+        }
+
+        String nombre = textoSeguro(txtNombre.getText()).trim();
         String categoria = cmbCategoria.getValue();
         String cantidadTexto = txtCantidad.getText().trim();
         String estado = cmbEstado.getValue();
@@ -72,20 +109,7 @@ public class EquipamientoFormController {
             return;
         }
 
-        int cantidad;
-
-        try {
-            cantidad = Integer.parseInt(cantidadTexto);
-
-        } catch (NumberFormatException e) {
-
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Cantidad inválida",
-                    "La cantidad debe contener solamente números.");
-
-            return;
-        }
+        int cantidad = Integer.parseInt(cantidadTexto);
 
         if (equipamientoEditando == null) {
 
@@ -116,6 +140,18 @@ public class EquipamientoFormController {
     public void cargarEquipamiento(Equipamiento equipamiento) {
 
         equipamientoEditando = equipamiento;
+
+        if (equipamiento == null) {
+            tituloLabel.setText("Nuevo equipamiento");
+        } else {
+            tituloLabel.setText("Editar equipamiento");
+        }
+
+        guardarButton.getStyleClass().removeAll(
+                "action-add");
+        if (!guardarButton.getStyleClass().contains("action-edit")) {
+            guardarButton.getStyleClass().add("action-edit");
+        }
 
         if (equipamiento == null) {
             return;
@@ -152,7 +188,7 @@ public class EquipamientoFormController {
             Stage stage =
                     (Stage) txtNombre.getScene().getWindow();
 
-            stage.getScene().setRoot(root);
+            NavigationShell.setRoot(stage.getScene(), root);
 
             stage.setTitle("Equipamiento");
 
@@ -175,5 +211,22 @@ public class EquipamientoFormController {
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
         alerta.showAndWait();
+    }
+
+    private String validarCantidad() {
+        String cantidad = textoSeguro(txtCantidad.getText()).trim();
+        if (cantidad.isEmpty()) {
+            return "La cantidad es obligatoria.";
+        }
+        try {
+            Integer.parseInt(cantidad);
+            return null;
+        } catch (NumberFormatException e) {
+            return "La cantidad debe ser un numero entero.";
+        }
+    }
+
+    private String textoSeguro(String valor) {
+        return valor == null ? "" : valor;
     }
 }

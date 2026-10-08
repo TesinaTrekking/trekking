@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.CheckpointDAO;
 import com.example.model.Checkpoint;
 import com.example.util.AlertUtils;
+import com.example.util.NavigationShell;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -53,8 +54,8 @@ import java.util.logging.Logger;
  */
 public class CheckpointController {
     private static final Logger LOGGER = Logger.getLogger(CheckpointController.class.getName());
-    private static final double SCENE_WIDTH = 1080.0;
-    private static final double SCENE_HEIGHT = 640.0;
+    private static final double SCENE_WIDTH = 1280.0;
+    private static final double SCENE_HEIGHT = 800.0;
     private final CheckpointDAO checkpointDAO = new CheckpointDAO();
     private final ObservableList<Checkpoint> checkpointList = FXCollections.observableArrayList();
     private final FilteredList<Checkpoint> filteredList = new FilteredList<>(checkpointList, checkpoint -> true);
@@ -73,7 +74,9 @@ public class CheckpointController {
             return;
         }
         primaryStage.setTitle("Trekking App - Gestión de Checkpoints");
-        primaryStage.setScene(buildScene());
+        Scene scene = buildScene();
+        NavigationShell.install(scene, "checkpoints");
+        primaryStage.setScene(scene);
         primaryStage.setMinWidth(850);
         primaryStage.setMinHeight(520);
     }
@@ -113,10 +116,6 @@ public class CheckpointController {
         brandTitle.getStyleClass().add("brand-title");
         Label brandSubtitle = new Label("Puntos de control de ruta");
         brandSubtitle.getStyleClass().add("brand-subtitle");
-        Button volverButton = new Button("← Inicio");
-        volverButton.getStyleClass().add("btn-secondary");
-        volverButton.setOnAction(
-            event -> volverDashboard(primaryStage));
 
         VBox brandContainer = new VBox(1, brandTitle, brandSubtitle);
         brandContainer.setAlignment(Pos.CENTER_LEFT);
@@ -134,21 +133,21 @@ public class CheckpointController {
         StackPane.setAlignment(clearButton, Pos.CENTER_RIGHT);
         searchContainer.getStyleClass().add("search-container");
         Button newButton = new Button("+ Nuevo Checkpoint");
-        newButton.getStyleClass().add("btn-primary");
+        newButton.getStyleClass().add("action-add");
         newButton.setOnAction(event -> showCreateDialog());
         Button editButton = new Button("Editar");
-        editButton.getStyleClass().add("btn-secondary");
+        editButton.getStyleClass().addAll("btn-edit");
         editButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
         editButton.setOnAction(event -> editSelected());
         Button deleteButton = new Button("Eliminar");
-        deleteButton.getStyleClass().add("btn-danger");
+        deleteButton.getStyleClass().add("action-delete");
         deleteButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
         deleteButton.setOnAction(event -> deleteSelected());
         HBox actionsContainer = new HBox(8, newButton, editButton, deleteButton);
         actionsContainer.setAlignment(Pos.CENTER_LEFT);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox topBar = new HBox(16, volverButton, brandContainer, spacer, searchContainer, actionsContainer);
+        HBox topBar = new HBox(16, brandContainer, spacer, searchContainer, actionsContainer);
         topBar.getStyleClass().add("top-bar");
         topBar.setAlignment(Pos.CENTER_LEFT);
         return topBar;
@@ -214,6 +213,7 @@ public class CheckpointController {
             TableRow<Checkpoint> row = new TableRow<>();
             ContextMenu contextMenu = new ContextMenu();
             MenuItem editItem = new MenuItem("Editar");
+            editItem.getStyleClass().add("action-edit-menu");
             editItem.setOnAction(event -> {
                 Checkpoint item = row.getItem();
                 if (item != null) {
@@ -221,6 +221,7 @@ public class CheckpointController {
                 }
             });
             MenuItem deleteItem = new MenuItem("Eliminar");
+            deleteItem.getStyleClass().add("action-delete-menu");
             deleteItem.setOnAction(event -> {
                 Checkpoint item = row.getItem();
                 if (item != null) {
@@ -404,7 +405,7 @@ public class CheckpointController {
 
             Parent root = loader.load();
 
-            stage.getScene().setRoot(root);
+            NavigationShell.setRoot(stage.getScene(), root);
 
         } catch (IOException e) {
 

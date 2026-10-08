@@ -45,7 +45,8 @@
                     <TextField fx:id="contactoRelacionField" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
                     <Label text="Ficha medica (PDF, maximo 2 MB):" GridPane.columnIndex="0" GridPane.rowIndex="10"/>
                     <HBox spacing="8.0" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="10">
-                        <Button text="Cargar ficha" onAction="#seleccionarFichaMedica"/>
+                        <Button text="Cargar ficha" onAction="#seleccionarFichaMedica"
+                                styleClass="action-add"/>
                         <Label fx:id="fichaMedicaLabel" text="Ningun archivo seleccionado"/>
                     </HBox>
                     <Label text="Autorizacion de menores:" GridPane.columnIndex="0" GridPane.rowIndex="11"/>
@@ -63,11 +64,11 @@
                     <TextField fx:id="tutorTelefonoField" GridPane.columnIndex="1" GridPane.rowIndex="15"/>
                 </children>
             </GridPane>
-            <HBox spacing="10.0" alignment="CENTER">
+            <HBox spacing="8.0" alignment="CENTER" styleClass="crud-actions">
                 <Button text="Guardar cliente" onAction="#guardarCliente"
-                        styleClass="primary-button" style="-fx-padding: 10px 20px;"/>
+                        styleClass="action-edit"/>
                 <Button text="Cancelar" onAction="#irListaClientes"
-                        styleClass="secondary-button" style="-fx-padding: 10px 20px;"/>
+                        styleClass="secondary-button"/>
             </HBox>
             <padding>
                 <Insets bottom="40.0" left="20.0" right="20.0" top="20.0"/>
