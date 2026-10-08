@@ -10,6 +10,8 @@ import com.example.model.Ruta;
 import com.example.model.Equipamiento;
 import com.example.model.EquipamientoRequerido;
 import com.example.model.RutaEquipamiento;
+import com.example.util.FormValidation;
+import com.example.util.NavigationShell;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,6 +50,9 @@ public class RutaFormController {
 
         @FXML
         private Label tituloForm;
+
+        @FXML
+        private Button guardarRutaButton;
 
         @FXML
         private TextField nombreField;
@@ -116,6 +121,7 @@ public class RutaFormController {
 
                 configurarCheckpoints();
                 configurarEquipamiento();
+                configurarValidacionesEnTiempoReal();
 
                 rutaEnEdicion = null;
         }
@@ -180,11 +186,19 @@ public class RutaFormController {
 
                 if (ruta != null) {
                         tituloForm.setText("Editar ruta");
+                        guardarRutaButton.getStyleClass().remove("action-add");
+                        if (!guardarRutaButton.getStyleClass().contains("action-edit")) {
+                                guardarRutaButton.getStyleClass().add("action-edit");
+                        }
                         cargarRuta(ruta);
                         cargarCheckpointsDeRuta(ruta.getId());
                         cargarEquipamientoDeRuta(ruta.getId());
                 } else {
                         tituloForm.setText("Nueva ruta");
+                        guardarRutaButton.getStyleClass().remove("action-add");
+                        if (!guardarRutaButton.getStyleClass().contains("action-edit")) {
+                                guardarRutaButton.getStyleClass().add("action-edit");
+                        }
                 }
         }
 
@@ -198,6 +212,7 @@ public class RutaFormController {
         @FXML
         private void agregarCheckpoint() {
 
+                FormValidation.validateNow(checkpointCombo);
                 Checkpoint checkpoint = checkpointCombo.getValue();
 
                 if (checkpoint == null) {
@@ -221,6 +236,7 @@ public class RutaFormController {
                 checkpointsSeleccionados.add(checkpoint);
 
                 checkpointCombo.getSelectionModel().clearSelection();
+                FormValidation.reset(checkpointCombo);
 
                 checkpointsListView.getSelectionModel().selectLast();
         }
@@ -398,6 +414,8 @@ public class RutaFormController {
         @FXML
         private void agregarEquipamiento() {
 
+                FormValidation.validateNow(equipamientoCombo);
+                FormValidation.validateNow(cantidadEquipamientoField);
                 Equipamiento equipamiento = equipamientoCombo.getValue();
 
                 if (equipamiento == null) {
@@ -452,6 +470,8 @@ public class RutaFormController {
 
                 equipamientoCombo.getSelectionModel().clearSelection();
                 cantidadEquipamientoField.clear();
+                FormValidation.reset(equipamientoCombo);
+                FormValidation.reset(cantidadEquipamientoField);
         }
 
         @FXML
@@ -482,11 +502,17 @@ public class RutaFormController {
 
                 Parent root = loader.load();
 
-                stage.getScene().setRoot(root);
+                NavigationShell.setRoot(stage.getScene(), root);
         }
 
         @FXML
         private void guardarRuta() throws IOException {
+
+                FormValidation.validateNow(nombreField);
+                FormValidation.validateNow(altitudMaximaField);
+                FormValidation.validateNow(tipoTerrenoCombo);
+                FormValidation.validateNow(dificultadTecnicaCombo);
+                FormValidation.validateNow(dificultadFisicaCombo);
 
                 String nombre = Ruta.formatearNombre(
                                 nombreField.getText());
@@ -655,6 +681,9 @@ public class RutaFormController {
 
                 if (rutaDAO.existeNombre(nombre, idExcluido)) {
 
+                        FormValidation.showError(
+                                        nombreField,
+                                        "Ya existe una ruta con ese nombre.");
                         mostrarError(
                                         "Nombre duplicado",
                                         "Ya existe una ruta con ese nombre.");
@@ -743,6 +772,7 @@ public class RutaFormController {
                 campo.pseudoClassStateChanged(
                                 PseudoClass.getPseudoClass("error"),
                                 false);
+                FormValidation.clearError(campo);
         }
 
         private void configurarCampos() {
@@ -777,6 +807,85 @@ public class RutaFormController {
                 configurarCampoNumerico(
                                 altitudMaximaField,
                                 "Ejemplo: 1250");
+        }
+
+        private void configurarValidacionesEnTiempoReal() {
+                FormValidation.watch(
+                                checkpointCombo,
+                                checkpointCombo.valueProperty(),
+                                () -> checkpointCombo.getValue() == null
+                                                ? "Selecciona un checkpoint."
+                                                : null);
+                FormValidation.watch(
+                                equipamientoCombo,
+                                equipamientoCombo.valueProperty(),
+                                () -> equipamientoCombo.getValue() == null
+                                                ? "Selecciona un equipamiento."
+                                                : null);
+                FormValidation.watch(
+                                cantidadEquipamientoField,
+                                cantidadEquipamientoField.textProperty(),
+                                this::validarCantidadEquipamiento);
+                FormValidation.watch(nombreField, nombreField.textProperty(), () -> {
+                        String nombre = Ruta.formatearNombre(nombreField.getText());
+                        if (nombre.isBlank()) {
+                                return "El nombre de la ruta es obligatorio.";
+                        }
+                        if (!Ruta.nombreValido(nombre)) {
+                                return "El nombre solo puede contener letras, numeros y espacios.";
+                        }
+                        return null;
+                });
+                FormValidation.watch(
+                                altitudMaximaField,
+                                altitudMaximaField.textProperty(),
+                                this::validarAltitudEnTiempoReal);
+                FormValidation.watch(tipoTerrenoCombo, tipoTerrenoCombo.valueProperty(),
+                                () -> tipoTerrenoCombo.getValue() == null
+                                                ? "Selecciona un tipo de terreno."
+                                                : null);
+                FormValidation.watch(
+                                dificultadTecnicaCombo,
+                                dificultadTecnicaCombo.valueProperty(),
+                                () -> dificultadTecnicaCombo.getValue() == null
+                                                ? "Selecciona una dificultad tecnica."
+                                                : null);
+                FormValidation.watch(
+                                dificultadFisicaCombo,
+                                dificultadFisicaCombo.valueProperty(),
+                                () -> dificultadFisicaCombo.getValue() == null
+                                                ? "Selecciona una dificultad fisica."
+                                                : null);
+        }
+
+        private String validarCantidadEquipamiento() {
+                String texto = cantidadEquipamientoField.getText().trim();
+                if (texto.isEmpty()) {
+                        return "Ingresa la cantidad requerida.";
+                }
+                try {
+                        return Integer.parseInt(texto) >= 1
+                                        ? null
+                                        : "La cantidad debe ser mayor o igual a 1.";
+                } catch (NumberFormatException e) {
+                        return "La cantidad debe ser un numero entero.";
+                }
+        }
+
+        private String validarAltitudEnTiempoReal() {
+                String texto = altitudMaximaField.getText().trim();
+                if (texto.isEmpty()) {
+                        return "La altitud maxima es obligatoria.";
+                }
+                try {
+                        double valor = Double.parseDouble(texto.replace(',', '.'));
+                        if (!Double.isFinite(valor) || valor < 0) {
+                                return "La altitud debe ser un numero valido mayor o igual a cero.";
+                        }
+                        return null;
+                } catch (NumberFormatException e) {
+                        return "Ingresa un valor numerico valido.";
+                }
         }
 
         private void configurarCampoNumerico(

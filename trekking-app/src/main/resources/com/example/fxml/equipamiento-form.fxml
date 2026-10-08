@@ -22,7 +22,7 @@
         <VBox alignment="TOP_CENTER"
               spacing="20.0">
 
-            <Label text="Nuevo equipamiento"/>
+            <Label fx:id="tituloLabel" text="Nuevo equipamiento"/>
 
             <GridPane alignment="CENTER"
                       hgap="10.0"
@@ -65,13 +65,16 @@
 
             </GridPane>
 
-            <HBox spacing="10.0"
-                  alignment="CENTER">
+            <HBox spacing="8.0"
+                  alignment="CENTER"
+                  styleClass="crud-actions">
 
-                <Button text="Guardar"
+                <Button fx:id="guardarButton" text="Guardar"
+                        styleClass="action-edit"
                         onAction="#guardarEquipamiento"/>
 
                 <Button text="Cancelar"
+                        styleClass="secondary-button"
                         onAction="#cancelar"/>
 
             </HBox>

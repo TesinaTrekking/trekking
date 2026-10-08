@@ -1,59 +1,247 @@
 .dashboard-header {
-    -fx-background-color: white;
-    -fx-border-color: #dadce0;
-    -fx-border-width: 0 0 1px 0;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e1e5eb;
+    -fx-border-width: 0 0 1 0;
 }
 
 .dashboard-title {
     -fx-font-family: "Segoe UI";
-    -fx-font-size: 22px;
+    -fx-font-size: 21px;
     -fx-font-weight: bold;
-    -fx-text-fill: #202124;
+    -fx-text-fill: #172b4d;
 }
 
 .dashboard-subtitle {
     -fx-font-family: "Segoe UI";
     -fx-font-size: 14px;
-    -fx-text-fill: #5f6368;
+    -fx-text-fill: #68778d;
 }
 
 .dashboard-module-area {
-    -fx-background-color: #f8f9fa;
+    -fx-background-color: #f5f7fa;
 }
 
 .dashboard-section-title {
     -fx-font-family: "Segoe UI";
-    -fx-font-size: 20px;
+    -fx-font-size: 30px;
     -fx-font-weight: bold;
-    -fx-text-fill: #202124;
+    -fx-text-fill: #172b4d;
 }
 
-.module-button {
-    -fx-background-color: white;
-    -fx-text-fill: #202124;
-
+.dashboard-welcome {
     -fx-font-family: "Segoe UI";
-    -fx-font-size: 15px;
-    -fx-font-weight: 500;
+    -fx-font-size: 16px;
+    -fx-text-fill: #68778d;
+    -fx-line-spacing: 5px;
+}
 
-    -fx-border-color: #dadce0;
-    -fx-border-width: 1px;
-    -fx-border-radius: 8px;
+.app-shell {
+    -fx-background-color: #f5f7fa;
+}
 
-    -fx-background-radius: 8px;
+.app-sidebar {
+    -fx-background-color: #172b4d;
+    -fx-padding: 26px 16px 18px 16px;
+    -fx-spacing: 8px;
+}
 
+.sidebar-brand {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-padding: 0 8px 0 8px;
+}
+
+.sidebar-caption {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #a8b5c8;
+    -fx-padding: 0 8px 22px 8px;
+}
+
+.sidebar-navigation {
+    -fx-spacing: 6px;
+}
+
+.sidebar-button {
+    -fx-alignment: center-left;
+    -fx-background-color: transparent;
+    -fx-background-radius: 7px;
+    -fx-text-fill: #e3e9f2;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 14px;
+    -fx-padding: 12px 14px;
     -fx-cursor: hand;
 }
 
-.module-button:hover {
-    -fx-background-color: #f1f3f4;
-    -fx-border-color: #bdc1c6;
+.sidebar-button:hover {
+    -fx-background-color: #263f63;
+    -fx-text-fill: white;
 }
 
-.module-button:pressed {
-    -fx-background-color: #e8eaed;
+.sidebar-button-active {
+    -fx-background-color: #2c4770;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
 }
+
+.sidebar-footer {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 10px;
+    -fx-text-fill: #a8b5c8;
+    -fx-padding: 18px 8px 2px 8px;
+}
+
+.app-content {
+    -fx-background-color: #f5f7fa;
+    -fx-padding: 14px;
+}
+
+.top-bar {
+    -fx-alignment: center-left;
+    -fx-spacing: 16px;
+    -fx-padding: 10px 0 14px 0;
+    -fx-border-color: transparent transparent #e1e5eb transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.brand-title {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172b4d;
+}
+
+.brand-subtitle {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #68778d;
+}
+
+.toolbar-actions {
+    -fx-alignment: center-right;
+    -fx-spacing: 8px;
+}
+
 .text-field:error {
     -fx-border-color: #d93025;
     -fx-border-width: 2px;
+}
+
+.text-field:invalid,
+.combo-box:invalid,
+.date-picker:invalid {
+    -fx-border-color: #d93025;
+    -fx-border-width: 2px;
+}
+
+.check-box:invalid > .box {
+    -fx-border-color: #d93025;
+    -fx-border-width: 2px;
+}
+
+.text-field:invalid:focused,
+.combo-box:invalid:focused,
+.date-picker:invalid:focused {
+    -fx-focus-color: #d93025;
+    -fx-faint-focus-color: rgba(217, 48, 37, 0.18);
+}
+
+.crud-actions {
+    -fx-alignment: center;
+    -fx-spacing: 8px;
+}
+
+.primary-button,
+.action-add,
+.btn-primary,
+.action-edit,
+.btn-edit,
+.secondary-button,
+.btn-secondary,
+.danger-button,
+.action-delete,
+.btn-danger {
+    -fx-min-width: 0;
+    -fx-min-height: 36px;
+    -fx-padding: 10px 20px;
+}
+
+.button.crud-primary,
+.button.primary-button,
+.button.action-add,
+.button.btn-primary {
+    -fx-background-color: #188038;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+}
+
+.button.crud-primary:hover,
+.button.primary-button:hover,
+.button.action-add:hover,
+.button.btn-primary:hover {
+    -fx-background-color: #137333;
+}
+
+.button.action-edit,
+.button.btn-edit {
+    -fx-background-color: #1a73e8;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+}
+
+.button.action-edit:hover,
+.button.btn-edit:hover {
+    -fx-background-color: #1558b0;
+}
+
+.button.crud-secondary,
+.button.secondary-button,
+.button.btn-secondary {
+    -fx-background-color: #f1f3f4;
+    -fx-text-fill: #202124;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+}
+
+.button.crud-secondary:hover,
+.button.secondary-button:hover,
+.button.btn-secondary:hover {
+    -fx-background-color: #e3e6e8;
+}
+
+.button.crud-danger,
+.button.danger-button,
+.button.action-delete,
+.button.btn-danger {
+    -fx-background-color: #d93025;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+}
+
+.button.crud-danger:hover,
+.button.danger-button:hover,
+.button.action-delete:hover,
+.button.btn-danger:hover {
+    -fx-background-color: #a50e0e;
+}
+
+.context-menu .action-edit-menu {
+    -fx-text-fill: #1a73e8;
+}
+
+.context-menu .action-delete-menu {
+    -fx-text-fill: #d93025;
+}
+
+.button,
+.text-field,
+.combo-box,
+.date-picker {
+    -fx-min-height: 36px;
 }

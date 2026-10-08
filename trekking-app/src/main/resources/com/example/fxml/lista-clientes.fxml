@@ -8,6 +8,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox alignment="TOP_CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17"
@@ -15,7 +16,23 @@
       fx:controller="com.example.controller.ListaClientesController"
       stylesheets="@styles.css">
     <children>
-        <Label text="Clientes" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
+        <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
+            <VBox spacing="3.0">
+                <Label text="Clientes" styleClass="brand-title"/>
+                <Label text="Administración de clientes" styleClass="brand-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
+                <Button text="Nuevo cliente" onAction="#irAgregarCliente"
+                        styleClass="action-add"/>
+                <Button text="Editar" onAction="#editarCliente"
+                        styleClass="action-edit"/>
+                <Button text="Abrir ficha" onAction="#abrirFichaMedica"
+                        styleClass="secondary-button"/>
+                <Button text="Eliminar" onAction="#eliminarCliente"
+                        styleClass="action-delete"/>
+            </HBox>
+        </HBox>
         <HBox spacing="10.0" alignment="CENTER_LEFT">
             <TextField fx:id="buscarField" promptText="Buscar por DNI, nombre o apellido"
                        prefWidth="300.0"/>
@@ -35,22 +52,6 @@
                 <TableColumn fx:id="colActivo" prefWidth="80.0" text="Activo"/>
             </columns>
         </TableView>
-        <HBox spacing="10.0" alignment="CENTER">
-            <Button text="Volver al Dashboard" onAction="#volverDashboard"
-                    styleClass="secondary-button"/>
-            <Button text="Nuevo cliente" onAction="#irAgregarCliente"
-                    styleClass="primary-button"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
-            <Button text="Editar" onAction="#editarCliente"
-                    styleClass="secondary-button"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
-            <Button text="Abrir ficha" onAction="#abrirFichaMedica"
-                    styleClass="secondary-button"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
-            <Button text="Eliminar" onAction="#eliminarCliente"
-                    styleClass="danger-button"
-                    style="-fx-padding: 10px 20px; -fx-font-size: 12;"/>
-        </HBox>
     </children>
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>

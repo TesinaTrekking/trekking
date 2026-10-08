@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
+import com.example.util.NavigationShell;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -102,7 +103,7 @@ public class EquipamientoBajaController {
                     .getScene()
                     .getWindow();
 
-            stage.getScene().setRoot(root);
+            NavigationShell.setRoot(stage.getScene(), root);
             stage.setTitle("Equipamiento");
 
         } catch (java.io.IOException e) {

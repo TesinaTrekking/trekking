@@ -11,6 +11,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 
@@ -27,7 +28,7 @@
 
                 <VBox alignment="TOP_CENTER"
                         spacing="10.0"
-                        prefWidth="1200.0"
+                        prefWidth="980.0"
                         prefHeight="800.0">
 
                         <padding>
@@ -37,8 +38,25 @@
                                         left="20.0" />
                         </padding>
 
-                        <Label text="Listado de Rutas"
-                                style="-fx-font-size: 24; -fx-font-weight: bold;" />
+                        <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
+                                <VBox spacing="3.0">
+                                        <Label text="Listado de Rutas" styleClass="brand-title" />
+                                        <Label text="Administración de rutas" styleClass="brand-subtitle" />
+                                </VBox>
+                                <Region HBox.hgrow="ALWAYS" />
+                                <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
+                                        <Button text="Agregar ruta"
+                                                onAction="#nuevaRuta"
+                                                styleClass="action-add" />
+                                        <Button text="Editar"
+                                                onAction="#editarRuta"
+                                                styleClass="action-edit" />
+                                        <Button fx:id="eliminarButton"
+                                                text="Eliminar"
+                                                onAction="#eliminarRuta"
+                                                styleClass="action-delete" />
+                                </HBox>
+                        </HBox>
 
                         <HBox spacing="10.0"
                                 alignment="CENTER">
@@ -67,7 +85,7 @@
                         <TableView fx:id="tablaRutas"
                                 VBox.vgrow="ALWAYS"
                                 prefHeight="430.0"
-                                prefWidth="1150.0">
+                                prefWidth="940.0">
 
                                 <columns>
 
@@ -113,28 +131,6 @@
                                 prefHeight="120.0"
                                 prefWidth="700.0"
                                 VBox.vgrow="NEVER" />
-
-                        <HBox spacing="10.0"
-                                alignment="CENTER">
-
-                                <Button text="Agregar ruta"
-                                        onAction="#nuevaRuta"
-                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-                                <Button text="Editar"
-                                        onAction="#editarRuta"
-                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-                                <Button fx:id="eliminarButton"
-                                        text="Eliminar"
-                                        onAction="#eliminarRuta"
-                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-                                <Button text="Volver al inicio"
-                                        onAction="#volverDashboard"
-                                        style="-fx-padding: 10px 20px; -fx-font-size: 12;" />
-
-                        </HBox>
 
                 </VBox>
         </content>

@@ -13,12 +13,15 @@ import com.example.dao.RutaDAO;
 import com.example.model.Cliente;
 import com.example.model.Recorrido;
 import com.example.model.Ruta;
+import com.example.util.FormValidation;
+import com.example.util.NavigationShell;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -69,6 +72,9 @@ public class RecorridosController {
 
     @FXML
     private ListView<Cliente> participantesListView;
+
+    @FXML
+    private Button guardarButton;
 
     @FXML
     private void initialize() {
@@ -123,11 +129,63 @@ public class RecorridosController {
 
         tablaRecorridos.getSelectionModel()
                 .selectedItemProperty()
-                .addListener((observable, anterior, recorrido) ->
-                        mostrarRecorrido(recorrido));
+                .addListener((observable, anterior, recorrido) -> {
+                    actualizarEstiloGuardar();
+                    mostrarRecorrido(recorrido);
+                });
 
+        configurarValidacionesEnTiempoReal();
         actualizarTabla();
         limpiarFormulario();
+    }
+
+    private void configurarValidacionesEnTiempoReal() {
+        FormValidation.watch(rutaComboBox, rutaComboBox.valueProperty(), () -> {
+            Ruta ruta = rutaComboBox.getValue();
+            if (ruta == null) {
+                return "Selecciona una ruta.";
+            }
+            boolean editando = tablaRecorridos.getSelectionModel()
+                    .getSelectedItem() != null;
+            return !editando && !rutaDAO.estaActiva(ruta.getId())
+                    ? "Para crear un recorrido debes seleccionar una ruta activa."
+                    : null;
+        });
+        FormValidation.watch(fechaPicker, fechaPicker.valueProperty(),
+                () -> fechaPicker.getValue() == null
+                        ? "Selecciona la fecha del recorrido."
+                        : null);
+        FormValidation.watch(horaInicioField, horaInicioField.textProperty(),
+                () -> validarHorarioEnTiempoReal(horaInicioField.getText()));
+        FormValidation.watch(horaFinField, horaFinField.textProperty(),
+                () -> validarHorarioEnTiempoReal(horaFinField.getText()));
+
+        horaInicioField.textProperty().addListener(
+                (observable, anterior, actual) -> validarHorarioVinculado());
+        horaFinField.textProperty().addListener(
+                (observable, anterior, actual) -> validarHorarioVinculado());
+        tablaRecorridos.getSelectionModel().selectedItemProperty().addListener(
+                (observable, anterior, actual) ->
+                        FormValidation.validateNow(rutaComboBox));
+    }
+
+    private String validarHorarioEnTiempoReal(String texto) {
+        try {
+            LocalTime inicio = parsearHora(horaInicioField.getText());
+            LocalTime fin = parsearHora(horaFinField.getText());
+            if (inicio != null && fin != null && !fin.isAfter(inicio)) {
+                return "La hora de finalizacion debe ser posterior a la de inicio.";
+            }
+            parsearHora(texto);
+            return null;
+        } catch (DateTimeParseException e) {
+            return "Escribe la hora en formato HH:mm, por ejemplo 08:30.";
+        }
+    }
+
+    private void validarHorarioVinculado() {
+        FormValidation.validateNow(horaInicioField);
+        FormValidation.validateNow(horaFinField);
     }
 
     @FXML
@@ -138,6 +196,7 @@ public class RecorridosController {
 
     @FXML
     private void guardarRecorrido() {
+        validarFormularioVisualmente();
         Ruta ruta = rutaComboBox.getValue();
         LocalDate fecha = fechaPicker.getValue();
         if (ruta == null || fecha == null) {
@@ -254,7 +313,7 @@ public class RecorridosController {
                     getClass().getResource(
                             "/com/example/fxml/dashboard.fxml"));
             Parent root = loader.load();
-            tablaRecorridos.getScene().setRoot(root);
+            NavigationShell.setRoot(tablaRecorridos.getScene(), root);
         } catch (IOException e) {
             mostrarAlerta(
                     Alert.AlertType.ERROR,
@@ -288,12 +347,29 @@ public class RecorridosController {
         }
     }
 
+    private void actualizarEstiloGuardar() {
+        guardarButton.getStyleClass().remove("action-add");
+        if (!guardarButton.getStyleClass().contains("action-edit")) {
+            guardarButton.getStyleClass().add("action-edit");
+        }
+    }
+
     private void limpiarFormulario() {
         rutaComboBox.getSelectionModel().clearSelection();
         fechaPicker.setValue(null);
         horaInicioField.clear();
         horaFinField.clear();
         participantesListView.getSelectionModel().clearSelection();
+        FormValidation.reset(rutaComboBox);
+        FormValidation.reset(fechaPicker);
+        FormValidation.reset(horaInicioField);
+        FormValidation.reset(horaFinField);
+    }
+
+    private void validarFormularioVisualmente() {
+        FormValidation.validateNow(rutaComboBox);
+        FormValidation.validateNow(fechaPicker);
+        validarHorarioVinculado();
     }
 
     private void actualizarTabla() {

@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -37,64 +35,26 @@
         </HBox>
     </top>
 
-    <!-- ÁREA PRINCIPAL DE MÓDULOS -->
     <center>
         <VBox
                 fx:id="moduleArea"
-                spacing="24"
+                alignment="CENTER_LEFT"
+                spacing="16"
                 styleClass="dashboard-module-area">
 
             <padding>
-                <Insets top="32" right="32" bottom="32" left="32"/>
+                <Insets top="48" right="56" bottom="48" left="56"/>
             </padding>
 
             <Label
-                    text="Módulos"
+                    text="Bienvenido a Trekking"
                     styleClass="dashboard-section-title"/>
 
-            <FlowPane
-                    fx:id="moduleContainer"
-                    hgap="20"
-                    vgap="20"
-                    prefWrapLength="700">
-
-                <Button
-                        text="Rutas"
-                        prefWidth="180"
-                        prefHeight="100"
-                        onAction="#abrirRutas"
-                        styleClass="module-button"/>
-
-                <Button
-                        text="Checkpoints"
-                        prefWidth="180"
-                        prefHeight="100"
-                        onAction="#abrirCheckpoints"
-                        styleClass="module-button"/>
-
-                <Button
-                        text="Equipamiento"
-                        prefWidth="180"
-                        prefHeight="100"
-                        onAction="#abrirEquipamiento"
-                        styleClass="module-button"/>
-
-
-                <Button
-                        text="Clientes"
-                        prefWidth="180"
-                        prefHeight="100"
-                        onAction="#abrirClientes"
-                        styleClass="module-button"/>
-
-                <Button
-                        text="Recorridos"
-                        prefWidth="180"
-                        prefHeight="100"
-                        onAction="#abrirRecorridos"
-                        styleClass="module-button"/>
-
-            </FlowPane>
+            <Label
+                    text="Seleccioná una sección desde el menú lateral para gestionar rutas, checkpoints, equipamiento, clientes y recorridos."
+                    wrapText="true"
+                    maxWidth="620"
+                    styleClass="dashboard-welcome"/>
 
         </VBox>
     </center>

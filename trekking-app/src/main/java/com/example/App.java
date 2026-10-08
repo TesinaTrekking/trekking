@@ -1,6 +1,7 @@
 package com.example;
 
 import com.example.database.ConexionDB;
+import com.example.util.NavigationShell;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -22,12 +23,13 @@ public class App extends Application {
 
         Parent root = loader.load();
 
-        Scene scene = new Scene(root, 1000, 700);
+        Scene scene = new Scene(root, 1280, 800);
+        NavigationShell.install(scene);
 
         stage.setTitle("Trekking App");
         stage.setScene(scene);
-        stage.setMinWidth(800);
-        stage.setMinHeight(600);
+        stage.setMinWidth(1100);
+        stage.setMinHeight(700);
         stage.show();
     }
 

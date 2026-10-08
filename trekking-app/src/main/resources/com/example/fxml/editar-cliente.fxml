@@ -45,9 +45,10 @@
                     <CheckBox fx:id="activoCheckBox" GridPane.columnIndex="1" GridPane.rowIndex="10"/>
                     <Label text="Ficha medica (PDF, maximo 2 MB):" GridPane.columnIndex="0" GridPane.rowIndex="11"/>
                     <HBox spacing="8.0" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="11">
-                        <Button text="Cargar ficha" onAction="#seleccionarFichaMedica"/>
+                        <Button text="Cargar ficha" onAction="#seleccionarFichaMedica"
+                                styleClass="action-add"/>
                         <Button text="Quitar ficha" onAction="#borrarFichaMedica"
-                                styleClass="danger-button"/>
+                                styleClass="action-delete"/>
                         <Label fx:id="fichaMedicaLabel" text="Sin ficha medica"/>
                     </HBox>
                     <Label text="Autorizacion de menores:" GridPane.columnIndex="0" GridPane.rowIndex="12"/>
@@ -65,11 +66,11 @@
                     <TextField fx:id="tutorTelefonoField" GridPane.columnIndex="1" GridPane.rowIndex="16"/>
                 </children>
             </GridPane>
-            <HBox spacing="10.0" alignment="CENTER">
+            <HBox spacing="8.0" alignment="CENTER" styleClass="crud-actions">
                 <Button text="Guardar cambios" onAction="#guardarCambios"
-                        styleClass="primary-button" style="-fx-padding: 10px 20px;"/>
+                        styleClass="action-edit"/>
                 <Button text="Cancelar" onAction="#cancelarEdicion"
-                        styleClass="secondary-button" style="-fx-padding: 10px 20px;"/>
+                        styleClass="secondary-button"/>
             </HBox>
             <padding>
                 <Insets bottom="40.0" left="20.0" right="20.0" top="20.0"/>

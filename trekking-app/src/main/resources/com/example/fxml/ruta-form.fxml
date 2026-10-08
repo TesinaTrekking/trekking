@@ -128,7 +128,8 @@
 
                             <Button fx:id="agregarCheckpointButton"
                                    text="Agregar"
-                                   onAction="#agregarCheckpoint" />
+                                   onAction="#agregarCheckpoint"
+                                   styleClass="action-add" />
 
                      </HBox>
 
@@ -143,7 +144,8 @@
 
                             <Button fx:id="quitarCheckpointButton"
                                    text="Quitar"
-                                   onAction="#quitarCheckpoint" />
+                                   onAction="#quitarCheckpoint"
+                                   styleClass="action-delete" />
 
                             <Button fx:id="subirCheckpointButton"
                                    text="Subir"
@@ -175,7 +177,8 @@
 
                                                  <Button fx:id="agregarEquipamientoButton"
                                                         text="Agregar"
-                                                        onAction="#agregarEquipamiento" />
+                                                        onAction="#agregarEquipamiento"
+                                                        styleClass="action-add" />
 
                                           </HBox>
 
@@ -187,7 +190,8 @@
 
                                                  <Button fx:id="quitarEquipamientoButton"
                                                         text="Quitar"
-                                                        onAction="#quitarEquipamiento" />
+                                                        onAction="#quitarEquipamiento"
+                                                        styleClass="action-delete" />
 
                                           </HBox>
 
@@ -199,14 +203,16 @@
 
 
                      <HBox alignment="CENTER"
-                            spacing="10.0">
+                            spacing="8.0"
+                            styleClass="crud-actions">
 
-                            <Button text="Guardar"
+                            <Button fx:id="guardarRutaButton" text="Guardar"
                                    onAction="#guardarRuta"
-                                   style="-fx-font-weight: bold;" />
+                                   styleClass="action-edit" />
 
                             <Button text="Cancelar"
-                                   onAction="#volverListado" />
+                                   onAction="#volverListado"
+                                   styleClass="secondary-button" />
 
                      </HBox>
 

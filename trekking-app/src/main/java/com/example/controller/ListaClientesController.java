@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 
 import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
+import com.example.util.NavigationShell;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -66,6 +67,9 @@ public class ListaClientesController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
+        tablaClientes.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY);
 
         colDni.setCellValueFactory(
                 new PropertyValueFactory<>("dni"));
@@ -149,7 +153,8 @@ public class ListaClientesController implements Initializable {
                 getClass().getResource(
                         "/com/example/fxml/agregar-cliente.fxml"));
         Parent root = loader.load();
-        ((Node) event.getSource()).getScene().setRoot(root);
+        NavigationShell.setRoot(
+                ((Node) event.getSource()).getScene(), root);
     }
 
     @FXML
@@ -158,7 +163,7 @@ public class ListaClientesController implements Initializable {
                 getClass().getResource(
                         "/com/example/fxml/dashboard.fxml"));
         Parent root = loader.load();
-        tablaClientes.getScene().setRoot(root);
+        NavigationShell.setRoot(tablaClientes.getScene(), root);
     }
 
     @FXML
@@ -184,7 +189,7 @@ public class ListaClientesController implements Initializable {
                             "/com/example/fxml/editar-cliente.fxml"));
             loader.setController(new EditarClienteController(clienteSeleccionado));
             Parent root = loader.load();
-            tablaClientes.getScene().setRoot(root);
+            NavigationShell.setRoot(tablaClientes.getScene(), root);
 
         } catch (IOException e) {
             mostrarAlerta(
