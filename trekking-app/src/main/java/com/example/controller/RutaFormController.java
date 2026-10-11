@@ -526,29 +526,23 @@ public class RutaFormController {
                 }
 
                 if (tipoTerrenoCombo.getValue() == null) {
-
                         mostrarError(
                                         "Tipo de terreno",
                                         "Selecciona un tipo de terreno.");
-
                         return;
                 }
 
                 if (dificultadTecnicaCombo.getValue() == null) {
-
                         mostrarError(
                                         "Dificultad técnica",
                                         "Selecciona una dificultad técnica.");
-
                         return;
                 }
 
                 if (dificultadFisicaCombo.getValue() == null) {
-
                         mostrarError(
                                         "Dificultad física",
                                         "Selecciona una dificultad física.");
-
                         return;
                 }
 
@@ -559,9 +553,7 @@ public class RutaFormController {
                 }
 
                 String tipoTerreno = tipoTerrenoCombo.getValue();
-
                 String dificultadTecnica = dificultadTecnicaCombo.getValue();
-
                 String dificultadFisica = dificultadFisicaCombo.getValue();
 
                 Ruta ruta = rutaEnEdicion == null
@@ -579,68 +571,69 @@ public class RutaFormController {
                                                 dificultadTecnica,
                                                 dificultadFisica);
 
+                int rutaId;
+
                 if (rutaEnEdicion == null) {
 
-                        int idGenerado = rutaDAO.insertar(ruta);
+                        rutaId = rutaDAO.insertar(ruta);
 
-                        if (idGenerado == -1) {
-
+                        if (rutaId == -1) {
                                 mostrarError(
                                                 "Error",
                                                 "No se pudo guardar la ruta.");
-
                                 return;
                         }
-
-                        boolean relacionesGuardadas = rutaCheckpointDAO.reemplazarPorRuta(
-                                        idGenerado,
-                                        checkpointsSeleccionados);
-
-                        if (!relacionesGuardadas) {
-
-                                mostrarError(
-                                                "Error",
-                                                "La ruta se guardó, pero no se pudieron "
-                                                                + "guardar sus checkpoints.");
-
-                                return;
-                        }
-
-                        mostrarInformacion(
-                                        "Ruta guardada",
-                                        "La ruta se guardó correctamente.");
 
                 } else {
 
                         boolean rutaActualizada = rutaDAO.actualizar(ruta);
 
                         if (!rutaActualizada) {
-
                                 mostrarError(
                                                 "Error",
                                                 "No se pudo actualizar la ruta.");
-
                                 return;
                         }
 
-                        boolean relacionesGuardadas = rutaCheckpointDAO.reemplazarPorRuta(
-                                        ruta.getId(),
-                                        checkpointsSeleccionados);
-
-                        if (!relacionesGuardadas) {
-
-                                mostrarError(
-                                                "Error",
-                                                "La ruta se actualizó, pero no se pudieron "
-                                                                + "guardar sus checkpoints.");
-
-                                return;
-                        }
-
-                        mostrarInformacion(
-                                        "Ruta actualizada",
-                                        "La ruta se actualizó correctamente.");
+                        rutaId = ruta.getId();
                 }
+
+                boolean checkpointsGuardados = rutaCheckpointDAO.reemplazarPorRuta(
+                                rutaId,
+                                checkpointsSeleccionados);
+
+                if (!checkpointsGuardados) {
+                        mostrarError(
+                                        "Error",
+                                        "La ruta se guardó, pero no se pudieron "
+                                                        + "guardar sus checkpoints.");
+                        return;
+                }
+
+                boolean equipamientosGuardados = rutaEquipamientoDAO.reemplazarPorRuta(
+                                rutaId,
+                                equipamientosSeleccionados.stream()
+                                                .map(requerido -> new RutaEquipamiento(
+                                                                rutaId,
+                                                                requerido.getEquipamiento().getId(),
+                                                                requerido.getCantidadRequerida()))
+                                                .toList());
+
+                if (!equipamientosGuardados) {
+                        mostrarError(
+                                        "Error",
+                                        "La ruta se guardó, pero no se pudieron "
+                                                        + "guardar sus equipamientos.");
+                        return;
+                }
+
+                mostrarInformacion(
+                                rutaEnEdicion == null
+                                                ? "Ruta guardada"
+                                                : "Ruta actualizada",
+                                rutaEnEdicion == null
+                                                ? "La ruta se guardó correctamente."
+                                                : "La ruta se actualizó correctamente.");
 
                 volverListado();
         }
