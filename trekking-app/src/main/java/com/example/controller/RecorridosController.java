@@ -1,6 +1,8 @@
 package com.example.controller;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
@@ -10,6 +12,7 @@ import java.util.List;
 import com.example.dao.ClienteDAO;
 import com.example.dao.RecorridoDAO;
 import com.example.dao.RutaDAO;
+import com.example.service.FichaOperativaPDFService;
 import com.example.model.Cliente;
 import com.example.model.Recorrido;
 import com.example.model.Ruta;
@@ -32,6 +35,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.SelectionMode;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 import javafx.util.StringConverter;
 
 public class RecorridosController {
@@ -39,6 +44,8 @@ public class RecorridosController {
     private final RecorridoDAO recorridoDAO = new RecorridoDAO();
     private final RutaDAO rutaDAO = new RutaDAO();
     private final ClienteDAO clienteDAO = new ClienteDAO();
+    private final FichaOperativaPDFService fichaOperativaPDFService =
+            new FichaOperativaPDFService();
 
     @FXML
     private TableView<Recorrido> tablaRecorridos;
@@ -75,6 +82,9 @@ public class RecorridosController {
 
     @FXML
     private Button guardarButton;
+
+    @FXML
+    private Button exportarFichaButton;
 
     @FXML
     private void initialize() {
@@ -133,6 +143,11 @@ public class RecorridosController {
                     actualizarEstiloGuardar();
                     mostrarRecorrido(recorrido);
                 });
+        tablaRecorridos.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, anterior, recorrido) -> {
+                    exportarFichaButton.setDisable(recorrido == null);
+                });
 
         configurarValidacionesEnTiempoReal();
         actualizarTabla();
@@ -165,8 +180,7 @@ public class RecorridosController {
         horaFinField.textProperty().addListener(
                 (observable, anterior, actual) -> validarHorarioVinculado());
         tablaRecorridos.getSelectionModel().selectedItemProperty().addListener(
-                (observable, anterior, actual) ->
-                        FormValidation.validateNow(rutaComboBox));
+                (observable, anterior, actual) -> FormValidation.validateNow(rutaComboBox));
     }
 
     private String validarHorarioEnTiempoReal(String texto) {
@@ -337,8 +351,7 @@ public class RecorridosController {
         horaFinField.setText(formatearHora(recorrido.getHoraFin()));
         participantesListView.getSelectionModel().clearSelection();
 
-        List<Integer> participantes =
-                recorridoDAO.obtenerClientes(recorrido.getId());
+        List<Integer> participantes = recorridoDAO.obtenerClientes(recorrido.getId());
         for (int i = 0; i < participantesListView.getItems().size(); i++) {
             Cliente cliente = participantesListView.getItems().get(i);
             if (participantes.contains(cliente.getId())) {
@@ -370,6 +383,82 @@ public class RecorridosController {
         FormValidation.validateNow(rutaComboBox);
         FormValidation.validateNow(fechaPicker);
         validarHorarioVinculado();
+    }
+
+    @FXML
+    private void exportarFichaPDF() {
+        Recorrido seleccionado = tablaRecorridos.getSelectionModel()
+                .getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta(
+                    Alert.AlertType.WARNING,
+                    "Recorrido no seleccionado",
+                    "Selecciona un recorrido para generar su ficha operativa.");
+            return;
+        }
+
+        FileChooser selector = new FileChooser();
+        selector.setTitle("Guardar ficha operativa");
+        selector.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Archivo PDF", "*.pdf"));
+        selector.setInitialFileName(
+                nombreArchivoFicha(seleccionado) + ".pdf");
+
+        Window ventana = tablaRecorridos.getScene().getWindow();
+        java.io.File archivo = selector.showSaveDialog(ventana);
+        if (archivo == null) {
+            return;
+        }
+
+        Path destino = archivo.toPath();
+        boolean extensionAgregada = !destino.getFileName().toString()
+                .toLowerCase()
+                .endsWith(".pdf");
+        if (extensionAgregada) {
+            destino = destino.resolveSibling(
+                    destino.getFileName() + ".pdf");
+        }
+        if (extensionAgregada && Files.exists(destino)) {
+            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmacion.setTitle("Reemplazar archivo");
+            confirmacion.setHeaderText(null);
+            confirmacion.setContentText(
+                    "El archivo " + destino.getFileName()
+                            + " ya existe. ¿Quieres reemplazarlo?");
+            confirmacion.initOwner(ventana);
+            if (confirmacion.showAndWait().orElse(null) != ButtonType.OK) {
+                return;
+            }
+        }
+
+        try {
+            fichaOperativaPDFService.exportar(seleccionado.getId(), destino);
+            mostrarAlerta(
+                    Alert.AlertType.INFORMATION,
+                    "Ficha generada",
+                    "La ficha operativa se guardó en:\n" + destino);
+        } catch (java.sql.SQLException e) {
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "No se pudieron leer los datos",
+                    "No se pudo generar la ficha porque ocurrió un error al leer la base de datos.\n"
+                            + e.getMessage());
+        } catch (IOException e) {
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "No se pudo guardar la ficha",
+                    "Verifica la ubicación y los permisos de escritura.\n"
+                            + e.getMessage());
+        }
+    }
+
+    private String nombreArchivoFicha(Recorrido recorrido) {
+        String nombreRuta = recorrido.getNombreRuta() == null
+                ? "recorrido"
+                : recorrido.getNombreRuta().trim()
+                        .replaceAll("[^\\p{L}\\p{N}._-]+", "_");
+        return "ficha_operativa_" + nombreRuta + "_"
+                + recorrido.getFecha();
     }
 
     private void actualizarTabla() {

@@ -15,72 +15,78 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane fitToWidth="true"
-            hbarPolicy="NEVER"
-            vbarPolicy="AS_NEEDED"
-            styleClass="pantalla-scroll"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.controller.RecorridosController"
-            stylesheets="@styles.css">
+    hbarPolicy="NEVER"
+    vbarPolicy="AS_NEEDED"
+    styleClass="pantalla-scroll"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.example.controller.RecorridosController"
+    stylesheets="@styles.css">
     <content>
         <VBox alignment="TOP_CENTER" spacing="12.0">
             <padding>
-                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
             </padding>
 
             <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
                 <VBox spacing="3.0">
-                    <Label text="Gestión de recorridos" styleClass="brand-title"/>
-                    <Label text="Administración de recorridos" styleClass="brand-subtitle"/>
+                    <Label text="Gestión de recorridos" styleClass="brand-title" />
+                    <Label text="Administración de recorridos" styleClass="brand-subtitle" />
                 </VBox>
-                <Region HBox.hgrow="ALWAYS"/>
+                <Region HBox.hgrow="ALWAYS" />
                 <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
                     <Button text="Nuevo recorrido" onAction="#nuevoRecorrido"
-                            styleClass="action-add"/>
+                        styleClass="action-add" />
                     <Button fx:id="guardarButton" text="Guardar" onAction="#guardarRecorrido"
-                            styleClass="action-edit"/>
+                        styleClass="action-edit" />
                     <Button text="Eliminar" onAction="#eliminarRecorrido"
-                            styleClass="action-delete"/>
+                        styleClass="action-delete" />
+
+                    <Button fx:id="exportarFichaButton"
+                        text="Generar ficha PDF"
+                        onAction="#exportarFichaPDF"
+                        disable="true"
+                        styleClass="action-edit" />
                 </HBox>
             </HBox>
 
             <TableView fx:id="tablaRecorridos" prefHeight="260.0" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="60.0"/>
-                    <TableColumn fx:id="colRuta" text="Ruta" prefWidth="250.0"/>
-                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="150.0"/>
-                    <TableColumn fx:id="colHoraInicio" text="Hora inicio" prefWidth="140.0"/>
-                    <TableColumn fx:id="colHoraFin" text="Hora fin" prefWidth="140.0"/>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="60.0" />
+                    <TableColumn fx:id="colRuta" text="Ruta" prefWidth="250.0" />
+                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="150.0" />
+                    <TableColumn fx:id="colHoraInicio" text="Hora inicio" prefWidth="140.0" />
+                    <TableColumn fx:id="colHoraFin" text="Hora fin" prefWidth="140.0" />
                 </columns>
             </TableView>
 
             <Label text="Datos del recorrido"
-                   style="-fx-font-size: 17; -fx-font-weight: bold;"/>
+                style="-fx-font-size: 17; -fx-font-weight: bold;" />
             <HBox spacing="12.0" alignment="CENTER_LEFT">
                 <VBox spacing="6.0">
-                    <Label text="Ruta *"/>
+                    <Label text="Ruta *" />
                     <ComboBox fx:id="rutaComboBox" prefWidth="280.0"
-                              promptText="Seleccionar ruta"/>
+                        promptText="Seleccionar ruta" />
                 </VBox>
                 <VBox spacing="6.0">
-                    <Label text="Fecha *"/>
-                    <DatePicker fx:id="fechaPicker" prefWidth="160.0"/>
+                    <Label text="Fecha *" />
+                    <DatePicker fx:id="fechaPicker" prefWidth="160.0" />
                 </VBox>
                 <VBox spacing="6.0">
-                    <Label text="Hora inicio (HH:mm)"/>
+                    <Label text="Hora inicio (HH:mm)" />
                     <TextField fx:id="horaInicioField" promptText="08:30"
-                               prefWidth="140.0"/>
+                        prefWidth="140.0" />
                 </VBox>
                 <VBox spacing="6.0">
-                    <Label text="Hora fin (HH:mm)"/>
+                    <Label text="Hora fin (HH:mm)" />
                     <TextField fx:id="horaFinField" promptText="17:00"
-                               prefWidth="140.0"/>
+                        prefWidth="140.0" />
                 </VBox>
             </HBox>
 
             <Label text="Clientes participantes (Ctrl+clic para seleccionar varios)"
-                   style="-fx-font-size: 15; -fx-font-weight: bold;"/>
-            <ListView fx:id="participantesListView" prefHeight="150.0"/>
+                style="-fx-font-size: 15; -fx-font-weight: bold;" />
+            <ListView fx:id="participantesListView" prefHeight="150.0" />
 
         </VBox>
     </content>
