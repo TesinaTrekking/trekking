@@ -13,6 +13,19 @@ import java.util.List;
 public class RutaCheckpointDAO {
 
     public List<Checkpoint> obtenerPorRuta(int rutaId) {
+        try (Connection conexion = ConexionDB.conectar()) {
+            return obtenerPorRuta(conexion, rutaId);
+        } catch (SQLException e) {
+            System.out.println(
+                    "Error al obtener los checkpoints de la ruta: "
+                            + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public List<Checkpoint> obtenerPorRuta(
+            Connection conexion,
+            int rutaId) throws SQLException {
         String sql = """
                 SELECT
                     c.id,
@@ -30,10 +43,7 @@ public class RutaCheckpointDAO {
 
         List<Checkpoint> checkpoints = new ArrayList<>();
 
-        try (
-                Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement = conexion.prepareStatement(sql)
-        ) {
+        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setInt(1, rutaId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -48,11 +58,6 @@ public class RutaCheckpointDAO {
                     ));
                 }
             }
-
-        } catch (SQLException e) {
-            System.out.println(
-                    "Error al obtener los checkpoints de la ruta: "
-                            + e.getMessage());
         }
 
         return checkpoints;

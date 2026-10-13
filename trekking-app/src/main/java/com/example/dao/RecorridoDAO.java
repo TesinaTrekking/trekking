@@ -52,6 +52,51 @@ public class RecorridoDAO {
         return recorridos;
     }
 
+    public Recorrido obtenerPorId(int recorridoId) throws SQLException {
+        try (Connection conexion = ConexionDB.conectar()) {
+            return obtenerPorId(conexion, recorridoId);
+        }
+    }
+
+    public Recorrido obtenerPorId(Connection conexion, int recorridoId)
+            throws SQLException {
+        String sql = """
+                SELECT
+                    r.recorrido_id,
+                    r.ruta_id,
+                    ru.nombre AS nombre_ruta,
+                    r.fecha,
+                    r.hora_inicio,
+                    r.hora_fin
+                FROM recorridos r
+                JOIN rutas ru ON ru.id = r.ruta_id
+                WHERE r.recorrido_id = ?
+                """;
+
+        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, recorridoId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return null;
+                }
+
+                try {
+                    return new Recorrido(
+                            resultSet.getInt("recorrido_id"),
+                            resultSet.getInt("ruta_id"),
+                            resultSet.getString("nombre_ruta"),
+                            LocalDate.parse(resultSet.getString("fecha")),
+                            parsearHora(resultSet.getString("hora_inicio")),
+                            parsearHora(resultSet.getString("hora_fin")));
+                } catch (RuntimeException e) {
+                    throw new SQLException(
+                            "Los datos del recorrido no tienen un formato válido.",
+                            e);
+                }
+            }
+        }
+    }
+
     public List<Integer> obtenerClientes(int recorridoId) {
         List<Integer> clientes = new ArrayList<>();
         String sql = """

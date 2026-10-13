@@ -183,30 +183,32 @@ public class EquipamientoDAO {
     }
 
     public static Equipamiento obtenerPorId(int id) {
+        try (Connection conexion = ConexionDB.conectar()) {
+            return obtenerPorId(conexion, id);
+        } catch (SQLException e) {
+            System.out.println(
+                    "Error al obtener equipamiento por ID: "
+                            + e.getMessage());
+            return null;
+        }
+    }
 
+    public static Equipamiento obtenerPorId(Connection conexion, int id)
+            throws SQLException {
         String sql = """
                 SELECT *
                 FROM equipamiento
                 WHERE id = ?
                 """;
 
-        try (
-                Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement = conexion.prepareStatement(sql)) {
-
+        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setInt(1, id);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-
                 if (resultSet.next()) {
                     return mapRow(resultSet);
                 }
             }
-
-        } catch (SQLException e) {
-            System.out.println(
-                    "Error al obtener equipamiento por ID: "
-                            + e.getMessage());
         }
 
         return null;

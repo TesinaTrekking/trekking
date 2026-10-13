@@ -246,6 +246,28 @@ public class RutaDAO {
         return rutas;
     }
 
+    public Ruta obtenerPorId(Connection conexion, int rutaId)
+            throws SQLException {
+        String sql = """
+                SELECT
+                    id,
+                    nombre,
+                    altitud_maxima,
+                    tipo_terreno,
+                    dificultad_tecnica,
+                    dificultad_fisica
+                FROM rutas
+                WHERE id = ?
+                """;
+
+        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, rutaId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapRow(resultSet) : null;
+            }
+        }
+    }
+
     public boolean estaActiva(int id) {
 
         String sql = "SELECT activo FROM rutas WHERE id = ?";

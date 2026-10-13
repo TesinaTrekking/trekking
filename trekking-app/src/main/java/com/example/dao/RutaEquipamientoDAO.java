@@ -13,7 +13,19 @@ import java.util.List;
 public class RutaEquipamientoDAO {
 
     public List<RutaEquipamiento> obtenerPorRuta(int rutaId) {
+        try (Connection conexion = ConexionDB.conectar()) {
+            return obtenerPorRuta(conexion, rutaId);
+        } catch (SQLException e) {
+            System.out.println(
+                    "Error al obtener el equipamiento de la ruta: "
+                            + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
 
+    public List<RutaEquipamiento> obtenerPorRuta(
+            Connection conexion,
+            int rutaId) throws SQLException {
         String sql = """
                 SELECT ruta_id,
                        equipamiento_id,
@@ -24,12 +36,7 @@ public class RutaEquipamientoDAO {
 
         List<RutaEquipamiento> requerimientos = new ArrayList<>();
 
-        try (
-                Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement =
-                        conexion.prepareStatement(sql)
-        ) {
-
+        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
             statement.setInt(1, rutaId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -45,12 +52,6 @@ public class RutaEquipamientoDAO {
                     );
                 }
             }
-
-        } catch (SQLException e) {
-
-            System.out.println(
-                    "Error al obtener el equipamiento de la ruta: "
-                            + e.getMessage());
         }
 
         return requerimientos;
