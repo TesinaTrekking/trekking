@@ -108,14 +108,6 @@ public class FichaOperativaPDFService {
                                 List<EquipamientoFicha> equipamiento = obtenerEquipamiento(conexion, ruta.getId());
 
                                 conexion.commit();
-                                System.out.println("=== DIAGNÓSTICO FICHA PDF ===");
-                                System.out.println("Recorrido seleccionado: " + recorrido.getId());
-                                System.out.println("Ruta del recorrido: " + recorrido.getRutaId());
-                                System.out.println("Ruta cargada: " + ruta.getId()
-                                                + " - " + ruta.getNombre());
-                                System.out.println("Checkpoints encontrados: " + checkpoints.size());
-                                System.out.println("Participantes encontrados: " + participantes.size());
-                                System.out.println("Equipamientos encontrados: " + equipamiento.size());
                                 return new FichaOperativa(
                                                 recorrido,
                                                 ruta,
@@ -377,8 +369,6 @@ public class FichaOperativaPDFService {
                                                         .toList());
 
                         seccion("Equipamiento requerido para la ruta");
-                        System.out.println("PDF checkpoints: " + ficha.checkpoints().size());
-                        System.out.println("PDF equipos: " + ficha.equipamiento().size());
                         tabla(
                                         List.of("Elemento", "Cantidad requerida"),
                                         new float[] { 399, 100 },
@@ -425,11 +415,6 @@ public class FichaOperativaPDFService {
                 }
 
                 private void seccion(String titulo) throws IOException {
-                        System.out.printf(
-                                        "SECCIÓN: %s | página: %d | y: %.1f%n",
-                                        titulo,
-                                        documento.getNumberOfPages(),
-                                        y);
                         asegurarEspacio(28);
                         y -= 3;
                         escribirTexto(PAGE_MARGIN, y, titulo, bold, SECTION_SIZE);
@@ -506,8 +491,6 @@ public class FichaOperativaPDFService {
                         }
 
                         dibujarEncabezado(encabezados, anchos);
-                        System.out.println("Tabla: " + encabezados.get(0)
-                                        + " | filas recibidas: " + filas.size());
                         if (filas.isEmpty()) {
                                 dibujarFila(
                                                 List.of("No hay datos disponibles"),
@@ -518,7 +501,6 @@ public class FichaOperativaPDFService {
                         }
 
                         for (List<String> fila : filas) {
-                                System.out.println("Dibujando fila: " + fila);
                                 List<List<String>> celdas = new ArrayList<>();
                                 int lineasRestantes = 1;
                                 for (int i = 0; i < fila.size(); i++) {
@@ -603,11 +585,6 @@ public class FichaOperativaPDFService {
                         }
                         float altura = maxLineas * 10 + 2 * CELL_PADDING;
                         asegurarEspacio(altura + TABLE_LINE_HEIGHT + 2 * CELL_PADDING);
-                        System.out.printf(
-                                        "ENCABEZADO: %s | página: %d | y: %.1f%n",
-                                        encabezados.get(0),
-                                        documento.getNumberOfPages(),
-                                        y);
                         dibujarFondoYBordes(anchos, altura, 232, 237, 241);
                         float x = PAGE_MARGIN + CELL_PADDING;
                         for (int i = 0; i < celdas.size(); i++) {
@@ -648,13 +625,6 @@ public class FichaOperativaPDFService {
                                                 if (indice >= celdas.get(i).size()) {
                                                         break;
                                                 }
-                                                System.out.printf(
-                                                                "CELDA | página=%d | columna=%d | x=%.1f | y=%.1f | texto='%s'%n",
-                                                                documento.getNumberOfPages(),
-                                                                i,
-                                                                x,
-                                                                y - CELL_PADDING - BODY_SIZE - j * TABLE_LINE_HEIGHT,
-                                                                celdas.get(i).get(indice));
                                                 escribirTexto(
                                                                 x,
                                                                 y - CELL_PADDING - BODY_SIZE
