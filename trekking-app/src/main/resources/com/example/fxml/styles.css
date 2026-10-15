@@ -245,7 +245,6 @@
 .date-picker {
     -fx-min-height: 36px;
 }
-
 /* Complementos mínimos de la migración a FXML (reutilizan la paleta existente). */
 
 .search-container {
@@ -345,4 +344,17 @@
 .field-error {
     -fx-border-color: #d93025;
     -fx-border-width: 2px;
+}
+
+.pantalla-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.pantalla-scroll > .viewport {
+    -fx-background-color: #f5f7fa;
+    -fx-background-insets: 0;
 }
