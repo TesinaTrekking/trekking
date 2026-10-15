@@ -245,3 +245,104 @@
 .date-picker {
     -fx-min-height: 36px;
 }
+
+/* Complementos mínimos de la migración a FXML (reutilizan la paleta existente). */
+
+.search-container {
+    -fx-background-color: transparent;
+}
+
+.search-field {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e1e5eb;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+}
+
+.clear-search-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #68778d;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+    -fx-padding: 4px 10px;
+    -fx-cursor: hand;
+}
+
+.clear-search-button:hover {
+    -fx-text-fill: #172b4d;
+}
+
+.footer-container {
+    -fx-padding: 4px 0 0 0;
+}
+
+.counter-badge {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #68778d;
+    -fx-background-color: #eef2f7;
+    -fx-background-radius: 12px;
+    -fx-padding: 4px 12px;
+}
+
+.table-placeholder {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-text-fill: #68778d;
+}
+
+.dialog-form-card {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e1e5eb;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 16px;
+}
+
+.dialog-header-title {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172b4d;
+}
+
+.dialog-header-subtitle {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #68778d;
+}
+
+.form-label {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+    -fx-text-fill: #172b4d;
+}
+
+.field-help {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 11px;
+    -fx-text-fill: #68778d;
+}
+
+.error-banner {
+    -fx-background-color: #fcecea;
+    -fx-border-color: #d93025;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-padding: 8px 12px;
+}
+
+.error-banner-icon {
+    -fx-font-size: 14px;
+}
+
+.error-banner-text {
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 12px;
+    -fx-text-fill: #a50e0e;
+}
+
+.field-error {
+    -fx-border-color: #d93025;
+    -fx-border-width: 2px;
+}

@@ -4,16 +4,26 @@ import com.example.dao.CheckpointDAO;
 import com.example.model.Checkpoint;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
+
+import java.io.IOException;
+import java.net.URL;
+import java.sql.SQLException;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -30,142 +40,114 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URL;
-import java.sql.SQLException;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javafx.stage.Window;
 
 /**
- * * Controlador del módulo de gestión de Checkpoints. * * Se encarga de
- * construir la interfaz, cargar los datos desde la base de datos * y gestionar
- * las operaciones de crear, editar y eliminar checkpoints.
+ * Controlador del módulo de gestión de Checkpoints.
+ *
+ * Estructura en {@code checkpoints.fxml}, estilo en {@code styles.css}.
+ * Aquí solo vive el comportamiento: carga de datos, filtrado,
+ * factories de celdas, interacciones de fila, shortcuts y CRUD.
  */
-public class CheckpointController {
+public class CheckpointController implements Initializable {
+
     private static final Logger LOGGER = Logger.getLogger(CheckpointController.class.getName());
-    private static final double SCENE_WIDTH = 1280.0;
-    private static final double SCENE_HEIGHT = 800.0;
+
+    @FXML
+    private TableView<Checkpoint> tablaCheckpoints;
+
+    @FXML
+    private TableColumn<Checkpoint, String> colHora;
+
+    @FXML
+    private TableColumn<Checkpoint, String> colNombre;
+
+    @FXML
+    private TableColumn<Checkpoint, Number> colLatitud;
+
+    @FXML
+    private TableColumn<Checkpoint, Number> colLongitud;
+
+    @FXML
+    private TableColumn<Checkpoint, String> colDescripcion;
+
+    @FXML
+    private TextField filterField;
+
+    @FXML
+    private Button clearButton;
+
+    @FXML
+    private Button editarButton;
+
+    @FXML
+    private Button eliminarButton;
+
+    @FXML
+    private Label counterLabel;
+
     private final CheckpointDAO checkpointDAO = new CheckpointDAO();
     private final ObservableList<Checkpoint> checkpointList = FXCollections.observableArrayList();
     private final FilteredList<Checkpoint> filteredList = new FilteredList<>(checkpointList, checkpoint -> true);
     private final SortedList<Checkpoint> sortedList = new SortedList<>(filteredList);
-    private TableView<Checkpoint> tableView;
-    private Stage primaryStage;
-    private Label counterLabel;
 
-    /**
-     * * Inicializa el módulo y muestra su interfaz. * * @param primaryStage ventana
-     * principal de la aplicación
-     */
-    public void initialize(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-        if (!loadDataFromDatabase()) {
-            return;
-        }
-        primaryStage.setTitle("Trekking App - Gestión de Checkpoints");
-        Scene scene = buildScene();
-        NavigationShell.install(scene, "checkpoints");
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(850);
-        primaryStage.setMinHeight(520);
-    }
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        tablaCheckpoints.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tablaCheckpoints.setItems(sortedList);
+        sortedList.comparatorProperty().bind(tablaCheckpoints.comparatorProperty());
 
-    private Scene buildScene() {
-        tableView = new TableView<>(sortedList);
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholderLabel = new Label(
-                "No hay checkpoints registrados. " + "Use \"+ Nuevo Checkpoint\" para agregar uno.");
-        placeholderLabel.getStyleClass().add("table-placeholder");
-        tableView.setPlaceholder(placeholderLabel);
         configureColumns();
         configureRowInteractions();
-        VBox mainLayout = new VBox(14, buildTopBar(), tableView, buildFooter());
-        mainLayout.setPadding(new Insets(14));
-        VBox.setVgrow(tableView, Priority.ALWAYS);
-        Scene scene = new Scene(mainLayout, SCENE_WIDTH, SCENE_HEIGHT);
-        applyStylesheet(scene);
-        configureShortcuts(scene);
-        return scene;
-    }
 
-    private void applyStylesheet(Scene scene) {
-        /*
-         * * El CSS ahora pertenece al proyecto integrado. * * Si styles.css todavía no
-         * tiene estos estilos, por ahora la interfaz * seguirá funcionando y luego
-         * unificamos los estilos.
-         */ URL cssUrl = getClass().getResource("/com/example/fxml/styles.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
-        }
-    }
-
-    private HBox buildTopBar() {
-        Label brandTitle = new Label("Trekking App");
-        brandTitle.getStyleClass().add("brand-title");
-        Label brandSubtitle = new Label("Puntos de control de ruta");
-        brandSubtitle.getStyleClass().add("brand-subtitle");
-
-        VBox brandContainer = new VBox(1, brandTitle, brandSubtitle);
-        brandContainer.setAlignment(Pos.CENTER_LEFT);
-        TextField filterField = new TextField();
-        filterField.setPromptText("Filtrar por nombre, hora o descripción…");
-        filterField.setPrefWidth(260);
-        filterField.getStyleClass().add("search-field");
         filterField.textProperty()
                 .addListener((obs, oldValue, newValue) -> filteredList.setPredicate(createFilterPredicate(newValue)));
-        Button clearButton = new Button("✕");
-        clearButton.getStyleClass().add("clear-search-button");
         clearButton.visibleProperty().bind(filterField.textProperty().isNotEmpty());
-        clearButton.setOnAction(event -> filterField.clear());
-        StackPane searchContainer = new StackPane(filterField, clearButton);
-        StackPane.setAlignment(clearButton, Pos.CENTER_RIGHT);
-        searchContainer.getStyleClass().add("search-container");
-        Button newButton = new Button("+ Nuevo Checkpoint");
-        newButton.getStyleClass().add("action-add");
-        newButton.setOnAction(event -> showCreateDialog());
-        Button editButton = new Button("Editar");
-        editButton.getStyleClass().addAll("btn-edit");
-        editButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
-        editButton.setOnAction(event -> editSelected());
-        Button deleteButton = new Button("Eliminar");
-        deleteButton.getStyleClass().add("action-delete");
-        deleteButton.disableProperty().bind(tableView.getSelectionModel().selectedItemProperty().isNull());
-        deleteButton.setOnAction(event -> deleteSelected());
-        HBox actionsContainer = new HBox(8, newButton, editButton, deleteButton);
-        actionsContainer.setAlignment(Pos.CENTER_LEFT);
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox topBar = new HBox(16, brandContainer, spacer, searchContainer, actionsContainer);
-        topBar.getStyleClass().add("top-bar");
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        return topBar;
-    }
 
-    private HBox buildFooter() {
-        counterLabel = new Label();
-        counterLabel.getStyleClass().add("counter-badge");
-        updateCounter();
+        editarButton.disableProperty()
+                .bind(tablaCheckpoints.getSelectionModel().selectedItemProperty().isNull());
+        eliminarButton.disableProperty()
+                .bind(tablaCheckpoints.getSelectionModel().selectedItemProperty().isNull());
+
         checkpointList.addListener((ListChangeListener<Checkpoint>) change -> updateCounter());
         filteredList.addListener((ListChangeListener<Checkpoint>) change -> updateCounter());
-        HBox footer = new HBox(counterLabel);
-        footer.getStyleClass().add("footer-container");
-        footer.setAlignment(Pos.CENTER_LEFT);
-        return footer;
+
+        loadDataFromDatabase();
+        updateCounter();
+
+        tablaCheckpoints.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                configureShortcuts();
+            }
+        });
+    }
+
+    @FXML
+    private void mostrarCrear() {
+        abrirFormulario(null);
+    }
+
+    @FXML
+    private void editarSeleccionado() {
+        abrirFormulario(tablaCheckpoints.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    private void eliminarSeleccionado() {
+        deleteSelected();
+    }
+
+    @FXML
+    private void limpiarFiltro() {
+        filterField.clear();
     }
 
     private void updateCounter() {
+        if (counterLabel == null) {
+            return;
+        }
         int total = checkpointList.size();
         int visibles = filteredList.size();
         String unidad = total == 1 ? " checkpoint" : " checkpoints";
@@ -186,30 +168,36 @@ public class CheckpointController {
         return valor != null && valor.toLowerCase(Locale.ROOT).contains(filtro);
     }
 
-    private void configureShortcuts(Scene scene) {
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN),
-                this::showCreateDialog);
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN),
-                this::editSelected);
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.DELETE), this::deleteSelected);
+    private void configureShortcuts() {
+        if (tablaCheckpoints.getScene() == null) {
+            return;
+        }
+        tablaCheckpoints.getScene().getAccelerators().put(
+                new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN),
+                this::mostrarCrear);
+        tablaCheckpoints.getScene().getAccelerators().put(
+                new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN),
+                this::editarSeleccionado);
+        tablaCheckpoints.getScene().getAccelerators().put(
+                new KeyCodeCombination(KeyCode.DELETE), this::deleteSelected);
     }
 
     private void editSelected() {
-        Checkpoint selected = tableView.getSelectionModel().getSelectedItem();
+        Checkpoint selected = tablaCheckpoints.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            showEditDialog(selected);
+            abrirFormulario(selected);
         }
     }
 
     private void deleteSelected() {
-        Checkpoint selected = tableView.getSelectionModel().getSelectedItem();
+        Checkpoint selected = tablaCheckpoints.getSelectionModel().getSelectedItem();
         if (selected != null) {
             confirmAndDelete(selected);
         }
     }
 
     private void configureRowInteractions() {
-        tableView.setRowFactory(tv -> {
+        tablaCheckpoints.setRowFactory(tv -> {
             TableRow<Checkpoint> row = new TableRow<>();
             ContextMenu contextMenu = new ContextMenu();
             MenuItem editItem = new MenuItem("Editar");
@@ -217,7 +205,7 @@ public class CheckpointController {
             editItem.setOnAction(event -> {
                 Checkpoint item = row.getItem();
                 if (item != null) {
-                    showEditDialog(item);
+                    abrirFormulario(item);
                 }
             });
             MenuItem deleteItem = new MenuItem("Eliminar");
@@ -232,7 +220,7 @@ public class CheckpointController {
             row.setContextMenu(contextMenu);
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    showEditDialog(row.getItem());
+                    abrirFormulario(row.getItem());
                 }
             });
             return row;
@@ -240,10 +228,8 @@ public class CheckpointController {
     }
 
     private void configureColumns() {
-        TableColumn<Checkpoint, String> horaColumn = new TableColumn<>("Hora");
-        horaColumn.setCellValueFactory(new PropertyValueFactory<>("hora"));
-        horaColumn.setPrefWidth(85);
-        horaColumn.setCellFactory(col -> new TableCell<>() {
+        colHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
+        colHora.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -258,20 +244,12 @@ public class CheckpointController {
                 }
             }
         });
-        TableColumn<Checkpoint, String> nombreColumn = new TableColumn<>("Checkpoint / Nombre");
-        nombreColumn.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        nombreColumn.setPrefWidth(240);
-        TableColumn<Checkpoint, Number> latitudColumn = new TableColumn<>("Latitud");
-        latitudColumn.setCellValueFactory(new PropertyValueFactory<>("latitud"));
-        latitudColumn.setPrefWidth(120);
-        setNumericCellFactory(latitudColumn);
-        TableColumn<Checkpoint, Number> longitudColumn = new TableColumn<>("Longitud");
-        longitudColumn.setCellValueFactory(new PropertyValueFactory<>("longitud"));
-        longitudColumn.setPrefWidth(120);
-        setNumericCellFactory(longitudColumn);
-        TableColumn<Checkpoint, String> descripcionColumn = new TableColumn<>("Descripción");
-        descripcionColumn.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
-        tableView.getColumns().addAll(horaColumn, nombreColumn, latitudColumn, longitudColumn, descripcionColumn);
+        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colLatitud.setCellValueFactory(new PropertyValueFactory<>("latitud"));
+        setNumericCellFactory(colLatitud);
+        colLongitud.setCellValueFactory(new PropertyValueFactory<>("longitud"));
+        setNumericCellFactory(colLongitud);
+        colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
     }
 
     private static void setNumericCellFactory(TableColumn<Checkpoint, Number> column) {
@@ -304,6 +282,13 @@ public class CheckpointController {
         return trimmed.isEmpty() ? "0.0" : trimmed;
     }
 
+    private Window getWindow() {
+        if (tablaCheckpoints.getScene() == null) {
+            return null;
+        }
+        return tablaCheckpoints.getScene().getWindow();
+    }
+
     private boolean loadDataFromDatabase() {
         checkpointList.clear();
         try {
@@ -311,51 +296,27 @@ public class CheckpointController {
             return true;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error al cargar los checkpoints", e);
-            AlertUtils.showError(primaryStage, "Error de base de datos",
+            AlertUtils.showError(getWindow(), "Error de base de datos",
                     "No se pudieron cargar los checkpoints.\n" + e.getMessage());
             return false;
         }
     }
 
-    private void showCreateDialog() {
-        CheckpointDialog dialog = new CheckpointDialog(primaryStage, null);
-        Optional<Checkpoint> result = dialog.showAndWait();
-        result.ifPresent(newCheckpoint -> {
-            try {
-                long newId = checkpointDAO.insertar(newCheckpoint);
-                if (newId != -1) {
-                    newCheckpoint.setId(newId);
-                }
-                checkpointList.add(newCheckpoint);
-                tableView.getSelectionModel().select(newCheckpoint);
-                tableView.scrollTo(newCheckpoint);
-            } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error al insertar checkpoint", e);
-                AlertUtils.showError(primaryStage, "Error al guardar",
-                        "No se pudo guardar el checkpoint " + "en la base de datos.\n" + e.getMessage());
-            }
-        });
-    }
-
-    private void showEditDialog(Checkpoint item) {
-        CheckpointDialog dialog = new CheckpointDialog(primaryStage, item);
-        Optional<Checkpoint> result = dialog.showAndWait();
-        result.ifPresent(updated -> {
-            item.setNombre(updated.getNombre());
-            item.setHora(updated.getHora());
-            item.setLatitud(updated.getLatitud());
-            item.setLongitud(updated.getLongitud());
-            item.setDescripcion(updated.getDescripcion());
-            try {
-                checkpointDAO.actualizar(item);
-                tableView.refresh();
-            } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Error al actualizar checkpoint id=" + item.getId(), e);
-                loadDataFromDatabase();
-                AlertUtils.showError(primaryStage, "Error al actualizar", "No se pudieron guardar los cambios "
-                        + "del checkpoint en la base de datos.\n" + e.getMessage());
-            }
-        });
+    private void abrirFormulario(Checkpoint checkpoint) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/example/fxml/checkpoint-form.fxml"));
+            Parent root = loader.load();
+            CheckpointFormController controller = loader.getController();
+            controller.cargarCheckpoint(checkpoint);
+            Stage stage = (Stage) tablaCheckpoints.getScene().getWindow();
+            NavigationShell.setRoot(stage.getScene(), root);
+            stage.setTitle(checkpoint == null ? "Nuevo checkpoint" : "Editar checkpoint");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error al abrir el formulario de checkpoint", e);
+            AlertUtils.showError(getWindow(), "Error",
+                    "No se pudo abrir el formulario de checkpoint.");
+        }
     }
 
     private void confirmAndDelete(Checkpoint item) {
@@ -364,7 +325,7 @@ public class CheckpointController {
         alert.setHeaderText("¿Eliminar Checkpoint?");
         alert.setContentText(
                 "¿Está seguro de que desea eliminar '" + item.getNombre() + "'? Esta acción no se puede deshacer.");
-        alert.initOwner(primaryStage);
+        alert.initOwner(getWindow());
         alert.initModality(Modality.WINDOW_MODAL);
         ButtonType confirmDelete = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancel = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -384,35 +345,14 @@ public class CheckpointController {
                 if (checkpointDAO.eliminar(item.getId())) {
                     checkpointList.remove(item);
                 } else {
-                    AlertUtils.showError(primaryStage, "Error al eliminar",
+                    AlertUtils.showError(getWindow(), "Error al eliminar",
                             "No se pudo eliminar el checkpoint " + "de la base de datos.");
                 }
             } catch (SQLException e) {
                 LOGGER.log(Level.SEVERE, "Error al eliminar checkpoint id=" + item.getId(), e);
-                AlertUtils.showError(primaryStage, "Error al eliminar",
+                AlertUtils.showError(getWindow(), "Error al eliminar",
                         "No se pudo eliminar el checkpoint " + "de la base de datos.\n" + e.getMessage());
             }
-        }
-    }
-
-    private void volverDashboard(Stage stage) {
-
-        try {
-
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource(
-                            "/com/example/fxml/dashboard.fxml"));
-
-            Parent root = loader.load();
-
-            NavigationShell.setRoot(stage.getScene(), root);
-
-        } catch (IOException e) {
-
-            AlertUtils.showError(
-                    stage,
-                    "Error",
-                    "No se pudo volver al dashboard.");
         }
     }
 }
