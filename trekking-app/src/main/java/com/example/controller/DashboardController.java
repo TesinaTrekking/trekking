@@ -2,7 +2,6 @@ package com.example.controller;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.example.service.DashboardService;
@@ -12,24 +11,18 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.VBox;
 
 /**
  * Panel de Inicio: solo lectura + navegación.
  *
- * <p>Carga al entrar vía {@code initialize()} más botón Recargar manual,
- * sin auto-refresh (decisión Q10).
+ * <p>Carga al entrar vía {@code initialize()}, sin auto-refresh.
  */
 public class DashboardController {
 
     private final DashboardService dashboardService = new DashboardService();
-
-    @FXML
-    private Label fechaHoyLabel;
 
     @FXML
     private Label kpiRutas;
@@ -57,12 +50,6 @@ public class DashboardController {
 
     @FXML
     private TableColumn<DashboardService.ProximoRecorrido, Integer> colParticipantes;
-
-    @FXML
-    private VBox alertasBox;
-
-    @FXML
-    private Label alertasEstado;
 
     @FXML
     private Label errorLabel;
@@ -105,46 +92,12 @@ public class DashboardController {
     }
 
     @FXML
-    private void onRecargar() {
-        cargar();
-    }
-
-    @FXML
     private void onVerTodosRecorridos() {
-        navegar("trips");
-    }
-
-    @FXML
-    private void onRutas() {
-        navegar("routes");
-    }
-
-    @FXML
-    private void onCheckpoints() {
-        navegar("checkpoints");
-    }
-
-    @FXML
-    private void onEquipamiento() {
-        navegar("equipment");
-    }
-
-    @FXML
-    private void onClientes() {
-        navegar("clients");
-    }
-
-    @FXML
-    private void onRecorridos() {
         navegar("trips");
     }
 
     private void cargar() {
         try {
-            if (fechaHoyLabel != null) {
-                fechaHoyLabel.setText(LocalDate.now().format(
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-            }
             DashboardService.Kpis kpis = dashboardService.obtenerKpis();
             kpiRutas.setText(String.valueOf(kpis.rutasActivas()));
             kpiClientes.setText(String.valueOf(kpis.clientesActivos()));
@@ -156,34 +109,10 @@ public class DashboardController {
             tablaProximos.setItems(
                     FXCollections.observableArrayList(proximos));
 
-            List<DashboardService.Alerta> alertas =
-                    dashboardService.obtenerAlertas();
-            mostrarAlertas(alertas);
-
             mostrarError(null);
         } catch (RuntimeException e) {
             mostrarError(
-                    "No se pudo cargar el panel: " + e.getMessage()
-                            + ". Probá con Recargar.");
-        }
-    }
-
-    private void mostrarAlertas(List<DashboardService.Alerta> alertas) {
-        alertasBox.getChildren().clear();
-        if (alertas.isEmpty()) {
-            alertasEstado.setText("Todo al día ✅");
-            alertasEstado.setVisible(true);
-            return;
-        }
-        alertasEstado.setVisible(false);
-        for (DashboardService.Alerta alerta : alertas) {
-            Button boton = new Button(alerta.mensaje() + "  →");
-            boton.getStyleClass().add("alert-item");
-            boton.setMaxWidth(Double.MAX_VALUE);
-            boton.setWrapText(true);
-            String destino = alerta.seccionDestino();
-            boton.setOnAction(event -> navegar(destino));
-            alertasBox.getChildren().add(boton);
+                    "No se pudo cargar el panel: " + e.getMessage());
         }
     }
 

@@ -359,7 +359,7 @@
     -fx-background-insets: 0;
 }
 
-/* Dashboard Inicio: KPIs, cards y alertas (reutiliza paleta existente). */
+/* Dashboard Inicio: KPIs y cards (reutiliza paleta existente). */
 
 .kpi-card {
     -fx-background-color: #ffffff;
@@ -395,27 +395,4 @@
     -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: #172b4d;
-}
-
-.empty-message {
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 13px;
-    -fx-text-fill: #188038;
-}
-
-.alert-item {
-    -fx-alignment: center-left;
-    -fx-background-color: #fef7e0;
-    -fx-border-color: #f9c74f;
-    -fx-border-radius: 7px;
-    -fx-background-radius: 7px;
-    -fx-text-fill: #5c4b00;
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 12px;
-    -fx-padding: 8px 12px;
-    -fx-cursor: hand;
-}
-
-.alert-item:hover {
-    -fx-background-color: #feefc3;
 }

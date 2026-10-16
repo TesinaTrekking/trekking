@@ -36,17 +36,6 @@
                     text="Sistema de gestión de trekking"
                     styleClass="dashboard-subtitle"/>
 
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <Label
-                    fx:id="fechaHoyLabel"
-                    styleClass="dashboard-subtitle"/>
-
-            <Button
-                    text="Recargar"
-                    onAction="#onRecargar"
-                    styleClass="btn-secondary"/>
-
         </HBox>
     </top>
 
@@ -76,7 +65,7 @@
                                 text="Panel de inicio"
                                 styleClass="dashboard-section-title"/>
                         <Label
-                                text="Resumen operativo: próximos recorridos y puntos que requieren atención."
+                                text="Resumen de próximos recorridos."
                                 wrapText="true"
                                 styleClass="dashboard-welcome"/>
                     </VBox>
@@ -101,84 +90,40 @@
                         </VBox>
                     </HBox>
 
-                    <!-- MAIN: PROXIMOS + ALERTAS -->
-                    <HBox spacing="12">
-                        <VBox HBox.hgrow="ALWAYS" spacing="8" styleClass="dashboard-card">
-                            <HBox spacing="8" alignment="CENTER_LEFT">
-                                <Label
-                                        text="Próximos recorridos"
-                                        styleClass="card-title"/>
-                                <Region HBox.hgrow="ALWAYS"/>
-                                <Button
-                                        text="Ver todos →"
-                                        onAction="#onVerTodosRecorridos"
-                                        styleClass="clear-search-button"/>
-                            </HBox>
-                            <TableView
-                                    fx:id="tablaProximos"
-                                    prefHeight="260.0">
-                                <columns>
-                                    <TableColumn
-                                            fx:id="colFecha"
-                                            text="Fecha"
-                                            prefWidth="110.0"/>
-                                    <TableColumn
-                                            fx:id="colRuta"
-                                            text="Ruta"
-                                            prefWidth="220.0"/>
-                                    <TableColumn
-                                            fx:id="colHorario"
-                                            text="Horario"
-                                            prefWidth="130.0"/>
-                                    <TableColumn
-                                            fx:id="colParticipantes"
-                                            text="Part."
-                                            prefWidth="70.0"/>
-                                </columns>
-                            </TableView>
-                        </VBox>
-
-                        <VBox HBox.hgrow="ALWAYS" spacing="8" styleClass="dashboard-card">
-                            <Label
-                                    text="Alertas operativas"
-                                    styleClass="card-title"/>
-                            <Label
-                                    fx:id="alertasEstado"
-                                    text="Todo al día ✅"
-                                    styleClass="empty-message"/>
-                            <VBox
-                                    fx:id="alertasBox"
-                                    spacing="8"/>
-                        </VBox>
-                    </HBox>
-
-                    <!-- ACCESOS RAPIDOS -->
+                    <!-- PROXIMOS RECORRIDOS -->
                     <VBox spacing="8" styleClass="dashboard-card">
-                        <Label
-                                text="Accesos rápidos"
-                                styleClass="card-title"/>
-                        <HBox spacing="8">
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label
+                                    text="Próximos recorridos"
+                                    styleClass="card-title"/>
+                            <Region HBox.hgrow="ALWAYS"/>
                             <Button
-                                    text="Rutas"
-                                    onAction="#onRutas"
-                                    styleClass="btn-secondary"/>
-                            <Button
-                                    text="Checkpoints"
-                                    onAction="#onCheckpoints"
-                                    styleClass="btn-secondary"/>
-                            <Button
-                                    text="Equipamiento"
-                                    onAction="#onEquipamiento"
-                                    styleClass="btn-secondary"/>
-                            <Button
-                                    text="Clientes"
-                                    onAction="#onClientes"
-                                    styleClass="btn-secondary"/>
-                            <Button
-                                    text="Recorridos"
-                                    onAction="#onRecorridos"
-                                    styleClass="btn-primary"/>
+                                    text="Ver todos →"
+                                    onAction="#onVerTodosRecorridos"
+                                    styleClass="clear-search-button"/>
                         </HBox>
+                        <TableView
+                                fx:id="tablaProximos"
+                                prefHeight="260.0">
+                            <columns>
+                                <TableColumn
+                                        fx:id="colFecha"
+                                        text="Fecha"
+                                        prefWidth="110.0"/>
+                                <TableColumn
+                                        fx:id="colRuta"
+                                        text="Ruta"
+                                        prefWidth="220.0"/>
+                                <TableColumn
+                                        fx:id="colHorario"
+                                        text="Horario"
+                                        prefWidth="130.0"/>
+                                <TableColumn
+                                        fx:id="colParticipantes"
+                                        text="Part."
+                                        prefWidth="70.0"/>
+                            </columns>
+                        </TableView>
                     </VBox>
 
                 </VBox>
