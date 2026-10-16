@@ -9,10 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import com.example.database.ConexionDB;
-import com.example.model.Equipamiento;
 
 /**
  * Datos y consultas del panel de Inicio.
@@ -20,9 +18,8 @@ import com.example.model.Equipamiento;
  * <p>Vocabulario fijado en diseño:
  * <ul>
  *   <li>Inicio = sección lateral {@code dashboard}.</li>
- *   <li>Dashboard = panel informativo de solo lectura + accesos.</li>
+ *   <li>Dashboard = panel informativo de solo lectura.</li>
  *   <li>Recorrido = instancia fechada de una Ruta con participantes (Cliente).</li>
- *   <li>Alerta = condición que requiere acción.</li>
  * </ul>
  */
 public class DashboardService {
@@ -35,12 +32,6 @@ public class DashboardService {
 
     /** Límite de filas en el dashboard. */
     public static final int LIMITE_PROXIMOS = 5;
-    public static final int LIMITE_ALERTAS = 8;
-
-    private static final Set<String> ESTADOS_CRITICOS = Set.of(
-            "Fuera de Servicio",
-            "Extraviado",
-            "En Reparación");
 
     public record Kpis(
             int rutasActivas,
@@ -56,11 +47,6 @@ public class DashboardService {
             LocalTime horaInicio,
             LocalTime horaFin,
             int participantes) {
-    }
-
-    public record Alerta(
-            String mensaje,
-            String seccionDestino) {
     }
 
     public Kpis obtenerKpis() {
@@ -167,168 +153,6 @@ public class DashboardService {
         return proximos;
     }
 
-    public List<Alerta> obtenerAlertas() {
-        return obtenerAlertas(LIMITE_ALERTAS);
-    }
-
-    public List<Alerta> obtenerAlertas(int limite) {
-        List<Alerta> alertas = new ArrayList<>();
-        alertas.addAll(alertasEquipamiento());
-        alertas.addAll(alertasRecorridosSinParticipantes());
-        alertas.addAll(alertasClientesSinFicha());
-        alertas.addAll(alertasRutasSinCheckpoints());
-        if (alertas.size() > limite) {
-            return alertas.subList(0, limite);
-        }
-        return alertas;
-    }
-
-    public List<Equipamiento> obtenerEquipamientoCritico() {
-        String sql = """
-                SELECT id, nombre, categoria, cantidad, estado
-                FROM equipamiento
-                WHERE activo = 1
-                  AND (cantidad <= ?
-                       OR estado IN ('Fuera de Servicio', 'Extraviado', 'En Reparación'))
-                ORDER BY cantidad ASC, nombre COLLATE NOCASE
-                LIMIT ?
-                """;
-        List<Equipamiento> equipos = new ArrayList<>();
-        try (Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, UMBRAL_STOCK_BAJO);
-            statement.setInt(2, LIMITE_ALERTAS);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    equipos.add(new Equipamiento(
-                            resultSet.getInt("id"),
-                            resultSet.getString("nombre"),
-                            resultSet.getString("categoria"),
-                            resultSet.getInt("cantidad"),
-                            resultSet.getString("estado")));
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(
-                    "Error al obtener equipamiento crítico: " + e.getMessage());
-        }
-        return equipos;
-    }
-
-    private List<Alerta> alertasEquipamiento() {
-        List<Alerta> alertas = new ArrayList<>();
-        for (Equipamiento equipo : obtenerEquipamientoCritico()) {
-            String detalle;
-            if (equipo.getCantidad() <= 0) {
-                detalle = "sin stock";
-            } else if (equipo.getCantidad() <= UMBRAL_STOCK_BAJO) {
-                detalle = "stock bajo (" + equipo.getCantidad() + ")";
-            } else {
-                detalle = estadoCritico(equipo.getEstado())
-                        ? equipo.getEstado().toLowerCase()
-                        : "requiere atención";
-            }
-            alertas.add(new Alerta(
-                    "Equipo: " + equipo.getNombre() + " — " + detalle,
-                    "equipment"));
-        }
-        return alertas;
-    }
-
-    private List<Alerta> alertasRecorridosSinParticipantes() {
-        String sql = """
-                SELECT r.recorrido_id, ru.nombre AS nombre_ruta, r.fecha
-                FROM recorridos r
-                JOIN rutas ru ON ru.id = r.ruta_id
-                WHERE r.fecha >= ? AND r.fecha <= ?
-                  AND NOT EXISTS (
-                      SELECT 1 FROM recorrido_cliente rc
-                      WHERE rc.recorrido_id = r.recorrido_id
-                  )
-                ORDER BY r.fecha ASC
-                LIMIT ?
-                """;
-        List<Alerta> alertas = new ArrayList<>();
-        try (Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setString(1, LocalDate.now().toString());
-            statement.setString(
-                    2, LocalDate.now().plusDays(VENTANA_PROXIMOS_DIAS).toString());
-            statement.setInt(3, LIMITE_ALERTAS);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    alertas.add(new Alerta(
-                            "Recorrido sin participantes: "
-                                    + resultSet.getString("nombre_ruta")
-                                    + " (" + resultSet.getString("fecha") + ")",
-                            "trips"));
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(
-                    "Error al obtener recorridos sin participantes: "
-                            + e.getMessage());
-        }
-        return alertas;
-    }
-
-    private List<Alerta> alertasClientesSinFicha() {
-        String sql = """
-                SELECT nombre, apellido
-                FROM clientes
-                WHERE activo = 1 AND ficha_medica IS NULL
-                ORDER BY apellido COLLATE NOCASE, nombre COLLATE NOCASE
-                LIMIT ?
-                """;
-        List<Alerta> alertas = new ArrayList<>();
-        try (Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, LIMITE_ALERTAS);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    alertas.add(new Alerta(
-                            "Cliente sin ficha médica: "
-                                    + resultSet.getString("apellido")
-                                    + ", " + resultSet.getString("nombre"),
-                            "clients"));
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(
-                    "Error al obtener clientes sin ficha: " + e.getMessage());
-        }
-        return alertas;
-    }
-
-    private List<Alerta> alertasRutasSinCheckpoints() {
-        String sql = """
-                SELECT r.nombre
-                FROM rutas r
-                LEFT JOIN ruta_checkpoints rc ON rc.ruta_id = r.id
-                WHERE r.activo = 1 AND rc.ruta_id IS NULL
-                ORDER BY r.nombre COLLATE NOCASE
-                LIMIT ?
-                """;
-        List<Alerta> alertas = new ArrayList<>();
-        try (Connection conexion = ConexionDB.conectar();
-                PreparedStatement statement = conexion.prepareStatement(sql)) {
-            statement.setInt(1, LIMITE_ALERTAS);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    alertas.add(new Alerta(
-                            "Ruta sin checkpoints: "
-                                    + resultSet.getString("nombre"),
-                            "routes"));
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(
-                    "Error al obtener rutas sin checkpoints: "
-                            + e.getMessage());
-        }
-        return alertas;
-    }
-
     private int contar(String sql) {
         try (Connection conexion = ConexionDB.conectar();
                 Statement statement = conexion.createStatement();
@@ -338,10 +162,6 @@ public class DashboardService {
             System.out.println("Error al contar: " + e.getMessage());
             return 0;
         }
-    }
-
-    private static boolean estadoCritico(String estado) {
-        return estado != null && ESTADOS_CRITICOS.contains(estado);
     }
 
     private static LocalTime parsearHora(String hora) {
