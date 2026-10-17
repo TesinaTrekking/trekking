@@ -47,7 +47,7 @@
                     <HBox spacing="8.0" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="11">
                         <Button text="Cargar ficha" onAction="#seleccionarFichaMedica"
                                 styleClass="action-add"/>
-                        <Button text="Quitar ficha" onAction="#borrarFichaMedica"
+                        <Button fx:id="quitarFichaButton" text="Quitar ficha" onAction="#borrarFichaMedica"
                                 styleClass="action-delete"/>
                         <Label fx:id="fichaMedicaLabel" text="Sin ficha medica"/>
                     </HBox>

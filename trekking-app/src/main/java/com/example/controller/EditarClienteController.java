@@ -21,6 +21,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
@@ -91,6 +92,9 @@ public class EditarClienteController {
     @FXML
     private Label fichaMedicaLabel;
 
+    @FXML
+    private Button quitarFichaButton;
+
     private final Cliente cliente;
     private final ClienteDAO clienteDAO = new ClienteDAO();
     private File fichaMedicaSeleccionada;
@@ -131,16 +135,24 @@ public class EditarClienteController {
         actualizarCamposTutor();
         activoCheckBox.setSelected(cliente.isActivo());
 
-        com.example.model.FichaMedica fichaMedica =
-                clienteDAO.obtenerFichaMedica(cliente.getId());
+        com.example.model.FichaMedica fichaMedica = clienteDAO.obtenerFichaMedica(cliente.getId());
+
+        boolean existeFichaEnDisco = Files.isRegularFile(
+                Path.of("fichas_medicas", cliente.getDni() + ".pdf"));
+
+        boolean existeFicha = fichaMedica != null || existeFichaEnDisco;
+
         if (fichaMedica != null) {
             fichaMedicaLabel.setText(fichaMedica.getNombreArchivo());
-        } else if (Files.isRegularFile(
-                Path.of("fichas_medicas", cliente.getDni() + ".pdf"))) {
+        } else if (existeFichaEnDisco) {
             fichaMedicaLabel.setText(cliente.getDni() + ".pdf");
         } else {
             fichaMedicaLabel.setText("Sin ficha medica");
         }
+
+        quitarFichaButton.setVisible(existeFicha);
+        quitarFichaButton.setManaged(existeFicha);
+
         configurarValidacionesEnTiempoReal();
     }
 
@@ -264,16 +276,16 @@ public class EditarClienteController {
     private void actualizarCamposTutor() {
         boolean mostrar = autorizacionMenoresCheckBox.isSelected();
         Label[] labels = {
-            tutorNombreLabel,
-            tutorApellidoLabel,
-            tutorDniLabel,
-            tutorTelefonoLabel
+                tutorNombreLabel,
+                tutorApellidoLabel,
+                tutorDniLabel,
+                tutorTelefonoLabel
         };
         TextField[] fields = {
-            tutorNombreField,
-            tutorApellidoField,
-            tutorDniField,
-            tutorTelefonoField
+                tutorNombreField,
+                tutorApellidoField,
+                tutorDniField,
+                tutorTelefonoField
         };
         for (Label label : labels) {
             label.setVisible(mostrar);
