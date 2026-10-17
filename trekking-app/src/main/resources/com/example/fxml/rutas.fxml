@@ -59,11 +59,12 @@
                         </HBox>
 
                         <HBox spacing="10.0"
-                                alignment="CENTER">
+                                alignment="CENTER_LEFT">
 
                                 <TextField fx:id="buscarField"
                                         promptText="Buscar por nombre"
-                                        prefWidth="200.0" />
+                                        prefWidth="200.0" 
+                                        styleClass="search-field"/>
 
                                 <ComboBox fx:id="filtroTerrenoCombo"
                                         prefWidth="150.0"
@@ -118,14 +119,16 @@
                         </TableView>
 
                         <Label text="Checkpoints de la ruta seleccionada"
-                                style="-fx-font-size: 16; -fx-font-weight: bold;" />
+                                styleClass="card-title" />
 
                         <ListView fx:id="checkpointsRutaListView"
                                 prefHeight="120.0"
                                 prefWidth="700.0"
                                 VBox.vgrow="NEVER" />
+                        
+                        
                         <Label text="Equipamiento minimo requerido"
-                                style="-fx-font-size: 16; -fx-font-weight: bold;" />
+                                styleClass="card-title" />
 
                         <ListView fx:id="equipamientosListView"
                                 prefHeight="120.0"

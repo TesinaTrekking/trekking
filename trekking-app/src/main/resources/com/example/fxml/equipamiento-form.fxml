@@ -8,79 +8,89 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
 <ScrollPane fitToWidth="true"
-            hbarPolicy="NEVER"
-            vbarPolicy="AS_NEEDED"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.controller.EquipamientoFormController"
-            stylesheets="@styles.css">
+       hbarPolicy="NEVER"
+       vbarPolicy="AS_NEEDED"
+       xmlns="http://javafx.com/javafx/17"
+       xmlns:fx="http://javafx.com/fxml/1"
+       fx:controller="com.example.controller.EquipamientoFormController"
+       stylesheets="@styles.css">
 
-    <content>
+       <content>
 
-        <VBox alignment="TOP_CENTER"
-              spacing="20.0">
+              <VBox alignment="TOP_CENTER"
+                     spacing="20.0">
 
-            <Label fx:id="tituloLabel" text="Nuevo equipamiento"/>
+                     <Label fx:id="tituloLabel" text="Nuevo equipamiento"  styleClass="dialog-header-title" />
 
-            <GridPane alignment="CENTER"
-                      hgap="10.0"
-                      vgap="15.0">
+                     <GridPane alignment="CENTER"
+                            hgap="10.0"
+                            vgap="15.0">
 
-                <Label text="Nombre:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="0"/>
+                            <Label text="Nombre:"
+                                   styleClass="form-label"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="0" />
 
-                <TextField fx:id="txtNombre"
-                           GridPane.columnIndex="1"
-                           GridPane.rowIndex="0"/>
-
-
-                <Label text="Categoría:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="1"/>
-
-                <ComboBox fx:id="cmbCategoria"
-                          GridPane.columnIndex="1"
-                          GridPane.rowIndex="1"/>
+                            <TextField fx:id="txtNombre"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="0" />
 
 
-                <Label text="Cantidad:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="2"/>
+                            <Label text="Categoría:"
+                                   styleClass="form-label"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="1" />
 
-                <TextField fx:id="txtCantidad"
-                           GridPane.columnIndex="1"
-                           GridPane.rowIndex="2"/>
+                            <ComboBox fx:id="cmbCategoria"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="1" />
 
 
-                <Label text="Estado:"
-                       GridPane.columnIndex="0"
-                       GridPane.rowIndex="3"/>
+                            <Label text="Cantidad:"
+                                   styleClass="form-label"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="2" />
 
-                <ComboBox fx:id="cmbEstado"
-                          GridPane.columnIndex="1"
-                          GridPane.rowIndex="3"/>
+                            <TextField fx:id="txtCantidad"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="2" />
 
-            </GridPane>
 
-            <HBox spacing="8.0"
-                  alignment="CENTER"
-                  styleClass="crud-actions">
+                            <Label text="Estado:"
+                                   styleClass="form-label"
+                                   GridPane.columnIndex="0"
+                                   GridPane.rowIndex="3" />
 
-                <Button fx:id="guardarButton" text="Guardar"
-                        styleClass="action-edit"
-                        onAction="#guardarEquipamiento"/>
+                            <ComboBox fx:id="cmbEstado"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="3" />
 
-                <Button text="Cancelar"
-                        styleClass="secondary-button"
-                        onAction="#cancelar"/>
+                     </GridPane>
 
-            </HBox>
+                     <HBox spacing="8.0"
+                            alignment="CENTER"
+                            styleClass="crud-actions">
 
-        </VBox>
+                            <Button fx:id="guardarButton" text="Guardar"
+                                   styleClass="action-edit"
+                                   onAction="#guardarEquipamiento" />
 
-    </content>
+                            <Button text="Cancelar"
+                                   styleClass="secondary-button"
+                                   onAction="#cancelar" />
+
+                     </HBox>
+                     <padding>
+                            <Insets top="24.0"
+                                   right="24.0"
+                                   bottom="24.0"
+                                   left="24.0" />
+                     </padding>
+              </VBox>
+
+       </content>
 
 </ScrollPane>

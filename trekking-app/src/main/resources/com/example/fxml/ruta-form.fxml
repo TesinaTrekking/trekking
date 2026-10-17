@@ -28,13 +28,14 @@
 
                      <Label fx:id="tituloForm"
                             text="Agregar Nueva Ruta"
-                            style="-fx-font-size: 20; -fx-font-weight: bold;" />
+                            styleClass="dialog-header-title" />
 
                      <GridPane alignment="CENTER"
                             hgap="10"
                             vgap="15">
 
                             <Label text="Nombre:"
+                                   styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="0" />
 
@@ -51,6 +52,7 @@
 
 
                             <Label text="Altitud máxima:"
+                                   styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="2" />
 
@@ -67,6 +69,7 @@
 
 
                             <Label text="Tipo de terreno:"
+                                   styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="4" />
 
@@ -83,6 +86,7 @@
 
 
                             <Label text="Dificultad técnica:"
+                                   styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="6" />
 
@@ -99,6 +103,7 @@
 
 
                             <Label text="Dificultad física:"
+                                   styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="8" />
 
@@ -116,7 +121,7 @@
                      </GridPane>
 
                      <Label text="Checkpoints de la ruta"
-                            style="-fx-font-size: 16; -fx-font-weight: bold;" />
+                            styleClass="card-title" />
 
 
                      <HBox alignment="CENTER"
