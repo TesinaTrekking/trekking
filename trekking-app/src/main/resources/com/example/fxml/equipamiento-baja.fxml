@@ -8,64 +8,68 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
 <ScrollPane fitToWidth="true"
-            hbarPolicy="NEVER"
-            vbarPolicy="AS_NEEDED"
-            styleClass="pantalla-scroll"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.controller.EquipamientoBajaController"
-            stylesheets="@styles.css">
+    hbarPolicy="NEVER"
+    vbarPolicy="AS_NEEDED"
+    styleClass="pantalla-scroll"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.example.controller.EquipamientoBajaController"
+    stylesheets="@styles.css">
 
     <content>
 
         <VBox alignment="TOP_CENTER"
-              spacing="10.0"
-              prefWidth="1200.0"
-              prefHeight="800.0">
+            spacing="10.0"
+            prefWidth="1200.0"
+            prefHeight="800.0">
 
             <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
                 <VBox spacing="3.0">
-                    <Label text="Equipamiento dado de baja" styleClass="brand-title"/>
-                    <Label text="Restauración de elementos" styleClass="brand-subtitle"/>
+                    <Label text="Equipamiento dado de baja" styleClass="brand-title" />
+                    <Label text="Restauración de elementos" styleClass="brand-subtitle" />
                 </VBox>
-                <Region HBox.hgrow="ALWAYS"/>
+                <Region HBox.hgrow="ALWAYS" />
                 <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
                     <Button text="Restaurar"
-                            styleClass="action-edit"
-                            onAction="#restaurarEquipamiento"/>
+                        styleClass="action-edit"
+                        onAction="#restaurarEquipamiento" />
                     <Button text="Volver"
-                            styleClass="secondary-button"
-                            onAction="#cerrarVentana"/>
+                        styleClass="secondary-button"
+                        onAction="#cerrarVentana" />
                 </HBox>
             </HBox>
 
             <TableView fx:id="tablaEquipamientoBaja"
-                       prefHeight="500.0"
-                       prefWidth="1150.0"
-                       VBox.vgrow="ALWAYS">
+                prefHeight="500.0"
+                prefWidth="1150.0"
+                VBox.vgrow="ALWAYS">
 
                 <columns>
 
                     <TableColumn fx:id="colId"
-                                 text="ID"/>
+                        text="ID" />
 
                     <TableColumn fx:id="colNombre"
-                                 text="Equipo"/>
+                        text="Equipo" />
 
                     <TableColumn fx:id="colCategoria"
-                                 text="Categoría"/>
+                        text="Categoría" />
 
                     <TableColumn fx:id="colCantidad"
-                                 text="Cantidad"/>
+                        text="Cantidad" />
 
                     <TableColumn fx:id="colEstado"
-                                 text="Estado"/>
+                        text="Estado" />
 
                 </columns>
 
             </TableView>
+            <padding>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0" />
+            </padding>
 
         </VBox>
 

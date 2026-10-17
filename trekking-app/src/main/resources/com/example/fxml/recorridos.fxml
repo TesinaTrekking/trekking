@@ -61,31 +61,31 @@
             </TableView>
 
             <Label text="Datos del recorrido"
-                style="-fx-font-size: 17; -fx-font-weight: bold;" />
+                styleClass="card-title" />
             <HBox spacing="12.0" alignment="CENTER_LEFT">
                 <VBox spacing="6.0">
-                    <Label text="Ruta *" />
+                    <Label text="Ruta *" styleClass="form-label" />
                     <ComboBox fx:id="rutaComboBox" prefWidth="280.0"
                         promptText="Seleccionar ruta" />
                 </VBox>
                 <VBox spacing="6.0">
-                    <Label text="Fecha *" />
+                    <Label text="Fecha *" styleClass="form-label" />
                     <DatePicker fx:id="fechaPicker" prefWidth="160.0" />
                 </VBox>
                 <VBox spacing="6.0">
-                    <Label text="Hora inicio (HH:mm)" />
+                    <Label text="Hora inicio (HH:mm)" styleClass="form-label" />
                     <TextField fx:id="horaInicioField" promptText="08:30"
                         prefWidth="140.0" />
                 </VBox>
                 <VBox spacing="6.0">
-                    <Label text="Hora fin (HH:mm)" />
+                    <Label text="Hora fin (HH:mm)" styleClass="form-label" />
                     <TextField fx:id="horaFinField" promptText="17:00"
                         prefWidth="140.0" />
                 </VBox>
             </HBox>
 
             <Label text="Clientes participantes (Ctrl+clic para seleccionar varios)"
-                style="-fx-font-size: 15; -fx-font-weight: bold;" />
+                styleClass="card-title" />
             <ListView fx:id="participantesListView" prefHeight="150.0" />
 
         </VBox>
