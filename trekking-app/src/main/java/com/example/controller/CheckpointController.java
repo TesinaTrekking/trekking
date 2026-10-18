@@ -197,6 +197,15 @@ public class CheckpointController implements Initializable {
     }
 
     private void configureRowInteractions() {
+        tablaCheckpoints.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((obs, anterior, actual) -> {
+                    System.out.println(
+                            "[SELECCION] Anterior: "
+                                    + (anterior == null ? "null" : anterior.getNombre())
+                                    + " | Actual: "
+                                    + (actual == null ? "null" : actual.getNombre()));
+                });
         tablaCheckpoints.setRowFactory(tv -> {
             TableRow<Checkpoint> row = new TableRow<>();
             ContextMenu contextMenu = new ContextMenu();
@@ -219,9 +228,27 @@ public class CheckpointController implements Initializable {
             contextMenu.getItems().addAll(editItem, deleteItem);
             row.setContextMenu(contextMenu);
             row.setOnMouseClicked(event -> {
+                System.out.println(
+                        "[CLIC] Cantidad: " + event.getClickCount()
+                                + " | Fila vacía: " + row.isEmpty()
+                                + " | Checkpoint: "
+                                + (row.isEmpty() ? "ninguno" : row.getItem().getNombre())
+                                + " | Seleccionado: "
+                                + (tablaCheckpoints.getSelectionModel().getSelectedItem() == null
+                                        ? "ninguno"
+                                        : tablaCheckpoints.getSelectionModel()
+                                                .getSelectedItem().getNombre()));
+
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
                     abrirFormulario(row.getItem());
                 }
+                System.out.println(
+                        "[ESTADO] Fila seleccionada: " + row.isSelected()
+                                + " | Tabla enfocada: " + tablaCheckpoints.isFocused()
+                                + " | Tabla seleccionada: "
+                                + tablaCheckpoints.getSelectionModel().getSelectedItem().getNombre()
+                                + " | Editar deshabilitado: " + editarButton.isDisabled()
+                                + " | Eliminar deshabilitado: " + eliminarButton.isDisabled());
             });
             return row;
         });

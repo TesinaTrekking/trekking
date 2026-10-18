@@ -12,81 +12,60 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane
-        xmlns="http://javafx.com/javafx/17"
-        xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="com.example.controller.DashboardController"
-        stylesheets="@styles.css">
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.example.controller.DashboardController"
+    stylesheets="@styles.css">
 
     <!-- HEADER -->
     <top>
-        <HBox
-                alignment="CENTER_LEFT"
-                spacing="12"
-                styleClass="dashboard-header">
-
-            <padding>
-                <Insets top="16" right="24" bottom="16" left="24"/>
-            </padding>
-
-            <Label
-                    text="Trekking App"
-                    styleClass="dashboard-title"/>
-
-            <Label
-                    text="Sistema de gestión de trekking"
-                    styleClass="dashboard-subtitle"/>
-
+        <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
+            <VBox spacing="3.0">
+                <Label text="Panel de inicio" styleClass="brand-title" />
+                <Label text="Resumen de próximos recorridos" styleClass="brand-subtitle" />
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
         </HBox>
     </top>
-
     <center>
         <ScrollPane
-                fitToWidth="true"
-                hbarPolicy="NEVER"
-                vbarPolicy="AS_NEEDED"
-                styleClass="pantalla-scroll">
+            fitToWidth="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            styleClass="pantalla-scroll">
             <content>
                 <VBox spacing="16">
 
                     <padding>
-                        <Insets top="24" right="24" bottom="24" left="24"/>
+                        <Insets top="24" right="24" bottom="24" left="24" />
                     </padding>
 
                     <Label
-                            fx:id="errorLabel"
-                            visible="false"
-                            managed="false"
-                            wrapText="true"
-                            maxWidth="900"
-                            styleClass="error-banner-text"/>
+                        fx:id="errorLabel"
+                        visible="false"
+                        managed="false"
+                        wrapText="true"
+                        maxWidth="900"
+                        styleClass="error-banner-text" />
 
-                    <VBox spacing="4">
-                        <Label
-                                text="Panel de inicio"
-                                styleClass="dashboard-section-title"/>
-                        <Label
-                                text="Resumen de próximos recorridos."
-                                wrapText="true"
-                                styleClass="dashboard-welcome"/>
-                    </VBox>
 
                     <!-- KPI CARDS -->
                     <HBox spacing="12">
                         <VBox HBox.hgrow="ALWAYS" styleClass="kpi-card" spacing="4">
-                            <Label text="Rutas activas" styleClass="kpi-caption"/>
-                            <Label fx:id="kpiRutas" text="—" styleClass="kpi-value"/>
+                            <Label text="Rutas activas" styleClass="kpi-caption" />
+                            <Label fx:id="kpiRutas" text="—" styleClass="kpi-value" />
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" styleClass="kpi-card" spacing="4">
-                            <Label text="Clientes activos" styleClass="kpi-caption"/>
-                            <Label fx:id="kpiClientes" text="—" styleClass="kpi-value"/>
+                            <Label text="Clientes activos" styleClass="kpi-caption" />
+                            <Label fx:id="kpiClientes" text="—" styleClass="kpi-value" />
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" styleClass="kpi-card" spacing="4">
-                            <Label text="Recorridos próximos (7 días)" styleClass="kpi-caption"/>
-                            <Label fx:id="kpiRecorridos" text="—" styleClass="kpi-value"/>
+                            <Label text="Recorridos próximos (7 días)" styleClass="kpi-caption" />
+                            <Label fx:id="kpiRecorridos" text="—" styleClass="kpi-value" />
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" styleClass="kpi-card" spacing="4">
-                            <Label text="Equipamiento crítico" styleClass="kpi-caption"/>
-                            <Label fx:id="kpiEquipo" text="—" styleClass="kpi-value"/>
+                            <Label text="Equipamiento crítico" styleClass="kpi-caption" />
+                            <Label fx:id="kpiEquipo" text="—" styleClass="kpi-value" />
                         </VBox>
                     </HBox>
 
@@ -94,34 +73,34 @@
                     <VBox spacing="8" styleClass="dashboard-card">
                         <HBox spacing="8" alignment="CENTER_LEFT">
                             <Label
-                                    text="Próximos recorridos"
-                                    styleClass="card-title"/>
-                            <Region HBox.hgrow="ALWAYS"/>
+                                text="Próximos recorridos"
+                                styleClass="card-title" />
+                            <Region HBox.hgrow="ALWAYS" />
                             <Button
-                                    text="Ver todos →"
-                                    onAction="#onVerTodosRecorridos"
-                                    styleClass="clear-search-button"/>
+                                text="Ver todos →"
+                                onAction="#onVerTodosRecorridos"
+                                styleClass="clear-search-button" />
                         </HBox>
                         <TableView
-                                fx:id="tablaProximos"
-                                prefHeight="260.0">
+                            fx:id="tablaProximos"
+                            prefHeight="260.0">
                             <columns>
                                 <TableColumn
-                                        fx:id="colFecha"
-                                        text="Fecha"
-                                        prefWidth="110.0"/>
+                                    fx:id="colFecha"
+                                    text="Fecha"
+                                    prefWidth="110.0" />
                                 <TableColumn
-                                        fx:id="colRuta"
-                                        text="Ruta"
-                                        prefWidth="220.0"/>
+                                    fx:id="colRuta"
+                                    text="Ruta"
+                                    prefWidth="220.0" />
                                 <TableColumn
-                                        fx:id="colHorario"
-                                        text="Horario"
-                                        prefWidth="130.0"/>
+                                    fx:id="colHorario"
+                                    text="Horario"
+                                    prefWidth="130.0" />
                                 <TableColumn
-                                        fx:id="colParticipantes"
-                                        text="Part."
-                                        prefWidth="70.0"/>
+                                    fx:id="colParticipantes"
+                                    text="Part."
+                                    prefWidth="70.0" />
                             </columns>
                         </TableView>
                     </VBox>
