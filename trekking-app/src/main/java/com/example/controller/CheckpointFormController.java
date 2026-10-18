@@ -13,27 +13,29 @@ import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.IdentityHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javafx.application.Platform;
-import javafx.css.PseudoClass; // NUEVO
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.control.Tooltip; // NUEVO
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.util.Duration; // NUEVO
 
 /**
  * Formulario en-contenedor de creación/edición de checkpoint.
@@ -45,6 +47,10 @@ public class CheckpointFormController implements Initializable {
 
     private static final Logger LOGGER =
             Logger.getLogger(CheckpointFormController.class.getName());
+    private static final PseudoClass ERROR =
+            PseudoClass.getPseudoClass("error");
+    private static final PseudoClass INVALID =
+            PseudoClass.getPseudoClass("invalid");
 
     private static final double LAT_MIN = -90.0;
     private static final double LAT_MAX = 90.0;
@@ -93,26 +99,33 @@ public class CheckpointFormController implements Initializable {
     private Button guardarButton;
 
     private final CheckpointDAO checkpointDAO = new CheckpointDAO();
+    private final Map<TextField, String> mensajesError = new IdentityHashMap<>();
     private Checkpoint checkpointEnEdicion;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        txtLatitud.setTextFormatter(createDecimalTextFormatter(txtLatitud)); // CAMBIADO
-        txtLongitud.setTextFormatter(createDecimalTextFormatter(txtLongitud)); // CAMBIADO
-        txtHora.setTextFormatter(createHoraTextFormatter(txtHora)); // CAMBIADO
+        txtLatitud.setTextFormatter(createDecimalTextFormatter(txtLatitud));
+        txtLongitud.setTextFormatter(createDecimalTextFormatter(txtLongitud));
+        txtHora.setTextFormatter(createHoraTextFormatter(txtHora));
 
-        // CAMBIADO: limpiar los estados visuales y luego recalcular la validación.
-        txtNombre.textProperty().addListener(
-                (obs, oldValue, newValue) -> limpiarError(txtNombre));
-        txtHora.textProperty().addListener(
-                (obs, oldValue, newValue) -> limpiarError(txtHora));
-        txtLatitud.textProperty().addListener(
-                (obs, oldValue, newValue) -> limpiarError(txtLatitud));
-        txtLongitud.textProperty().addListener(
-                (obs, oldValue, newValue) -> limpiarError(txtLongitud));
-
-        configurarTooltips(); // NUEVO
+        configurarTooltips();
         configurarValidacionesEnTiempoReal();
+        txtNombre.textProperty().addListener(
+                (obs, oldValue, newValue) -> limpiarErrorTrasCambio(txtNombre));
+        txtHora.textProperty().addListener(
+                (obs, oldValue, newValue) -> limpiarErrorTrasCambio(txtHora));
+        txtLatitud.textProperty().addListener(
+                (obs, oldValue, newValue) -> limpiarErrorTrasCambio(txtLatitud));
+        txtLongitud.textProperty().addListener(
+                (obs, oldValue, newValue) -> limpiarErrorTrasCambio(txtLongitud));
+        txtNombre.focusedProperty().addListener(
+                (obs, wasFocused, isFocused) -> actualizarErrorTrasCambioDeFoco(txtNombre));
+        txtHora.focusedProperty().addListener(
+                (obs, wasFocused, isFocused) -> actualizarErrorTrasCambioDeFoco(txtHora));
+        txtLatitud.focusedProperty().addListener(
+                (obs, wasFocused, isFocused) -> actualizarErrorTrasCambioDeFoco(txtLatitud));
+        txtLongitud.focusedProperty().addListener(
+                (obs, wasFocused, isFocused) -> actualizarErrorTrasCambioDeFoco(txtLongitud));
 
         Platform.runLater(() -> {
             txtNombre.requestFocus();
@@ -160,16 +173,24 @@ public class CheckpointFormController implements Initializable {
                 Checkpoint nuevo = new Checkpoint(
                         0L, nombre, hora, latitud, longitud, descripcion);
                 long newId = checkpointDAO.insertar(nuevo);
-                if (newId != -1) {
-                    nuevo.setId(newId);
+                if (newId == -1) {
+                    AlertUtils.showError(getWindow(), "Error al guardar",
+                            "No se pudo confirmar el guardado del checkpoint.");
+                    return;
                 }
+                nuevo.setId(newId);
             } else {
                 checkpointEnEdicion.setNombre(nombre);
                 checkpointEnEdicion.setHora(hora);
                 checkpointEnEdicion.setLatitud(latitud);
                 checkpointEnEdicion.setLongitud(longitud);
                 checkpointEnEdicion.setDescripcion(descripcion);
-                checkpointDAO.actualizar(checkpointEnEdicion);
+                int filasActualizadas = checkpointDAO.actualizar(checkpointEnEdicion);
+                if (filasActualizadas == 0) {
+                    AlertUtils.showError(getWindow(), "Error al guardar",
+                            "No se pudo actualizar el checkpoint.");
+                    return;
+                }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error al guardar checkpoint", e);
@@ -178,6 +199,7 @@ public class CheckpointFormController implements Initializable {
             return;
         }
 
+        mostrarConfirmacionExito();
         volverListado();
     }
 
@@ -214,7 +236,7 @@ public class CheckpointFormController implements Initializable {
      * @return true cuando todos los campos son válidos
      */
     public boolean validateInput() {
-        limpiarTodosLosErrores(); // CAMBIADO
+        limpiarTodosLosErrores();
 
         FormValidation.validateNow(txtNombre);
         FormValidation.validateNow(txtHora);
@@ -228,53 +250,53 @@ public class CheckpointFormController implements Initializable {
 
         if (nombre.isEmpty()) {
             mostrarErrorDeValidacion(
-                    txtNombre, "Por favor ingrese un nombre para el Checkpoint."); // CAMBIADO
+                    txtNombre, "Por favor ingrese un nombre para el Checkpoint.");
             return false;
         }
 
         if (hora.isEmpty() || !isHoraValida(hora)) {
             mostrarErrorDeValidacion(
-                    txtHora, "La hora debe tener el formato HH:mm (Ej. 14:30)."); // CAMBIADO
+                    txtHora, "La hora debe tener el formato HH:mm (Ej. 14:30).");
             return false;
         }
 
         if (latitudRaw.isEmpty()) {
             mostrarErrorDeValidacion(
-                    txtLatitud, "Por favor ingrese la latitud del Checkpoint."); // CAMBIADO
+                    txtLatitud, "Por favor ingrese la latitud del Checkpoint.");
             return false;
         }
 
         try {
             double lat = parseDecimal(latitudRaw);
-            if (!Double.isFinite(lat) || lat < LAT_MIN || lat > LAT_MAX) { // CAMBIADO
+            if (!Double.isFinite(lat) || lat < LAT_MIN || lat > LAT_MAX) {
                 mostrarErrorDeValidacion(
                         txtLatitud,
-                        "La latitud debe estar entre " + LAT_MIN + " y " + LAT_MAX + "."); // CAMBIADO
+                        "La latitud debe estar entre " + LAT_MIN + " y " + LAT_MAX + ".");
                 return false;
             }
         } catch (NumberFormatException ex) {
             mostrarErrorDeValidacion(
-                    txtLatitud, "La latitud debe ser un valor numérico decimal."); // CAMBIADO
+                    txtLatitud, "La latitud debe ser un valor numérico decimal.");
             return false;
         }
 
         if (longitudRaw.isEmpty()) {
             mostrarErrorDeValidacion(
-                    txtLongitud, "Por favor ingrese la longitud del Checkpoint."); // CAMBIADO
+                    txtLongitud, "Por favor ingrese la longitud del Checkpoint.");
             return false;
         }
 
         try {
             double lon = parseDecimal(longitudRaw);
-            if (!Double.isFinite(lon) || lon < LON_MIN || lon > LON_MAX) { // CAMBIADO
+            if (!Double.isFinite(lon) || lon < LON_MIN || lon > LON_MAX) {
                 mostrarErrorDeValidacion(
                         txtLongitud,
-                        "La longitud debe estar entre " + LON_MIN + " y " + LON_MAX + "."); // CAMBIADO
+                        "La longitud debe estar entre " + LON_MIN + " y " + LON_MAX + ".");
                 return false;
             }
         } catch (NumberFormatException ex) {
             mostrarErrorDeValidacion(
-                    txtLongitud, "La longitud debe ser un valor numérico decimal."); // CAMBIADO
+                    txtLongitud, "La longitud debe ser un valor numérico decimal.");
             return false;
         }
 
@@ -283,14 +305,10 @@ public class CheckpointFormController implements Initializable {
 
     private void configurarValidacionesEnTiempoReal() {
         FormValidation.watch(txtNombre, txtNombre.textProperty(),
-                () -> txtNombre.getText().trim().isEmpty()
-                        ? "Por favor ingrese un nombre para el Checkpoint."
-                        : null);
+                this::validarNombre);
 
         FormValidation.watch(txtHora, txtHora.textProperty(),
-                () -> isHoraValida(txtHora.getText().trim())
-                        ? null
-                        : "La hora debe tener el formato HH:mm (Ej. 14:30).");
+                this::validarHora);
 
         FormValidation.watch(txtLatitud, txtLatitud.textProperty(),
                 () -> validarCoordenada(
@@ -299,6 +317,18 @@ public class CheckpointFormController implements Initializable {
         FormValidation.watch(txtLongitud, txtLongitud.textProperty(),
                 () -> validarCoordenada(
                         txtLongitud.getText(), LON_MIN, LON_MAX, "longitud"));
+    }
+
+    private String validarNombre() {
+        return txtNombre.getText().trim().isEmpty()
+                ? "Por favor ingrese un nombre para el Checkpoint."
+                : null;
+    }
+
+    private String validarHora() {
+        return isHoraValida(txtHora.getText().trim())
+                ? null
+                : "La hora debe tener el formato HH:mm (Ej. 14:30).";
     }
 
     private String validarCoordenada(
@@ -318,19 +348,14 @@ public class CheckpointFormController implements Initializable {
 
             return null;
         } catch (NumberFormatException e) {
-            return "La " + nombre + " debe ser un valor numérico decimal."; // CAMBIADO
+            return "La " + nombre + " debe ser un valor numérico decimal.";
         }
     }
 
-    // NUEVO: sigue el patrón de RutaFormController para el estado :error.
     private void marcarError(TextField campo, String mensaje) {
-        campo.pseudoClassStateChanged(PseudoClass.getPseudoClass("error"), true);
-
-        Tooltip tooltip = new Tooltip(mensaje);
-        tooltip.setShowDelay(Duration.millis(200));
-        tooltip.setShowDuration(Duration.seconds(5));
-        tooltip.setHideDelay(Duration.millis(100));
-        campo.setTooltip(tooltip);
+        mensajesError.put(campo, mensaje);
+        campo.pseudoClassStateChanged(ERROR, true);
+        FormValidation.showError(campo, mensaje);
 
         errorText.setText(mensaje);
         errorBanner.setVisible(true);
@@ -339,36 +364,90 @@ public class CheckpointFormController implements Initializable {
         campo.requestFocus();
     }
 
-    // NUEVO: limpia tanto :error como el estado :invalid de FormValidation.
     private void limpiarError(TextField campo) {
-        campo.pseudoClassStateChanged(PseudoClass.getPseudoClass("error"), false);
+        mensajesError.remove(campo);
+        campo.pseudoClassStateChanged(ERROR, false);
         FormValidation.clearError(campo);
         actualizarBanner();
     }
 
-    // NUEVO: muestra el error del campo y conserva el banner existente.
+    private void limpiarErrorTrasCambio(TextField campo) {
+        mensajesError.remove(campo);
+        campo.pseudoClassStateChanged(ERROR, false);
+        FormValidation.validateNow(campo);
+        actualizarBanner();
+    }
+
+    private void actualizarErrorTrasCambioDeFoco(TextField campo) {
+        if (campo.getPseudoClassStates().contains(ERROR)
+                && mensajeValidacionActual(campo) == null) {
+            String mensaje = mensajesError.get(campo);
+            if (mensaje != null) {
+                FormValidation.showError(campo, mensaje);
+            }
+        }
+        actualizarBanner();
+    }
+
     private void mostrarErrorDeValidacion(TextField campo, String mensaje) {
         marcarError(campo, mensaje);
     }
 
-    // NUEVO: oculta el banner cuando no quedan errores de envío.
     private void actualizarBanner() {
-        boolean hayErrores = txtNombre.getPseudoClassStates()
-                .contains(PseudoClass.getPseudoClass("error"))
-                || txtHora.getPseudoClassStates()
-                .contains(PseudoClass.getPseudoClass("error"))
-                || txtLatitud.getPseudoClassStates()
-                .contains(PseudoClass.getPseudoClass("error"))
-                || txtLongitud.getPseudoClassStates()
-                .contains(PseudoClass.getPseudoClass("error"));
-
-        if (!hayErrores) {
-            errorBanner.setVisible(false);
-            errorBanner.setManaged(false);
+        TextField campoConError = primerCampoConError();
+        boolean hayErrores = campoConError != null;
+        if (hayErrores) {
+            String mensaje = mensajeValidacionActual(campoConError);
+            if (mensaje == null) {
+                mensaje = mensajesError.get(campoConError);
+            }
+            if (mensaje != null) {
+                errorText.setText(mensaje);
+            }
         }
+        errorBanner.setVisible(hayErrores);
+        errorBanner.setManaged(hayErrores);
     }
 
-    // NUEVO: los tooltips originales se conservan al limpiar errores.
+    private String mensajeValidacionActual(TextField campo) {
+        if (campo == txtNombre) {
+            return validarNombre();
+        }
+        if (campo == txtHora) {
+            return validarHora();
+        }
+        if (campo == txtLatitud) {
+            return validarCoordenada(
+                    txtLatitud.getText(), LAT_MIN, LAT_MAX, "latitud");
+        }
+        if (campo == txtLongitud) {
+            return validarCoordenada(
+                    txtLongitud.getText(), LON_MIN, LON_MAX, "longitud");
+        }
+        return null;
+    }
+
+    private TextField primerCampoConError() {
+        if (tieneError(txtNombre)) {
+            return txtNombre;
+        }
+        if (tieneError(txtHora)) {
+            return txtHora;
+        }
+        if (tieneError(txtLatitud)) {
+            return txtLatitud;
+        }
+        if (tieneError(txtLongitud)) {
+            return txtLongitud;
+        }
+        return null;
+    }
+
+    private boolean tieneError(TextField campo) {
+        return campo.getPseudoClassStates().contains(ERROR)
+                || campo.getPseudoClassStates().contains(INVALID);
+    }
+
     private void configurarTooltips() {
         txtNombre.setTooltip(new Tooltip("Ingrese el nombre del checkpoint."));
         txtHora.setTooltip(new Tooltip("Ingrese la hora en formato HH:mm."));
@@ -376,7 +455,6 @@ public class CheckpointFormController implements Initializable {
         txtLongitud.setTooltip(new Tooltip("Ingrese una longitud entre -180 y 180."));
     }
 
-    // NUEVO: limpia los errores anteriores antes de validar nuevamente.
     private void limpiarTodosLosErrores() {
         limpiarError(txtNombre);
         limpiarError(txtHora);
@@ -385,6 +463,17 @@ public class CheckpointFormController implements Initializable {
 
         errorBanner.setVisible(false);
         errorBanner.setManaged(false);
+    }
+
+    private void mostrarConfirmacionExito() {
+        boolean esAlta = checkpointEnEdicion == null;
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+        alerta.setTitle(esAlta ? "Checkpoint creado" : "Checkpoint actualizado");
+        alerta.setHeaderText(null);
+        alerta.setContentText(esAlta
+                ? "El checkpoint se creó correctamente."
+                : "El checkpoint se actualizó correctamente.");
+        alerta.showAndWait();
     }
 
     private static boolean isHoraValida(String hora) {
@@ -400,32 +489,30 @@ public class CheckpointFormController implements Initializable {
         return Double.parseDouble(raw.replace(',', '.'));
     }
 
-    // CAMBIADO: el filtro ahora recibe el campo para marcar caracteres rechazados.
     private TextFormatter<String> createDecimalTextFormatter(TextField campo) {
         return new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
 
             if (newText.isEmpty() || newText.matches(DECIMAL_PATTERN)) {
-                limpiarError(campo); // NUEVO
+                limpiarError(campo);
                 return change;
             }
 
-            marcarError(campo, "Ingrese un número decimal válido."); // NUEVO
+            marcarError(campo, "Ingrese un número decimal válido.");
             return null;
         });
     }
 
-    // CAMBIADO: el filtro ahora recibe el campo para marcar caracteres rechazados.
     private TextFormatter<String> createHoraTextFormatter(TextField campo) {
         return new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
 
             if (newText.isEmpty() || newText.matches(HORA_PATTERN)) {
-                limpiarError(campo); // NUEVO
+                limpiarError(campo);
                 return change;
             }
 
-            marcarError(campo, "La hora debe escribirse en formato HH:mm."); // NUEVO
+            marcarError(campo, "La hora debe escribirse en formato HH:mm.");
             return null;
         });
     }

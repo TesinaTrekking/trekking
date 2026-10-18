@@ -12,77 +12,127 @@
 <?import javafx.geometry.Insets?>
 
 <ScrollPane fitToWidth="true"
-            hbarPolicy="NEVER"
-            vbarPolicy="AS_NEEDED"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.controller.CheckpointFormController"
-            stylesheets="@styles.css">
+    hbarPolicy="NEVER"
+    vbarPolicy="AS_NEEDED"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.example.controller.CheckpointFormController"
+    stylesheets="@styles.css">
 
     <content>
 
         <VBox spacing="12.0">
             <children>
                 <VBox spacing="2.0">
-                    <Label fx:id="tituloLabel" text="Nuevo Checkpoint" styleClass="dialog-header-title"/>
+                    <Label fx:id="tituloLabel" text="Nuevo Checkpoint"
+                        styleClass="dialog-header-title" />
                     <Label fx:id="subtituloLabel"
-                           text="Ingrese los datos del nuevo punto de control para la bitácora."
-                           wrapText="true" styleClass="dialog-header-subtitle"/>
+                        text="Ingrese los datos del nuevo punto de control para la bitácora."
+                        wrapText="true" styleClass="dialog-header-subtitle" />
                 </VBox>
                 <HBox fx:id="errorBanner" spacing="8.0" alignment="CENTER_LEFT"
-                      visible="false" managed="false" styleClass="error-banner">
-                    <Label text="⚠️" styleClass="error-banner-icon"/>
-                    <Label fx:id="errorText" wrapText="true" styleClass="error-banner-text"/>
+                    visible="false" managed="false" styleClass="error-banner">
+                    <Label text="⚠️" styleClass="error-banner-icon" />
+                    <Label fx:id="errorText" wrapText="true" styleClass="error-banner-text" />
                 </HBox>
-                <GridPane hgap="12.0" vgap="12.0" styleClass="dialog-form-card">
+                <GridPane hgap="12.0" vgap="8.0" styleClass="dialog-form-card">
+
                     <columnConstraints>
-                        <ColumnConstraints halignment="LEFT" minWidth="140.0"/>
-                        <ColumnConstraints halignment="LEFT" hgrow="ALWAYS"/>
+                        <ColumnConstraints minWidth="140.0" prefWidth="140.0" />
+                        <ColumnConstraints hgrow="ALWAYS" />
                     </columnConstraints>
 
-                    <Label text="Nombre" styleClass="form-label"
-                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                    <TextField fx:id="txtNombre" promptText="Ej. Checkpoint Alfa"
-                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    <!-- Nombre del checkpoint: se conserva el campo original. -->
+                    <Label text="Nombre"
+                        GridPane.columnIndex="0"
+                        GridPane.rowIndex="0" />
 
-                    <Label text="Hora (HH:mm)" styleClass="form-label"
-                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                    <TextField fx:id="txtHora" promptText="Ej. 14:30"
-                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <TextField fx:id="txtNombre"
+                        promptText="Ej. Checkpoint Alfa"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="0" />
 
-                    <Label text="Latitud" styleClass="form-label"
-                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                    <TextField fx:id="txtLatitud" promptText="Ej. -31.4135"
-                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <!-- Hora: se conserva el campo original. -->
+                    <Label text="Hora (HH:mm)"
+                        GridPane.columnIndex="0"
+                        GridPane.rowIndex="1" />
 
-                    <Label text="Longitud" styleClass="form-label"
-                           GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                    <TextField fx:id="txtLongitud" promptText="Ej. -64.1810"
-                               GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                    <TextField fx:id="txtHora"
+                        promptText="Ej. 14:30"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="1" />
 
-                    <Label text="Descripción" styleClass="form-label"
-                           GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                    <TextArea fx:id="txtDescripcion" promptText="Descripción opcional de la parada o control..."
-                              prefRowCount="3" prefColumnCount="22"
-                              GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                    <!-- NUEVO: ayuda para indicar el formato de hora esperado. -->
+                    <Label text="Formato de 24 horas. Ejemplo: 14:30."
+                        styleClass="field-help"
+                        wrapText="true"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="2" />
+
+                    <!-- Latitud: se conserva el campo original. -->
+                    <Label text="Latitud"
+                        GridPane.columnIndex="0"
+                        GridPane.rowIndex="3" />
+
+                    <TextField fx:id="txtLatitud"
+                        promptText="Ej. -31.4135"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="3" />
+
+                    <!-- NUEVO: informa el rango válido de latitud. -->
+                    <Label text="Grados decimales, entre -90 y 90."
+                        styleClass="field-help"
+                        wrapText="true"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="4" />
+
+                    <!-- Longitud: se conserva el campo original. -->
+                    <Label text="Longitud"
+                        GridPane.columnIndex="0"
+                        GridPane.rowIndex="5" />
+
+                    <TextField fx:id="txtLongitud"
+                        promptText="Ej. -64.1810"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="5" />
+
+                    <!-- NUEVO: informa el rango válido de longitud. -->
+                    <Label text="Grados decimales, entre -180 y 180."
+                        styleClass="field-help"
+                        wrapText="true"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="6" />
+
+                    <!-- Descripción: se conserva el campo original y sigue siendo opcional. -->
+                    <Label text="Descripción"
+                        GridPane.columnIndex="0"
+                        GridPane.rowIndex="7" />
+
+                    <TextArea fx:id="txtDescripcion"
+                        promptText="Descripción opcional de la parada o control..."
+                        prefRowCount="3"
+                        wrapText="true"
+                        GridPane.columnIndex="1"
+                        GridPane.rowIndex="7" />
+
                 </GridPane>
 
                 <HBox spacing="8.0"
-                      alignment="CENTER"
-                      styleClass="crud-actions">
+                    alignment="CENTER"
+                    styleClass="crud-actions">
 
                     <Button fx:id="guardarButton" text="Guardar"
-                            styleClass="action-edit"
-                            onAction="#guardarCheckpoint"/>
+                        styleClass="action-edit"
+                        onAction="#guardarCheckpoint" />
 
                     <Button text="Cancelar"
-                            styleClass="secondary-button"
-                            onAction="#cancelar"/>
+                        styleClass="secondary-button"
+                        onAction="#cancelar" />
 
                 </HBox>
             </children>
             <padding>
-                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
             </padding>
         </VBox>
 

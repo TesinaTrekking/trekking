@@ -23,7 +23,7 @@
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
             <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
-                <Button text="Nuevo cliente" onAction="#irAgregarCliente"
+                <Button text="+ Nuevo Cliente" onAction="#irAgregarCliente"
                         styleClass="action-add"/>
                 <Button text="Editar" onAction="#editarCliente"
                         styleClass="action-edit"/>
