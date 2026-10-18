@@ -23,7 +23,8 @@
               <VBox alignment="TOP_CENTER"
                      spacing="20.0">
 
-                     <Label fx:id="tituloLabel" text="Nuevo equipamiento"  styleClass="dialog-header-title" />
+                     <Label fx:id="tituloLabel" text="Nuevo equipamiento"
+                            styleClass="dialog-header-title" />
 
                      <GridPane alignment="CENTER"
                             hgap="10.0"
