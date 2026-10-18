@@ -35,7 +35,7 @@
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
                 <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
-                    <Button text="Nuevo recorrido" onAction="#nuevoRecorrido"
+                    <Button text="deseleccionar ruta" onAction="#nuevoRecorrido"
                         styleClass="action-add" />
                     <Button fx:id="guardarButton" text="Guardar" onAction="#guardarRecorrido"
                         styleClass="action-edit" />

@@ -122,7 +122,9 @@
 
                      <Label text="Checkpoints de la ruta"
                             styleClass="card-title" />
-
+                     <Label text="Agregue los checkpoints y ajuste el orden de visita."
+                            styleClass="field-help"
+                            wrapText="true" />
 
                      <HBox alignment="CENTER"
                             spacing="10.0">
@@ -168,6 +170,11 @@
                             <content>
 
                                    <VBox spacing="10.0">
+                                          <Label
+                                                 text="Seleccione el equipamiento y la cantidad necesaria."
+                                                 styleClass="field-help"
+                                                 wrapText="true" />
+
 
                                           <HBox alignment="CENTER"
                                                  spacing="10.0">

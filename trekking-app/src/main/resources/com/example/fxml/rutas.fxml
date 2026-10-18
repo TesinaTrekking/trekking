@@ -45,7 +45,7 @@
                                 </VBox>
                                 <Region HBox.hgrow="ALWAYS" />
                                 <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
-                                        <Button text="Agregar ruta"
+                                        <Button text="+ Nueva Ruta"
                                                 onAction="#nuevaRuta"
                                                 styleClass="action-add" />
                                         <Button text="Editar"

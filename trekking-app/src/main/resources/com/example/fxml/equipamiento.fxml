@@ -35,7 +35,7 @@
                   alignment="CENTER_RIGHT"
                   styleClass="toolbar-actions">
 
-                <Button text="Nuevo"
+                <Button text="+ Nuevo Equipamiento"
                         styleClass="action-add"
                         onAction="#nuevoEquipamiento"/>
 
