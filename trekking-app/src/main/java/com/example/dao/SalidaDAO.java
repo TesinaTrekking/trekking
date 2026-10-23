@@ -22,6 +22,118 @@ import java.util.Comparator;
 public class SalidaDAO {
     private final RutaDAO rutaDAO = new RutaDAO();
 
+    public List<Checkpoint> obtenerCheckpoints(int salidaId) throws SQLException {
+        List<Checkpoint> puntos = new ArrayList<>();
+        try (Connection c = ConexionDB.conectar(); PreparedStatement ps = c.prepareStatement(
+                "SELECT nombre, hora, latitud, longitud, altitud, descripcion FROM salida_checkpoints WHERE salida_id = ? ORDER BY orden")) {
+            ps.setInt(1, salidaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) puntos.add(new Checkpoint(0L, rs.getString("nombre"), rs.getString("hora"),
+                        rs.getDouble("latitud"), rs.getDouble("longitud"), rs.getDouble("altitud"), rs.getString("descripcion")));
+            }
+        }
+        return puntos;
+    }
+
+    public void actualizar(int salidaId, LocalDate fecha, int rutaId, List<Checkpoint> puntos,
+            List<Checkpoint> guardarEnRuta, boolean actualizarDesdeRuta) throws SQLException {
+        if (fecha == null || puntos == null) throw new SQLException("La fecha y los Checkpoints son obligatorios.");
+        try (Connection c = ConexionDB.conectar()) {
+            c.setAutoCommit(false);
+            try {
+                Salida actual;
+                try (PreparedStatement ps = c.prepareStatement("SELECT * FROM salidas WHERE id = ?")) {
+                    ps.setInt(1, salidaId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new SQLException("La Salida ya no existe.");
+                        actual = mapear(rs);
+                    }
+                }
+                Ruta rutaCatalogo = rutaDAO.obtenerPorId(c, rutaId);
+                if (rutaCatalogo == null) throw new SQLException("La Ruta seleccionada ya no existe.");
+                boolean mismaRuta = rutaId == actual.rutaId();
+                Ruta ruta = mismaRuta && !actualizarDesdeRuta
+                        ? new Ruta(rutaId, actual.rutaNombre(), actual.rutaAltitudMaxima(), actual.rutaTipoTerreno(),
+                                actual.rutaDificultadTecnica(), actual.rutaDificultadFisica())
+                        : rutaCatalogo;
+                try (PreparedStatement ps = c.prepareStatement("SELECT activo FROM rutas WHERE id = ?")) {
+                    ps.setInt(1, rutaId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next() || (rs.getInt(1) != 1 && !mismaRuta))
+                            throw new SQLException("No se puede cambiar a una Ruta inactiva.");
+                    }
+                }
+                for (Checkpoint cp : puntos) validarCheckpoint(cp, ruta.getAltitudMaxima());
+                if (!guardarEnRuta.isEmpty()) {
+                    if (mismaRuta && !rutaActiva(c, rutaId)) throw new SQLException("La Ruta inactiva no admite nuevos Checkpoints.");
+                    int total = new RutaCheckpointDAO().obtenerPorRuta(c, rutaId).size();
+                    if (total + guardarEnRuta.size() == 1) throw new SQLException("La Ruta no puede quedar con exactamente un Checkpoint.");
+                    for (Checkpoint cp : guardarEnRuta) {
+                        validarCheckpoint(cp, ruta.getAltitudMaxima());
+                        if (cp.getAltitud() > rutaCatalogo.getAltitudMaxima())
+                            throw new SQLException("El Checkpoint supera la altitud máxima actual de la Ruta.");
+                    }
+                }
+                try (PreparedStatement ps = c.prepareStatement("UPDATE salidas SET ruta_id = ?, fecha = ?, ruta_nombre = ?, ruta_altitud_maxima = ?, ruta_tipo_terreno = ?, ruta_dificultad_tecnica = ?, ruta_dificultad_fisica = ? WHERE id = ?")) {
+                    ps.setInt(1, rutaId); ps.setString(2, fecha.toString()); ps.setString(3, ruta.getNombre());
+                    ps.setDouble(4, ruta.getAltitudMaxima()); ps.setString(5, ruta.getTipoTerreno());
+                    ps.setString(6, ruta.getDificultadTecnica()); ps.setString(7, ruta.getDificultadFisica()); ps.setInt(8, salidaId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement del = c.prepareStatement("DELETE FROM salida_checkpoints WHERE salida_id = ?")) {
+                    del.setInt(1, salidaId); del.executeUpdate();
+                }
+                try (PreparedStatement ins = c.prepareStatement("INSERT INTO salida_checkpoints (salida_id,nombre,hora,latitud,longitud,altitud,descripcion,orden) VALUES (?,?,?,?,?,?,?,?)")) {
+                    int orden = 0;
+                    for (Checkpoint cp : puntos) {
+                        ins.setInt(1, salidaId); ins.setString(2, cp.getNombre().trim()); ins.setString(3, cp.getHora());
+                        ins.setDouble(4, cp.getLatitud()); ins.setDouble(5, cp.getLongitud()); ins.setDouble(6, cp.getAltitud());
+                        ins.setString(7, cp.getDescripcion()); ins.setInt(8, orden++); ins.addBatch();
+                    }
+                    ins.executeBatch();
+                }
+                for (Checkpoint cp : guardarEnRuta) agregarCheckpointRuta(c, rutaId, cp);
+                c.commit();
+            } catch (SQLException | RuntimeException e) {
+                c.rollback();
+                if (e instanceof SQLException sql) throw sql;
+                throw new SQLException("No se pudo actualizar la Salida.", e);
+            }
+        }
+    }
+
+    private boolean rutaActiva(Connection c, int rutaId) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT activo FROM rutas WHERE id = ?")) {
+            ps.setInt(1, rutaId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next() && rs.getInt(1) == 1; }
+        }
+    }
+
+    private void validarCheckpoint(Checkpoint cp, double maxima) throws SQLException {
+        if (cp == null || cp.getNombre() == null || cp.getNombre().isBlank() || cp.getHora() == null
+                || !cp.getHora().matches("(?:[01]\\d|2[0-3]):[0-5]\\d")
+                || !Double.isFinite(cp.getLatitud()) || cp.getLatitud() < -90 || cp.getLatitud() > 90
+                || !Double.isFinite(cp.getLongitud()) || cp.getLongitud() < -180 || cp.getLongitud() > 180
+                || !Double.isFinite(cp.getAltitud()) || cp.getAltitud() < 0 || cp.getAltitud() > maxima)
+            throw new SQLException("Revisa nombre, hora, coordenadas y altitud de cada Checkpoint. Ninguno puede superar la altitud máxima copiada de la Ruta (" + maxima + " m).");
+    }
+
+    private void agregarCheckpointRuta(Connection c, int rutaId, Checkpoint cp) throws SQLException {
+        long id;
+        try (PreparedStatement ps = c.prepareStatement("INSERT INTO checkpoints (nombre,hora,latitud,longitud,altitud,descripcion) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, cp.getNombre().trim()); ps.setString(2, cp.getHora()); ps.setDouble(3, cp.getLatitud());
+            ps.setDouble(4, cp.getLongitud()); ps.setDouble(5, cp.getAltitud()); ps.setString(6, cp.getDescripcion()); ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) { if (!rs.next()) throw new SQLException("No se pudo crear el Checkpoint de Ruta."); id = rs.getLong(1); }
+        }
+        try (PreparedStatement ps = c.prepareStatement("INSERT INTO ruta_checkpoints (ruta_id,checkpoint_id,orden) VALUES (?,?,?)")) {
+            ps.setInt(1, rutaId); ps.setLong(2, id);
+            try (PreparedStatement max = c.prepareStatement("SELECT COALESCE(MAX(orden),0)+1 FROM ruta_checkpoints WHERE ruta_id = ?")) {
+                max.setInt(1, rutaId); try (ResultSet rs = max.executeQuery()) { ps.setInt(3, rs.next() ? rs.getInt(1) : 1); }
+            }
+            ps.executeUpdate();
+        }
+    }
+
     public List<Salida> obtenerTodas() {
         String sql = "SELECT * FROM salidas ORDER BY fecha DESC, id DESC";
         List<Salida> salidas = new ArrayList<>();

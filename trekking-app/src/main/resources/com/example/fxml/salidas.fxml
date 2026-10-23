@@ -20,6 +20,7 @@
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="Marcar realizada" onAction="#marcarRealizada" styleClass="action-edit"/>
         <Button text="Cancelar Salida" onAction="#cancelarSalida" styleClass="action-delete"/>
+        <Button text="Editar Salida" onAction="#editarSalida" styleClass="action-edit"/>
     </HBox>
     <HBox spacing="12" alignment="CENTER_LEFT">
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Salidas próximas (7 días)" styleClass="form-label"/><Label fx:id="kpiProximas" text="0" styleClass="brand-title"/></VBox>

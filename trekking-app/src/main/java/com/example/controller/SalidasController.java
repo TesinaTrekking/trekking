@@ -5,6 +5,7 @@ import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.SalidaDAO;
 import com.example.model.Ruta;
 import com.example.model.Salida;
+import com.example.model.Checkpoint;
 import com.example.model.Equipamiento;
 import com.example.model.AsignacionEquipamiento;
 import com.example.dao.EquipamientoDAO;
@@ -62,6 +63,11 @@ public class SalidasController {
     }
 
     @FXML private void iniciarWizard() { new WizardSalida().mostrar(); }
+    @FXML private void editarSalida() {
+        Salida seleccionada = tablaSalidas.getSelectionModel().getSelectedItem();
+        if (seleccionada == null) { aviso(Alert.AlertType.INFORMATION, "Selecciona una Salida", "Selecciona la Salida que quieres editar."); return; }
+        new EditorSalida(seleccionada).mostrar();
+    }
     @FXML private void marcarRealizada() { cerrar("realizada"); }
     @FXML private void cancelarSalida() { cerrar("cancelada"); }
 
@@ -96,6 +102,127 @@ public class SalidasController {
     private void aviso(Alert.AlertType tipo, String titulo, String mensaje) {
         Alert alert = new Alert(tipo); alert.setTitle(titulo); alert.setHeaderText(null);
         alert.setContentText(mensaje == null ? "Ocurrió un error inesperado." : mensaje); alert.showAndWait();
+    }
+
+    private final class EditorSalida {
+        private final Salida original;
+        private final Stage stage = new Stage();
+        private final VBox content = new VBox(10);
+        private final DatePicker fecha = new DatePicker();
+        private final ComboBox<Ruta> rutas = new ComboBox<>();
+        private final ListView<Checkpoint> puntos = new ListView<>();
+        private final List<Checkpoint> checkpoints = new ArrayList<>();
+        private final Label detalleRuta = new Label();
+        private boolean actualizarDesdeRuta;
+        private final List<Checkpoint> checkpointsGuardarEnRuta = new ArrayList<>();
+
+        EditorSalida(Salida original) { this.original = original; }
+
+        void mostrar() {
+            stage.initOwner(tablaSalidas.getScene().getWindow()); stage.initModality(Modality.WINDOW_MODAL);
+            stage.setTitle("Editar Salida " + original.id());
+            try {
+                checkpoints.addAll(salidaDAO.obtenerCheckpoints(original.id()));
+                rutas.setItems(FXCollections.observableArrayList(rutaDAO.obtenerTodasIncluyendoInactivas()));
+            } catch (SQLException e) {
+                aviso(Alert.AlertType.ERROR, "No se pudo abrir la Salida", e.getMessage()); return;
+            }
+            rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
+            fecha.setValue(original.fecha());
+            rutas.getItems().stream().filter(r -> r.getId() == original.rutaId()).findFirst().ifPresent(rutas::setValue);
+            rutas.valueProperty().addListener((o, a, b) -> {
+                if (b != null && b.getId() != original.rutaId() && !rutaDAO.estaActiva(b.getId())) {
+                    rutas.setValue(a); aviso(Alert.AlertType.WARNING, "Ruta inactiva", "No se puede cambiar a una Ruta inactiva."); return;
+                }
+                if (b != null && a != null && b.getId() != a.getId()) {
+                    actualizarDesdeRuta = false;
+                    checkpointsGuardarEnRuta.clear();
+                    checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(b.getId())); actualizarPuntos();
+                }
+                actualizarDetalle();
+            });
+            detalleRuta.setWrapText(true); actualizarDetalle(); actualizarPuntos();
+            Button agregar = new Button("Agregar Checkpoint"), editar = new Button("Editar seleccionado"), quitar = new Button("Quitar seleccionado");
+            Button refrescar = new Button("Actualizar desde ruta"), guardar = new Button("Guardar cambios"), cancelar = new Button("Cancelar");
+            agregar.setOnAction(e -> editarCheckpoint(null));
+            editar.setOnAction(e -> { Checkpoint cp = puntos.getSelectionModel().getSelectedItem(); if (cp != null) editarCheckpoint(cp); });
+            quitar.setOnAction(e -> { Checkpoint cp = puntos.getSelectionModel().getSelectedItem(); if (cp != null) { checkpoints.remove(cp); checkpointsGuardarEnRuta.remove(cp); actualizarPuntos(); } });
+            refrescar.setOnAction(e -> {
+                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Se reemplazarán los datos copiados de Ruta y todos sus Checkpoints. Se perderán las modificaciones locales de Checkpoints. Equipamiento y Participantes se conservarán.", ButtonType.CANCEL, ButtonType.OK);
+                confirm.setTitle("Actualizar desde ruta"); confirm.setHeaderText("¿Reemplazar la copia operativa?");
+                if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK && rutas.getValue() != null) {
+                    actualizarDesdeRuta = true;
+                    checkpointsGuardarEnRuta.clear();
+                    checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(rutas.getValue().getId())); actualizarPuntos();
+                }
+            });
+            guardar.setOnAction(e -> guardar()); cancelar.setOnAction(e -> stage.close());
+            content.setStyle("-fx-padding: 20;");
+            content.getChildren().addAll(new Label("Fecha de la Salida"), fecha, new Label("Ruta"), rutas, detalleRuta,
+                    new Label("Checkpoints operativos (se admite una lista vacía o de cualquier tamaño)"), puntos,
+                    new javafx.scene.layout.HBox(8, agregar, editar, quitar), refrescar,
+                    new javafx.scene.layout.HBox(8, cancelar, guardar));
+            ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true);
+            stage.setScene(new Scene(scroll, 650, 650)); stage.showAndWait();
+        }
+
+        private void actualizarPuntos() {
+            puntos.setItems(FXCollections.observableArrayList(checkpoints));
+            puntos.setCellFactory(v -> new ListCell<>() { @Override protected void updateItem(Checkpoint cp, boolean empty) {
+                super.updateItem(cp, empty); setText(empty || cp == null ? null : cp.getHora() + " · " + cp.getNombre() + " · " + cp.getAltitud() + " m");
+            }});
+        }
+
+        private void actualizarDetalle() {
+            Ruta r = rutas.getValue();
+            if (r != null) detalleRuta.setText(r.getNombre() + " · altitud máxima " + r.getAltitudMaxima() + " m · " + r.getTipoTerreno() + " · " + r.getDificultadTecnica() + "/" + r.getDificultadFisica());
+        }
+
+        private void editarCheckpoint(Checkpoint existente) {
+            Ruta ruta = rutas.getValue(); if (ruta == null) return;
+            TextField nombre = new TextField(existente == null ? "" : existente.getNombre());
+            TextField hora = new TextField(existente == null ? "" : existente.getHora());
+            TextField latitud = new TextField(existente == null ? "" : String.valueOf(existente.getLatitud()));
+            TextField longitud = new TextField(existente == null ? "" : String.valueOf(existente.getLongitud()));
+            TextField altitud = new TextField(existente == null ? "" : String.valueOf(existente.getAltitud()));
+            TextField descripcion = new TextField(existente == null ? "" : existente.getDescripcion());
+            CheckBox guardarRuta = new CheckBox("Guardar también en la Ruta");
+            boolean activa = rutaDAO.estaActiva(ruta.getId());
+            int cantidadPlantilla = new RutaCheckpointDAO().obtenerPorRuta(ruta.getId()).size();
+            boolean permiteGuardar = cantidadPlantilla + 1 >= 2;
+            guardarRuta.setVisible(existente == null && activa && permiteGuardar);
+            guardarRuta.setManaged(existente == null && activa && permiteGuardar);
+            if (!activa) guardarRuta.setTooltip(new javafx.scene.control.Tooltip("La Ruta está inactiva."));
+            Dialog<ButtonType> dialog = new Dialog<>(); dialog.initOwner(stage); dialog.setTitle(existente == null ? "Agregar Checkpoint" : "Editar Checkpoint");
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
+            GridPane grid = new GridPane(); grid.setHgap(8); grid.setVgap(8);
+            String[] labels = {"Nombre *", "Hora (HH:mm) *", "Latitud *", "Longitud *", "Altitud (m) *", "Descripción"};
+            TextField[] fields = {nombre, hora, latitud, longitud, altitud, descripcion};
+            for (int i = 0; i < fields.length; i++) { grid.add(new Label(labels[i]), 0, i); grid.add(fields[i], 1, i); }
+            grid.add(guardarRuta, 1, fields.length); dialog.getDialogPane().setContent(grid);
+            if (dialog.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+            try {
+                double altitudMaxima = rutas.getValue().getId() == original.rutaId() && !actualizarDesdeRuta
+                        ? original.rutaAltitudMaxima() : ruta.getAltitudMaxima();
+                Checkpoint cp = new Checkpoint(0L, nombre.getText().trim(), hora.getText().trim(),
+                        Double.parseDouble(latitud.getText().trim().replace(',', '.')), Double.parseDouble(longitud.getText().trim().replace(',', '.')),
+                        Double.parseDouble(altitud.getText().trim().replace(',', '.')), descripcion.getText().trim());
+                if (cp.getNombre().isBlank() || !cp.getHora().matches("(?:[01]\\d|2[0-3]):[0-5]\\d") || cp.getLatitud() < -90 || cp.getLatitud() > 90
+                        || cp.getLongitud() < -180 || cp.getLongitud() > 180 || cp.getAltitud() < 0 || cp.getAltitud() > altitudMaxima)
+                    throw new IllegalArgumentException("Verifica los campos; la altitud debe estar entre cero y " + altitudMaxima + " m.");
+                if (existente == null) checkpoints.add(cp); else { int index = checkpoints.indexOf(existente); checkpoints.set(index, cp); }
+                if (guardarRuta.isSelected()) checkpointsGuardarEnRuta.add(cp);
+                actualizarPuntos();
+            } catch (RuntimeException ex) { aviso(Alert.AlertType.WARNING, "Checkpoint inválido", ex.getMessage() == null ? "Completa correctamente todos los campos." : ex.getMessage()); }
+        }
+
+        private void guardar() {
+            try {
+                List<Checkpoint> copia = List.copyOf(checkpoints);
+                salidaDAO.actualizar(original.id(), fecha.getValue(), rutas.getValue().getId(), copia, List.copyOf(checkpointsGuardarEnRuta), actualizarDesdeRuta);
+                stage.close(); actualizarTabla(); actualizarIndicadores();
+            } catch (SQLException | RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudo actualizar la Salida", e.getMessage()); }
+        }
     }
 
     private final class WizardSalida {
