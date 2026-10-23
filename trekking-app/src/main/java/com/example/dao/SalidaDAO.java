@@ -18,8 +18,11 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
+import java.util.HashMap;
 
 public class SalidaDAO {
+    public record ResumenOperativo(String participantes, String equipamiento) {}
+
     private final RutaDAO rutaDAO = new RutaDAO();
 
     public List<AsignacionEquipamiento> obtenerEquipamiento(int salidaId) throws SQLException {
@@ -260,6 +263,27 @@ public class SalidaDAO {
             throw new IllegalStateException("No se pudieron cargar las salidas.", e);
         }
         return salidas;
+    }
+
+    /** Returns searchable participant copies and assigned equipment summaries for the Salidas list. */
+    public Map<Integer, ResumenOperativo> obtenerResumenesOperativos() {
+        Map<Integer, ResumenOperativo> resumenes = new HashMap<>();
+        String sql = """
+                SELECT s.id,
+                    COALESCE((SELECT GROUP_CONCAT(sp.apellido_copia || ', ' || sp.nombre_copia || ' ' || sp.dni_copia, ' ')
+                        FROM salida_participantes sp WHERE sp.salida_id = s.id), '') AS participantes,
+                    COALESCE((SELECT GROUP_CONCAT(se.nombre_copia || ' × ' || se.cantidad, ', ')
+                        FROM salida_equipamiento se WHERE se.salida_id = s.id), '') AS equipamiento
+                FROM salidas s
+                """;
+        try (Connection c = ConexionDB.conectar(); Statement statement = c.createStatement();
+                ResultSet rs = statement.executeQuery(sql)) {
+            while (rs.next()) resumenes.put(rs.getInt("id"), new ResumenOperativo(
+                    rs.getString("participantes"), rs.getString("equipamiento")));
+        } catch (SQLException e) {
+            throw new IllegalStateException("No se pudieron cargar los resúmenes de las Salidas.", e);
+        }
+        return resumenes;
     }
 
     public Map<String, Integer> obtenerIndicadores() {

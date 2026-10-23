@@ -18,8 +18,8 @@
         <VBox spacing="4"><Label text="Salidas" styleClass="brand-title"/>
             <Label text="Planificación y seguimiento de actividades" styleClass="brand-subtitle"/></VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Marcar realizada" onAction="#marcarRealizada" styleClass="action-edit"/>
-        <Button text="Cancelar Salida" onAction="#cancelarSalida" styleClass="action-delete"/>
+        <Button fx:id="btnRealizada" text="Marcar realizada" onAction="#marcarRealizada" styleClass="action-edit"/>
+        <Button fx:id="btnCancelar" text="Cancelar Salida" onAction="#cancelarSalida" styleClass="action-delete"/>
         <Button text="Editar Salida" onAction="#editarSalida" styleClass="action-edit"/>
     </HBox>
     <HBox spacing="12" alignment="CENTER_LEFT">
@@ -32,7 +32,7 @@
         <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
     </HBox>
     <HBox spacing="10" alignment="CENTER_LEFT">
-        <TextField fx:id="buscarField" promptText="Buscar por Ruta" HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="buscarField" promptText="Buscar por Ruta o Cliente" HBox.hgrow="ALWAYS"/>
         <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Filtrar por estado"/>
     </HBox>
     <TableView fx:id="tablaSalidas" VBox.vgrow="ALWAYS">
@@ -40,6 +40,8 @@
             <TableColumn fx:id="colId" text="ID" prefWidth="70"/>
             <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
             <TableColumn fx:id="colRuta" text="Ruta" prefWidth="320"/>
+            <TableColumn fx:id="colParticipantes" text="Participantes" prefWidth="260"/>
+            <TableColumn fx:id="colEquipamiento" text="Equipamiento asignado" prefWidth="260"/>
             <TableColumn fx:id="colEstado" text="Estado" prefWidth="160"/>
         </columns>
     </TableView>

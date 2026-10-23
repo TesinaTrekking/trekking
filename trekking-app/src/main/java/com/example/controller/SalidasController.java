@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Locale;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -39,18 +41,26 @@ public class SalidasController {
     @FXML private TableColumn<Salida, LocalDate> colFecha;
     @FXML private TableColumn<Salida, String> colRuta;
     @FXML private TableColumn<Salida, String> colEstado;
+    @FXML private TableColumn<Salida, String> colParticipantes;
+    @FXML private TableColumn<Salida, String> colEquipamiento;
     @FXML private Label kpiProximas, kpiRutas, kpiClientes, kpiInventario;
     @FXML private TextField buscarField;
     @FXML private ComboBox<String> estadoFiltro;
+    @FXML private Button btnRealizada, btnCancelar;
+    private Map<Integer, SalidaDAO.ResumenOperativo> resumenes = Map.of();
 
     @FXML private void initialize() {
         colId.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().id()));
         colFecha.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().fecha()));
         colRuta.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().rutaNombre()));
         colEstado.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().estado()));
+        colParticipantes.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenParticipantes(data.getValue())));
+        colEquipamiento.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenEquipamiento(data.getValue())));
         estadoFiltro.setItems(FXCollections.observableArrayList("Todos", "planificada", "realizada", "cancelada"));
         estadoFiltro.setValue("Todos");
         actualizarIndicadores(); actualizarTabla();
+        tablaSalidas.getSelectionModel().selectedItemProperty().addListener((obs, anterior, seleccionada) -> actualizarAcciones(seleccionada));
+        actualizarAcciones(null);
         buscarField.textProperty().addListener((obs, oldValue, newValue) -> aplicarFiltros());
         estadoFiltro.valueProperty().addListener((obs, oldValue, newValue) -> aplicarFiltros());
         tablaSalidas.setRowFactory(table -> new TableRow<>() {
@@ -74,12 +84,42 @@ public class SalidasController {
     private void cerrar(String estado) {
         Salida salida = tablaSalidas.getSelectionModel().getSelectedItem();
         if (salida == null) { aviso(Alert.AlertType.INFORMATION, "Selecciona una Salida", "Selecciona una Salida planificada para continuar."); return; }
+        if (!"planificada".equals(salida.estado())) {
+            aviso(Alert.AlertType.INFORMATION, "Salida ya cerrada", "Solo se pueden cerrar Salidas planificadas."); return;
+        }
+        String accion = "realizada".equals(estado) ? "marcar como realizada" : "cancelar";
+        Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION,
+                "¿Quieres " + accion + " la Salida " + salida.id() + "? Su reserva de stock se liberará y el estado no se podrá revertir desde el flujo normal.",
+                ButtonType.CANCEL, ButtonType.OK);
+        confirmar.setTitle("Cerrar Salida"); confirmar.setHeaderText("Confirmar cierre");
+        if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
         try { salidaDAO.cambiarEstado(salida.id(), estado); actualizarIndicadores(); actualizarTabla(); }
         catch (SQLException e) { aviso(Alert.AlertType.ERROR, "No se pudo actualizar la Salida", e.getMessage()); }
     }
 
+    private void actualizarAcciones(Salida seleccionada) {
+        boolean planificada = seleccionada != null && "planificada".equals(seleccionada.estado());
+        if (btnRealizada != null) btnRealizada.setDisable(!planificada);
+        if (btnCancelar != null) btnCancelar.setDisable(!planificada);
+    }
+
+    private String resumenParticipantes(Salida salida) {
+        SalidaDAO.ResumenOperativo resumen = resumenes.get(salida.id());
+        return resumen == null ? "—" : textoResumen(resumen.participantes());
+    }
+
+    private String resumenEquipamiento(Salida salida) {
+        SalidaDAO.ResumenOperativo resumen = resumenes.get(salida.id());
+        return resumen == null ? "—" : textoResumen(resumen.equipamiento());
+    }
+
+    private String textoResumen(String texto) {
+        return texto == null || texto.isBlank() ? "—" : texto;
+    }
+
     private void actualizarTabla() {
         try {
+            resumenes = salidaDAO.obtenerResumenesOperativos();
             FilteredList<Salida> filas = new FilteredList<>(FXCollections.observableArrayList(salidaDAO.obtenerTodas()), s -> true);
             tablaSalidas.setItems(filas); aplicarFiltros();
         } catch (RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudieron cargar las Salidas", e.getMessage()); }
@@ -87,10 +127,17 @@ public class SalidasController {
     private void aplicarFiltros() {
         if (!(tablaSalidas.getItems() instanceof FilteredList<?> raw)) return;
         @SuppressWarnings("unchecked") FilteredList<Salida> filas = (FilteredList<Salida>) raw;
-        String consulta = buscarField == null || buscarField.getText() == null ? "" : buscarField.getText().trim().toLowerCase();
+        String consulta = buscarField == null || buscarField.getText() == null ? "" : buscarField.getText().trim().toLowerCase(Locale.ROOT);
         String estado = estadoFiltro == null ? "Todos" : estadoFiltro.getValue();
-        filas.setPredicate(s -> (consulta.isEmpty() || s.rutaNombre().toLowerCase().contains(consulta))
+        filas.setPredicate(s -> (consulta.isEmpty() || s.rutaNombre().toLowerCase(Locale.ROOT).contains(consulta)
+                        || contieneCliente(s, consulta))
                 && (estado == null || "Todos".equals(estado) || s.estado().equals(estado)));
+    }
+
+    private boolean contieneCliente(Salida salida, String consulta) {
+        SalidaDAO.ResumenOperativo resumen = resumenes.get(salida.id());
+        return resumen != null && resumen.participantes() != null
+                && resumen.participantes().toLowerCase(Locale.ROOT).contains(consulta);
     }
     private void actualizarIndicadores() {
         try {
