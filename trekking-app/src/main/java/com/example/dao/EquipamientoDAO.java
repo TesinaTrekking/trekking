@@ -35,9 +35,7 @@ public class EquipamientoDAO {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-            System.out.println(
-                    "Error al insertar equipamiento: "
-                            + e.getMessage());
+            throw new IllegalStateException("No se pudo guardar el elemento de inventario.", e);
         }
     }
 
@@ -49,25 +47,40 @@ public class EquipamientoDAO {
                     categoria = ?,
                     cantidad = ?,
                     estado = ?
-                WHERE id = ?
+                WHERE id = ? AND ? >= (
+                    SELECT COALESCE(SUM(se.cantidad), 0)
+                    FROM salida_equipamiento se
+                    JOIN salidas s ON s.id = se.salida_id
+                    WHERE se.equipamiento_id = equipamiento.id
+                      AND s.estado = 'planificada'
+                )
                 """;
 
         try (
                 Connection conexion = ConexionDB.conectar();
                 PreparedStatement statement = conexion.prepareStatement(sql)) {
 
+            int reservada = obtenerCantidadReservada(conexion, equipamiento.getId());
+            if (equipamiento.getCantidad() < reservada) {
+                throw new IllegalArgumentException(
+                        "La cantidad total no puede ser menor que la cantidad reservada ("
+                                + reservada + ").");
+            }
+
             statement.setString(1, equipamiento.getNombre());
             statement.setString(2, equipamiento.getCategoria());
             statement.setInt(3, equipamiento.getCantidad());
             statement.setString(4, equipamiento.getEstado());
             statement.setInt(5, equipamiento.getId());
+            statement.setInt(6, equipamiento.getCantidad());
 
-            statement.executeUpdate();
+            if (statement.executeUpdate() == 0) {
+                throw new IllegalArgumentException(
+                        "No se pudo actualizar: la cantidad total no puede ser menor que lo reservado.");
+            }
 
         } catch (SQLException e) {
-            System.out.println(
-                    "Error al actualizar equipamiento: "
-                            + e.getMessage());
+            throw new IllegalStateException("No se pudo actualizar el elemento de inventario.", e);
         }
     }
 
@@ -90,6 +103,30 @@ public class EquipamientoDAO {
             System.out.println(
                     "Error al eliminar equipamiento: "
                             + e.getMessage());
+        }
+    }
+
+    public static int obtenerCantidadReservada(int id) {
+        try (Connection conexion = ConexionDB.conectar()) {
+            return obtenerCantidadReservada(conexion, id);
+        } catch (SQLException e) {
+            throw new IllegalStateException("No se pudo consultar la reserva del elemento.", e);
+        }
+    }
+
+    private static int obtenerCantidadReservada(Connection conexion, int id)
+            throws SQLException {
+        String sql = """
+                SELECT COALESCE(SUM(se.cantidad), 0)
+                FROM salida_equipamiento se
+                JOIN salidas s ON s.id = se.salida_id
+                WHERE se.equipamiento_id = ? AND s.estado = 'planificada'
+                """;
+        try (PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getInt(1) : 0;
+            }
         }
     }
 
@@ -120,9 +157,14 @@ public class EquipamientoDAO {
         ObservableList<Equipamiento> equipamientos = FXCollections.observableArrayList();
 
         String sql = """
-                SELECT *
-                FROM equipamiento
+                SELECT e.*, COALESCE(SUM(CASE WHEN s.estado = 'planificada'
+                    THEN se.cantidad ELSE 0 END), 0) AS cantidad_reservada
+                FROM equipamiento e
+                LEFT JOIN salida_equipamiento se ON se.equipamiento_id = e.id
+                LEFT JOIN salidas s ON s.id = se.salida_id
                 WHERE activo = 1
+                GROUP BY e.id
+                ORDER BY e.nombre COLLATE NOCASE
                 """;
 
         try (
@@ -148,9 +190,14 @@ public class EquipamientoDAO {
         ObservableList<Equipamiento> equipamientos = FXCollections.observableArrayList();
 
         String sql = """
-                SELECT *
-                FROM equipamiento
-                WHERE activo = 0
+                SELECT e.*, COALESCE(SUM(CASE WHEN s.estado = 'planificada'
+                    THEN se.cantidad ELSE 0 END), 0) AS cantidad_reservada
+                FROM equipamiento e
+                LEFT JOIN salida_equipamiento se ON se.equipamiento_id = e.id
+                LEFT JOIN salidas s ON s.id = se.salida_id
+                WHERE e.activo = 0
+                GROUP BY e.id
+                ORDER BY e.nombre COLLATE NOCASE
                 """;
 
         try (
@@ -179,7 +226,8 @@ public class EquipamientoDAO {
                 resultSet.getString("nombre"),
                 resultSet.getString("categoria"),
                 resultSet.getInt("cantidad"),
-                resultSet.getString("estado"));
+                resultSet.getString("estado"),
+                resultSet.getInt("cantidad_reservada"));
     }
 
     public static Equipamiento obtenerPorId(int id) {
@@ -196,9 +244,12 @@ public class EquipamientoDAO {
     public static Equipamiento obtenerPorId(Connection conexion, int id)
             throws SQLException {
         String sql = """
-                SELECT *
-                FROM equipamiento
-                WHERE id = ?
+                SELECT e.*, COALESCE((SELECT SUM(se.cantidad)
+                    FROM salida_equipamiento se JOIN salidas s ON s.id = se.salida_id
+                    WHERE se.equipamiento_id = e.id AND s.estado = 'planificada'), 0)
+                    AS cantidad_reservada
+                FROM equipamiento e
+                WHERE e.id = ?
                 """;
 
         try (PreparedStatement statement = conexion.prepareStatement(sql)) {

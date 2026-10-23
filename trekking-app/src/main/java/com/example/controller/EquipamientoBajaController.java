@@ -30,6 +30,12 @@ public class EquipamientoBajaController {
     private TableColumn<Equipamiento, Integer> colCantidad;
 
     @FXML
+    private TableColumn<Equipamiento, Integer> colReservada;
+
+    @FXML
+    private TableColumn<Equipamiento, Integer> colDisponible;
+
+    @FXML
     private TableColumn<Equipamiento, String> colEstado;
 
     @FXML
@@ -46,6 +52,12 @@ public class EquipamientoBajaController {
 
         colCantidad.setCellValueFactory(
                 new PropertyValueFactory<>("cantidad"));
+
+        colReservada.setCellValueFactory(
+                new PropertyValueFactory<>("cantidadReservada"));
+
+        colDisponible.setCellValueFactory(
+                new PropertyValueFactory<>("cantidadDisponible"));
 
         colEstado.setCellValueFactory(
                 new PropertyValueFactory<>("estado"));

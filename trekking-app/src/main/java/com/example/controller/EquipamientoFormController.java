@@ -111,27 +111,17 @@ public class EquipamientoFormController {
 
         int cantidad = Integer.parseInt(cantidadTexto);
 
-        if (equipamientoEditando == null) {
-
-            Equipamiento equipamiento = new Equipamiento(
-                    0,
-                    nombre,
-                    categoria,
-                    cantidad,
-                    estado);
-
-            EquipamientoDAO.insertar(equipamiento);
-
-        } else {
-
-            Equipamiento equipamiento = new Equipamiento(
-                    equipamientoEditando.getId(),
-                    nombre,
-                    categoria,
-                    cantidad,
-                    estado);
-
-            EquipamientoDAO.actualizar(equipamiento);
+        try {
+            if (equipamientoEditando == null) {
+                EquipamientoDAO.insertar(new Equipamiento(
+                        0, nombre, categoria, cantidad, estado));
+            } else {
+                EquipamientoDAO.actualizar(new Equipamiento(
+                        equipamientoEditando.getId(), nombre, categoria, cantidad, estado));
+            }
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar", e.getMessage());
+            return;
         }
 
         volverListado();
@@ -219,10 +209,12 @@ public class EquipamientoFormController {
             return "La cantidad es obligatoria.";
         }
         try {
-            Integer.parseInt(cantidad);
+            if (Integer.parseInt(cantidad) < 0) {
+                return "La cantidad total debe ser mayor o igual a cero.";
+            }
             return null;
         } catch (NumberFormatException e) {
-            return "La cantidad debe ser un numero entero.";
+            return "La cantidad debe ser un número entero mayor o igual a cero.";
         }
     }
 

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
@@ -23,9 +24,9 @@
               styleClass="top-bar">
 
             <VBox spacing="3.0">
-                <Label text="Inventario de Equipamiento"
+                <Label text="Inventario"
                        styleClass="brand-title"/>
-                <Label text="Administración de equipamiento"
+                <Label text="Administración de elementos"
                        styleClass="brand-subtitle"/>
             </VBox>
 
@@ -35,7 +36,7 @@
                   alignment="CENTER_RIGHT"
                   styleClass="toolbar-actions">
 
-                <Button text="+ Nuevo Equipamiento"
+                <Button text="+ Nuevo elemento"
                         styleClass="action-add"
                         onAction="#nuevoEquipamiento"/>
 
@@ -54,6 +55,8 @@
             </HBox>
         </HBox>
 
+        <TextField fx:id="txtBuscar" promptText="Buscar por nombre, categoría o estado" />
+
         <TableView fx:id="tablaEquipamiento"
                    prefHeight="300.0"
                    prefWidth="600.0"
@@ -65,7 +68,7 @@
                              prefWidth="70.0"/>
 
                 <TableColumn fx:id="colNombre"
-                             text="Equipo"
+                             text="Elemento"
                              prefWidth="250.0"/>
 
                 <TableColumn fx:id="colCategoria"
@@ -73,8 +76,11 @@
                              prefWidth="200.0"/>
 
                 <TableColumn fx:id="colCantidad"
-                             text="Cantidad"
-                             prefWidth="120.0"/>
+                             text="Total"
+                             prefWidth="90.0"/>
+
+                <TableColumn fx:id="colReservada" text="Reservada" prefWidth="100.0"/>
+                <TableColumn fx:id="colDisponible" text="Disponible" prefWidth="100.0"/>
 
                 <TableColumn fx:id="colEstado"
                              text="Estado"

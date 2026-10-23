@@ -12,8 +12,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.collections.transformation.FilteredList;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -36,6 +38,15 @@ public class EquipamientoController {
     private TableColumn<Equipamiento, Integer> colCantidad;
 
     @FXML
+    private TableColumn<Equipamiento, Integer> colReservada;
+
+    @FXML
+    private TableColumn<Equipamiento, Integer> colDisponible;
+
+    @FXML
+    private TextField txtBuscar;
+
+    @FXML
     private TableColumn<Equipamiento, String> colEstado;
 
     @FXML
@@ -53,6 +64,12 @@ public class EquipamientoController {
         colCantidad.setCellValueFactory(
                 new PropertyValueFactory<>("cantidad"));
 
+        colReservada.setCellValueFactory(
+                new PropertyValueFactory<>("cantidadReservada"));
+
+        colDisponible.setCellValueFactory(
+                new PropertyValueFactory<>("cantidadDisponible"));
+
         colEstado.setCellValueFactory(
                 new PropertyValueFactory<>("estado"));
 
@@ -61,10 +78,16 @@ public class EquipamientoController {
 
     private void cargarEquipamiento() {
 
-        ObservableList<Equipamiento> equipamientos =
-                EquipamientoDAO.obtenerTodos();
-
-        tablaEquipamiento.setItems(equipamientos);
+        ObservableList<Equipamiento> equipamientos = EquipamientoDAO.obtenerTodos();
+        FilteredList<Equipamiento> filtrados = new FilteredList<>(equipamientos, item -> true);
+        txtBuscar.textProperty().addListener((observable, anterior, actual) -> {
+            String consulta = actual == null ? "" : actual.trim().toLowerCase();
+            filtrados.setPredicate(item -> consulta.isEmpty()
+                    || item.getNombre().toLowerCase().contains(consulta)
+                    || item.getCategoria().toLowerCase().contains(consulta)
+                    || item.getEstado().toLowerCase().contains(consulta));
+        });
+        tablaEquipamiento.setItems(filtrados);
     }
 
     @FXML
@@ -107,10 +130,13 @@ public class EquipamientoController {
         Alert confirmacion = new Alert(
                 Alert.AlertType.CONFIRMATION);
 
-        confirmacion.setTitle("Eliminar equipamiento");
+        int reservada = EquipamientoDAO.obtenerCantidadReservada(seleccionado.getId());
+        confirmacion.setTitle("Dar de baja elemento de inventario");
         confirmacion.setHeaderText(null);
-        confirmacion.setContentText(
-                "¿Está seguro de dar de baja el equipo seleccionado?");
+        confirmacion.setContentText(reservada > 0
+                ? "Este elemento tiene " + reservada + " unidad(es) reservada(s). "
+                        + "Las Salidas planificadas mantienen esa reserva. ¿Desea darlo de baja?"
+                : "¿Está seguro de dar de baja el elemento seleccionado?");
 
         Optional<ButtonType> resultado =
                 confirmacion.showAndWait();
@@ -124,7 +150,7 @@ public class EquipamientoController {
             mostrarAlerta(
                     Alert.AlertType.INFORMATION,
                     "Equipamiento",
-                    "Equipo dado de baja correctamente.");
+                    "Elemento dado de baja correctamente.");
         }
     }
 
