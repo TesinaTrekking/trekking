@@ -115,6 +115,16 @@ public class SalidasController {
         private final Label detalleRuta = new Label();
         private boolean actualizarDesdeRuta;
         private final List<Checkpoint> checkpointsGuardarEnRuta = new ArrayList<>();
+        private final List<AsignacionEquipamiento> equipamiento = new ArrayList<>();
+        private final List<AsignacionParticipante> participantes = new ArrayList<>();
+        private final java.util.Set<Integer> refrescarEquipamiento = new java.util.HashSet<>();
+        private final java.util.Set<Integer> refrescarParticipantes = new java.util.HashSet<>();
+        private final ComboBox<Equipamiento> selectorEquipo = new ComboBox<>();
+        private final TextField cantidadEquipo = new TextField("1");
+        private final ListView<AsignacionEquipamiento> listaEquipo = new ListView<>();
+        private final ComboBox<Cliente> selectorCliente = new ComboBox<>();
+        private final ListView<AsignacionParticipante> listaParticipantes = new ListView<>();
+        private final java.util.Set<Integer> equiposActivos = new java.util.HashSet<>();
 
         EditorSalida(Salida original) { this.original = original; }
 
@@ -123,6 +133,8 @@ public class SalidasController {
             stage.setTitle("Editar Salida " + original.id());
             try {
                 checkpoints.addAll(salidaDAO.obtenerCheckpoints(original.id()));
+                equipamiento.addAll(salidaDAO.obtenerEquipamiento(original.id()));
+                participantes.addAll(salidaDAO.obtenerParticipantes(original.id()));
                 rutas.setItems(FXCollections.observableArrayList(rutaDAO.obtenerTodasIncluyendoInactivas()));
             } catch (SQLException e) {
                 aviso(Alert.AlertType.ERROR, "No se pudo abrir la Salida", e.getMessage()); return;
@@ -142,6 +154,7 @@ public class SalidasController {
                 actualizarDetalle();
             });
             detalleRuta.setWrapText(true); actualizarDetalle(); actualizarPuntos();
+            configurarAsignaciones();
             Button agregar = new Button("Agregar Checkpoint"), editar = new Button("Editar seleccionado"), quitar = new Button("Quitar seleccionado");
             Button refrescar = new Button("Actualizar desde ruta"), guardar = new Button("Guardar cambios"), cancelar = new Button("Cancelar");
             agregar.setOnAction(e -> editarCheckpoint(null));
@@ -161,10 +174,37 @@ public class SalidasController {
             content.getChildren().addAll(new Label("Fecha de la Salida"), fecha, new Label("Ruta"), rutas, detalleRuta,
                     new Label("Checkpoints operativos (se admite una lista vacía o de cualquier tamaño)"), puntos,
                     new javafx.scene.layout.HBox(8, agregar, editar, quitar), refrescar,
+                    new Label("Equipamiento"), new javafx.scene.layout.HBox(8, selectorEquipo, cantidadEquipo, boton("Agregar", this::agregarEquipo)), listaEquipo,
+                    boton("Quitar equipamiento seleccionado", () -> { var a=listaEquipo.getSelectionModel().getSelectedItem(); if(a!=null){equipamiento.remove(a);refrescarEquipamiento.add(a.equipamiento().getId());if(!equiposActivos.contains(a.equipamiento().getId()))selectorEquipo.getItems().removeIf(i->i.getId()==a.equipamiento().getId());renderAsignaciones();} }),
+                    new Label("Participantes"), new javafx.scene.layout.HBox(8, selectorCliente, boton("Agregar", this::agregarParticipante)), listaParticipantes,
+                    boton("Quitar participante seleccionado", () -> { var a=listaParticipantes.getSelectionModel().getSelectedItem(); if(a!=null){participantes.remove(a);refrescarParticipantes.add(a.cliente().getId());if(!a.cliente().isActivo())selectorCliente.getItems().removeIf(i->i.getId()==a.cliente().getId());renderAsignaciones();} }),
                     new javafx.scene.layout.HBox(8, cancelar, guardar));
             ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true);
             stage.setScene(new Scene(scroll, 650, 650)); stage.showAndWait();
         }
+
+        private void configurarAsignaciones() {
+            var equipos = new ArrayList<Equipamiento>(EquipamientoDAO.obtenerTodos());
+            equipos.forEach(e->equiposActivos.add(e.getId()));
+            EquipamientoDAO.obtenerDadosDeBaja().forEach(e -> { if (equipamiento.stream().anyMatch(a -> a.equipamiento().getId()==e.getId())) equipos.add(e); });
+            equipamiento.forEach(a -> { if(equipos.stream().noneMatch(e->e.getId()==a.equipamiento().getId())) equipos.add(a.equipamiento()); });
+            selectorEquipo.setItems(FXCollections.observableArrayList(equipos));
+            selectorEquipo.setConverter(new StringConverter<>() { public String toString(Equipamiento e){return e==null?"":e.getNombre()+" · disponible: "+e.getCantidadDisponible();} public Equipamiento fromString(String s){return null;} });
+            selectorCliente.setConverter(new StringConverter<>() { public String toString(Cliente c){return c==null?"":c.getApellido()+", "+c.getNombre()+" · DNI "+c.getDni();} public Cliente fromString(String s){return null;} });
+            var todos = new ClienteDAO().obtenerTodosLosClientes();
+            var clientes = new ArrayList<Cliente>();
+            todos.stream().filter(Cliente::isActivo).forEach(clientes::add);
+            participantes.forEach(a -> { if(clientes.stream().noneMatch(c->c.getId()==a.cliente().getId())) clientes.add(a.cliente()); });
+            selectorCliente.setItems(FXCollections.observableArrayList(clientes));
+            listaEquipo.setCellFactory(v->new ListCell<>(){@Override protected void updateItem(AsignacionEquipamiento a,boolean empty){super.updateItem(a,empty);setText(empty||a==null?null:a.equipamiento().getNombre()+" · "+a.cantidad());}});
+            listaParticipantes.setCellFactory(v->new ListCell<>(){@Override protected void updateItem(AsignacionParticipante a,boolean empty){super.updateItem(a,empty);setText(empty||a==null?null:a.cliente().getApellido()+", "+a.cliente().getNombre()+" · DNI "+a.cliente().getDni());}});
+            renderAsignaciones();
+        }
+
+        private void renderAsignaciones(){listaEquipo.setItems(FXCollections.observableArrayList(equipamiento));listaParticipantes.setItems(FXCollections.observableArrayList(participantes));}
+        private Button boton(String texto,Runnable accion){Button b=new Button(texto);b.setOnAction(e->accion.run());return b;}
+        private void agregarEquipo(){try{Equipamiento item=selectorEquipo.getValue();int cantidad=Integer.parseInt(cantidadEquipo.getText().trim());if(item==null||cantidad<=0)throw new IllegalArgumentException();int i=-1;for(int n=0;n<equipamiento.size();n++)if(equipamiento.get(n).equipamiento().getId()==item.getId())i=n;if(i>=0){var a=equipamiento.get(i);equipamiento.set(i,new AsignacionEquipamiento(a.equipamiento(),a.cantidad()+cantidad,false));}else equipamiento.add(new AsignacionEquipamiento(item,cantidad,false));renderAsignaciones();}catch(RuntimeException e){aviso(Alert.AlertType.WARNING,"Cantidad inválida","Selecciona un elemento y una cantidad positiva.");}}
+        private void agregarParticipante(){Cliente c=selectorCliente.getValue();if(c==null)return;if(participantes.stream().anyMatch(a->a.cliente().getId()==c.getId())){aviso(Alert.AlertType.INFORMATION,"Cliente ya asociado","Ese Cliente ya está asociado a esta Salida.");return;}participantes.add(new AsignacionParticipante(c,false));renderAsignaciones();}
 
         private void actualizarPuntos() {
             puntos.setItems(FXCollections.observableArrayList(checkpoints));
@@ -219,7 +259,7 @@ public class SalidasController {
         private void guardar() {
             try {
                 List<Checkpoint> copia = List.copyOf(checkpoints);
-                salidaDAO.actualizar(original.id(), fecha.getValue(), rutas.getValue().getId(), copia, List.copyOf(checkpointsGuardarEnRuta), actualizarDesdeRuta);
+                salidaDAO.actualizar(original.id(), fecha.getValue(), rutas.getValue().getId(), copia, List.copyOf(checkpointsGuardarEnRuta), actualizarDesdeRuta, List.copyOf(equipamiento), List.copyOf(participantes), java.util.Set.copyOf(refrescarEquipamiento), java.util.Set.copyOf(refrescarParticipantes));
                 stage.close(); actualizarTabla(); actualizarIndicadores();
             } catch (SQLException | RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudo actualizar la Salida", e.getMessage()); }
         }

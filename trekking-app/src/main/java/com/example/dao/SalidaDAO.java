@@ -22,6 +22,22 @@ import java.util.Comparator;
 public class SalidaDAO {
     private final RutaDAO rutaDAO = new RutaDAO();
 
+    public List<AsignacionEquipamiento> obtenerEquipamiento(int salidaId) throws SQLException {
+        List<AsignacionEquipamiento> result = new ArrayList<>();
+        try (Connection c=ConexionDB.conectar(); PreparedStatement ps=c.prepareStatement("SELECT e.*, se.nombre_copia, se.categoria_copia, se.cantidad FROM salida_equipamiento se JOIN equipamiento e ON e.id=se.equipamiento_id WHERE se.salida_id=? ORDER BY se.nombre_copia COLLATE NOCASE")) {
+            ps.setInt(1,salidaId); try(ResultSet rs=ps.executeQuery()){ while(rs.next()) result.add(new AsignacionEquipamiento(new Equipamiento(rs.getInt("id"),rs.getString("nombre_copia"),rs.getString("categoria_copia"),rs.getInt("cantidad"),rs.getString("estado")),rs.getInt("cantidad"),false)); }
+        }
+        return result;
+    }
+
+    public List<AsignacionParticipante> obtenerParticipantes(int salidaId) throws SQLException {
+        List<AsignacionParticipante> result=new ArrayList<>();
+        try(Connection c=ConexionDB.conectar(); PreparedStatement ps=c.prepareStatement("SELECT c.*,sp.dni_copia,sp.nombre_copia,sp.apellido_copia,sp.telefono_copia,sp.emergencia_nombre_copia,sp.emergencia_telefono_copia,sp.emergencia_relacion_copia FROM salida_participantes sp JOIN clientes c ON c.id=sp.cliente_id WHERE sp.salida_id=? ORDER BY sp.apellido_copia COLLATE NOCASE, sp.nombre_copia COLLATE NOCASE")) {
+            ps.setInt(1,salidaId); try(ResultSet rs=ps.executeQuery()){ while(rs.next()) result.add(new AsignacionParticipante(new Cliente(rs.getInt("id"),rs.getString("dni_copia"),rs.getString("nombre_copia"),rs.getString("apellido_copia"),LocalDate.parse(rs.getString("fecha_nacimiento")),rs.getString("email"),rs.getString("telefono_copia"),rs.getString("sexo"),rs.getString("emergencia_nombre_copia"),rs.getString("emergencia_telefono_copia"),rs.getString("emergencia_relacion_copia"),rs.getBoolean("autorizacion_menores"),rs.getString("tutor_nombre"),rs.getString("tutor_apellido"),rs.getString("tutor_dni"),rs.getString("tutor_telefono"),rs.getInt("activo")==1,null,null),false)); }
+        }
+        return result;
+    }
+
     public List<Checkpoint> obtenerCheckpoints(int salidaId) throws SQLException {
         List<Checkpoint> puntos = new ArrayList<>();
         try (Connection c = ConexionDB.conectar(); PreparedStatement ps = c.prepareStatement(
@@ -37,10 +53,29 @@ public class SalidaDAO {
 
     public void actualizar(int salidaId, LocalDate fecha, int rutaId, List<Checkpoint> puntos,
             List<Checkpoint> guardarEnRuta, boolean actualizarDesdeRuta) throws SQLException {
+        actualizar(salidaId, fecha, rutaId, puntos, guardarEnRuta, actualizarDesdeRuta, null, null);
+    }
+
+    /** Updates the operational copy and its assignments atomically when assignment lists are supplied. */
+    public void actualizar(int salidaId, LocalDate fecha, int rutaId, List<Checkpoint> puntos,
+            List<Checkpoint> guardarEnRuta, boolean actualizarDesdeRuta,
+            List<AsignacionEquipamiento> equipamiento, List<AsignacionParticipante> participantes) throws SQLException {
+        actualizar(salidaId, fecha, rutaId, puntos, guardarEnRuta, actualizarDesdeRuta,
+                equipamiento, participantes, java.util.Set.of(), java.util.Set.of());
+    }
+
+    public void actualizar(int salidaId, LocalDate fecha, int rutaId, List<Checkpoint> puntos,
+            List<Checkpoint> guardarEnRuta, boolean actualizarDesdeRuta,
+            List<AsignacionEquipamiento> equipamiento, List<AsignacionParticipante> participantes,
+            java.util.Set<Integer> refrescarEquipamiento, java.util.Set<Integer> refrescarParticipantes) throws SQLException {
         if (fecha == null || puntos == null) throw new SQLException("La fecha y los Checkpoints son obligatorios.");
         try (Connection c = ConexionDB.conectar()) {
+            if (equipamiento != null) {
+                try (Statement timeout = c.createStatement()) { timeout.execute("PRAGMA busy_timeout = 5000"); }
+            }
             c.setAutoCommit(false);
             try {
+                if (equipamiento != null) bloquearInventario(c, equipamiento);
                 Salida actual;
                 try (PreparedStatement ps = c.prepareStatement("SELECT * FROM salidas WHERE id = ?")) {
                     ps.setInt(1, salidaId);
@@ -93,6 +128,10 @@ public class SalidaDAO {
                     ins.executeBatch();
                 }
                 for (Checkpoint cp : guardarEnRuta) agregarCheckpointRuta(c, rutaId, cp);
+                if (equipamiento != null && participantes != null) {
+                    reemplazarAsignaciones(c, salidaId, equipamiento, participantes,
+                            "planificada".equals(actual.estado()), refrescarEquipamiento, refrescarParticipantes);
+                }
                 c.commit();
             } catch (SQLException | RuntimeException e) {
                 c.rollback();
@@ -100,6 +139,83 @@ public class SalidaDAO {
                 throw new SQLException("No se pudo actualizar la Salida.", e);
             }
         }
+    }
+
+    private void reemplazarAsignaciones(Connection c, int salidaId,
+            List<AsignacionEquipamiento> equipamiento, List<AsignacionParticipante> participantes,
+            boolean reservaActiva, java.util.Set<Integer> refrescarEquipamiento,
+            java.util.Set<Integer> refrescarParticipantes) throws SQLException {
+        // Keep the old snapshots available while validating and before replacing either relation.
+        Map<Integer, String[]> equipoCopias = new java.util.HashMap<>();
+        try (PreparedStatement ps = c.prepareStatement("SELECT equipamiento_id,nombre_copia,categoria_copia FROM salida_equipamiento WHERE salida_id=?")) {
+            ps.setInt(1, salidaId); try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) equipoCopias.put(rs.getInt(1), new String[]{rs.getString(2), rs.getString(3)});
+            }
+        }
+        Map<Integer, String[]> clienteCopias = new java.util.HashMap<>();
+        try (PreparedStatement ps = c.prepareStatement("SELECT cliente_id,dni_copia,nombre_copia,apellido_copia,telefono_copia,emergencia_nombre_copia,emergencia_telefono_copia,emergencia_relacion_copia FROM salida_participantes WHERE salida_id=?")) {
+            ps.setInt(1, salidaId); try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) clienteCopias.put(rs.getInt(1), new String[]{rs.getString(2),rs.getString(3),rs.getString(4),rs.getString(5),rs.getString(6),rs.getString(7),rs.getString(8)});
+            }
+        }
+        // Exclude this Salida's former reservation while checking its proposed quantities.
+        java.util.Set<Integer> vistos = new java.util.HashSet<>();
+        for (AsignacionEquipamiento a : equipamiento) {
+            if (a == null || a.equipamiento() == null || a.cantidad() <= 0) throw new SQLException("La cantidad asignada debe ser un entero positivo.");
+            if (a.nuevo()) continue;
+            int id = a.equipamiento().getId();
+            if (!vistos.add(id)) throw new SQLException("No se puede asignar dos veces el mismo Elemento de inventario.");
+            Equipamiento actual = EquipamientoDAO.obtenerPorId(c, id);
+            if (actual == null) throw new SQLException("El Elemento de inventario ya no existe.");
+            if (!esActivo(c, id) && (!equipoCopias.containsKey(id) || refrescarEquipamiento.contains(id)))
+                throw new SQLException("El Elemento de inventario está dado de baja y no puede agregarse nuevamente.");
+            int reservada = actual.getCantidadReservada();
+            if (reservaActiva && equipoCopias.containsKey(id)) reservada -= cantidadAsignadaActual(c, salidaId, id);
+            int disponible = Math.max(0, actual.getCantidad() - reservada);
+            if (a.cantidad() > disponible) throw new SQLException("No hay cantidad suficiente de " + actual.getNombre() + ". Disponible: " + disponible + ".");
+        }
+        java.util.Set<Integer> clientesVistos = new java.util.HashSet<>();
+        for (AsignacionParticipante a : participantes) {
+            if (a == null || a.cliente() == null || a.nuevo()) throw new SQLException("En edición, selecciona Clientes existentes.");
+            int id = a.cliente().getId();
+            if (!clientesVistos.add(id)) throw new SQLException("No se puede asociar dos veces el mismo Cliente.");
+            if (!clienteCopias.containsKey(id) || refrescarParticipantes.contains(id)) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT activo FROM clientes WHERE id=?")) {
+                    ps.setInt(1,id); try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next() || rs.getInt(1) != 1) throw new SQLException("Los Clientes inactivos solo pueden conservarse si ya estaban asociados.");
+                    }
+                }
+            }
+        }
+        try (PreparedStatement ps=c.prepareStatement("DELETE FROM salida_equipamiento WHERE salida_id=?")) { ps.setInt(1,salidaId); ps.executeUpdate(); }
+        for (AsignacionEquipamiento a : equipamiento) {
+            Equipamiento item = a.nuevo() ? a.equipamiento() : EquipamientoDAO.obtenerPorId(c,a.equipamiento().getId());
+            int id=item.getId(); String[] copia=equipoCopias.get(id);
+            boolean refrescar = refrescarEquipamiento.contains(id);
+            String nombre=copia == null || refrescar ? item.getNombre() : copia[0], categoria=copia == null || refrescar ? item.getCategoria() : copia[1];
+            if (a.nuevo()) {
+                try (PreparedStatement ins=c.prepareStatement("INSERT INTO equipamiento(nombre,categoria,cantidad,estado,activo) VALUES(?,?,?,?,1)",Statement.RETURN_GENERATED_KEYS)) {
+                    ins.setString(1,item.getNombre()); ins.setString(2,item.getCategoria()); ins.setInt(3,item.getCantidad()); ins.setString(4,item.getEstado()); ins.executeUpdate();
+                    try(ResultSet keys=ins.getGeneratedKeys()){ if(!keys.next()) throw new SQLException("No se pudo crear el Elemento de inventario."); id=keys.getInt(1); }
+                }
+                nombre=item.getNombre(); categoria=item.getCategoria();
+            }
+            try(PreparedStatement ins=c.prepareStatement("INSERT INTO salida_equipamiento(salida_id,equipamiento_id,nombre_copia,categoria_copia,cantidad) VALUES(?,?,?,?,?)")) {
+                ins.setInt(1,salidaId); ins.setInt(2,id); ins.setString(3,nombre); ins.setString(4,categoria); ins.setInt(5,a.cantidad()); ins.executeUpdate();
+            }
+        }
+        try (PreparedStatement ps=c.prepareStatement("DELETE FROM salida_participantes WHERE salida_id=?")) { ps.setInt(1,salidaId); ps.executeUpdate(); }
+        for (AsignacionParticipante a : participantes) {
+            Cliente cl=a.cliente(); String[] cp=clienteCopias.get(cl.getId());
+            if (refrescarParticipantes.contains(cl.getId())) cp=null;
+            try(PreparedStatement ins=c.prepareStatement("INSERT INTO salida_participantes(salida_id,cliente_id,dni_copia,nombre_copia,apellido_copia,telefono_copia,emergencia_nombre_copia,emergencia_telefono_copia,emergencia_relacion_copia) VALUES(?,?,?,?,?,?,?,?,?)")) {
+                ins.setInt(1,salidaId); ins.setInt(2,cl.getId()); ins.setString(3,cp==null?cl.getDni():cp[0]); ins.setString(4,cp==null?cl.getNombre():cp[1]); ins.setString(5,cp==null?cl.getApellido():cp[2]); ins.setString(6,cp==null?cl.getTelefono():cp[3]); ins.setString(7,cp==null?cl.getContactoEmergenciaNombre():cp[4]); ins.setString(8,cp==null?cl.getContactoEmergenciaTelefono():cp[5]); ins.setString(9,cp==null?cl.getContactoEmergenciaRelacion():cp[6]); ins.executeUpdate();
+            }
+        }
+    }
+
+    private int cantidadAsignadaActual(Connection c, int salidaId, int equipoId) throws SQLException {
+        try(PreparedStatement ps=c.prepareStatement("SELECT cantidad FROM salida_equipamiento WHERE salida_id=? AND equipamiento_id=?")) { ps.setInt(1,salidaId); ps.setInt(2,equipoId); try(ResultSet rs=ps.executeQuery()){return rs.next()?rs.getInt(1):0;} }
     }
 
     private boolean rutaActiva(Connection c, int rutaId) throws SQLException {
