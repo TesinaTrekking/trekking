@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="16" styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.SalidasController"
+      stylesheets="@styles.css">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="top-bar">
+        <VBox spacing="4"><Label text="Salidas" styleClass="brand-title"/>
+            <Label text="Planificación y seguimiento de actividades" styleClass="brand-subtitle"/></VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Marcar realizada" onAction="#marcarRealizada" styleClass="action-edit"/>
+        <Button text="Cancelar Salida" onAction="#cancelarSalida" styleClass="action-delete"/>
+    </HBox>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Salidas próximas (7 días)" styleClass="form-label"/><Label fx:id="kpiProximas" text="0" styleClass="brand-title"/></VBox>
+        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Rutas activas" styleClass="form-label"/><Label fx:id="kpiRutas" text="0" styleClass="brand-title"/></VBox>
+        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Clientes activos" styleClass="form-label"/><Label fx:id="kpiClientes" text="0" styleClass="brand-title"/></VBox>
+        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Inventario crítico" styleClass="form-label"/><Label fx:id="kpiInventario" text="0" styleClass="brand-title"/></VBox>
+    </HBox>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <VBox spacing="6"><Label text="Fecha *" styleClass="form-label"/><DatePicker fx:id="fechaPicker"/></VBox>
+        <VBox spacing="6"><Label text="Ruta activa *" styleClass="form-label"/><ComboBox fx:id="rutaComboBox" prefWidth="260" promptText="Seleccionar Ruta"/></VBox>
+        <Button text="Crear Salida planificada" onAction="#crearSalida" styleClass="action-add" translateY="10"/>
+    </HBox>
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="buscarField" promptText="Buscar por Ruta" HBox.hgrow="ALWAYS"/>
+        <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Filtrar por estado"/>
+    </HBox>
+    <TableView fx:id="tablaSalidas" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="70"/>
+            <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
+            <TableColumn fx:id="colRuta" text="Ruta" prefWidth="320"/>
+            <TableColumn fx:id="colEstado" text="Estado" prefWidth="160"/>
+        </columns>
+    </TableView>
+</VBox>

@@ -34,6 +34,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 public class RutaController implements Initializable {
@@ -90,6 +91,9 @@ public class RutaController implements Initializable {
         private ListView<Checkpoint> checkpointsRutaListView;
         @FXML
         private ListView<EquipamientoRequerido> equipamientosListView;
+
+        @FXML
+        private Label estadoItinerarioLabel;
 
         @Override
         public void initialize(URL url, ResourceBundle rb) {
@@ -159,6 +163,7 @@ public class RutaController implements Initializable {
 
                 if (ruta == null) {
                         checkpointsRutaListView.getItems().clear();
+                        estadoItinerarioLabel.setText("Selecciona una Ruta para ver su estado.");
                         return;
                 }
 
@@ -166,6 +171,9 @@ public class RutaController implements Initializable {
 
                 checkpointsRutaListView.setItems(
                                 FXCollections.observableArrayList(checkpoints));
+                estadoItinerarioLabel.setText(checkpoints.isEmpty()
+                                ? "Borrador · sin Checkpoints"
+                                : checkpoints.size() + " Checkpoints · Completa");
         }
 
         private void configurarEquipamiento() {
@@ -306,11 +314,12 @@ public class RutaController implements Initializable {
                 }
 
                 if (!rutaDAO.estaActiva(rutaSeleccionada.getId())) {
-
-                        mostrarAlerta(
-                                        "Ruta inactiva",
-                                        "La ruta seleccionada ya está inactiva.");
-
+                        if (rutaDAO.reactivar(rutaSeleccionada.getId())) {
+                                cargarRutas();
+                                mostrarAlerta("Ruta reactivada", "La Ruta volvió a estar activa.");
+                        } else {
+                                mostrarAlerta("Error", "No se pudo reactivar la Ruta.");
+                        }
                         return;
                 }
 
@@ -441,11 +450,10 @@ public class RutaController implements Initializable {
         private void actualizarEstadoBotonEliminar() {
 
                 Ruta rutaSeleccionada = tablaRutas.getSelectionModel().getSelectedItem();
-
-                eliminarButton.setDisable(
-                                rutaSeleccionada == null
-                                                || !rutaDAO.estaActiva(
-                                                                rutaSeleccionada.getId()));
+                boolean activa = rutaSeleccionada != null
+                                && rutaDAO.estaActiva(rutaSeleccionada.getId());
+                eliminarButton.setDisable(rutaSeleccionada == null);
+                eliminarButton.setText(activa ? "Dar de baja" : "Reactivar");
         }
 
         @FXML

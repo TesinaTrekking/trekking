@@ -14,6 +14,7 @@ public class Checkpoint {
     private final StringProperty hora;
     private final DoubleProperty latitud;
     private final DoubleProperty longitud;
+    private final DoubleProperty altitud;
     private final StringProperty descripcion;
 
     public Checkpoint(
@@ -24,11 +25,24 @@ public class Checkpoint {
             double longitud,
             String descripcion) {
 
+        this(id, nombre, hora, latitud, longitud, 0, descripcion);
+    }
+
+    public Checkpoint(
+            Long id,
+            String nombre,
+            String hora,
+            double latitud,
+            double longitud,
+            double altitud,
+            String descripcion) {
+
         this.id = new SimpleLongProperty(id);
         this.nombre = new SimpleStringProperty(nombre);
         this.hora = new SimpleStringProperty(hora);
         this.latitud = new SimpleDoubleProperty(latitud);
         this.longitud = new SimpleDoubleProperty(longitud);
+        this.altitud = new SimpleDoubleProperty(altitud);
         this.descripcion = new SimpleStringProperty(descripcion);
     }
 
@@ -91,6 +105,12 @@ public class Checkpoint {
     public void setLongitud(double longitud) {
         this.longitud.set(longitud);
     }
+
+    public double getAltitud() { return altitud.get(); }
+
+    public DoubleProperty altitudProperty() { return altitud; }
+
+    public void setAltitud(double altitud) { this.altitud.set(altitud); }
 
     public String getDescripcion() {
         return descripcion.get();

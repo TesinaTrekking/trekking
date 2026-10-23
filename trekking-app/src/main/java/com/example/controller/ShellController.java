@@ -29,24 +29,18 @@ public class ShellController implements Initializable {
     private VBox navigationBox;
 
     @FXML
-    private Button btnInicio;
-
-    @FXML
     private Button btnRutas;
 
     @FXML
-    private Button btnCheckpoints;
-
-    @FXML
-    private Button btnEquipamiento;
+    private Button btnInventario;
 
     @FXML
     private Button btnClientes;
 
     @FXML
-    private Button btnRecorridos;
+    private Button btnSalidas;
 
-    private String activeSection = "dashboard";
+    private String activeSection = "trips";
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -71,8 +65,8 @@ public class ShellController implements Initializable {
     }
 
     @FXML
-    private void onInicio() {
-        navigate("dashboard");
+    private void onSalidas() {
+        navigate("trips");
     }
 
     @FXML
@@ -81,13 +75,8 @@ public class ShellController implements Initializable {
     }
 
     @FXML
-    private void onCheckpoints() {
-        navigate("checkpoints");
-    }
-
-    @FXML
-    private void onEquipamiento() {
-        navigate("equipment");
+    private void onInventario() {
+        navigate("inventory");
     }
 
     @FXML
@@ -96,10 +85,6 @@ public class ShellController implements Initializable {
     }
 
     @FXML
-    private void onRecorridos() {
-        navigate("trips");
-    }
-
     private void navigate(String section) {
         Scene scene = contentContainer.getScene();
         if (scene == null) {
@@ -113,12 +98,10 @@ public class ShellController implements Initializable {
         if (navigationBox == null) {
             return;
         }
-        applyActive(btnInicio, "dashboard");
+        applyActive(btnSalidas, "trips");
         applyActive(btnRutas, "routes");
-        applyActive(btnCheckpoints, "checkpoints");
-        applyActive(btnEquipamiento, "equipment");
+        applyActive(btnInventario, "inventory");
         applyActive(btnClientes, "clients");
-        applyActive(btnRecorridos, "trips");
     }
 
     private void applyActive(Button button, String section) {

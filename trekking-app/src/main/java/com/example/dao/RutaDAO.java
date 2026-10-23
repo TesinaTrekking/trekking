@@ -14,18 +14,22 @@ import java.util.List;
 public class RutaDAO {
 
     public boolean existeNombre(String nombre, int idExcluido) {
-
-        String sql = "SELECT 1 FROM rutas "
-                + "WHERE nombre = ? COLLATE NOCASE AND id <> ? LIMIT 1";
+        String sql = "SELECT id, nombre FROM rutas WHERE id <> ?";
 
         try (
                 Connection conexion = ConexionDB.conectar();
                 PreparedStatement statement = conexion.prepareStatement(sql)) {
 
-            statement.setString(1, nombre);
-            statement.setInt(2, idExcluido);
-
-            return statement.executeQuery().next();
+            statement.setInt(1, idExcluido);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                String claveBuscada = Ruta.claveNombre(nombre);
+                while (resultSet.next()) {
+                    if (Ruta.claveNombre(resultSet.getString("nombre")).equals(claveBuscada)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
         } catch (SQLException e) {
 
@@ -172,6 +176,18 @@ public class RutaDAO {
                     "Error al eliminar la ruta: "
                             + e.getMessage());
 
+            return false;
+        }
+    }
+
+    public boolean reactivar(int id) {
+        String sql = "UPDATE rutas SET activo = 1 WHERE id = ?";
+        try (Connection conexion = ConexionDB.conectar();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Error al reactivar la ruta: " + e.getMessage());
             return false;
         }
     }

@@ -52,7 +52,7 @@
                                                 onAction="#editarRuta"
                                                 styleClass="action-edit" />
                                         <Button fx:id="eliminarButton"
-                                                text="Eliminar"
+                                                text="Dar de baja"
                                                 onAction="#eliminarRuta"
                                                 styleClass="action-delete" />
                                 </HBox>
@@ -120,6 +120,10 @@
 
                         <Label text="Checkpoints de la ruta seleccionada"
                                 styleClass="card-title" />
+
+                        <Label fx:id="estadoItinerarioLabel"
+                                text="Selecciona una Ruta para ver su estado."
+                                styleClass="field-help" />
 
                         <ListView fx:id="checkpointsRutaListView"
                                 prefHeight="120.0"

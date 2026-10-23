@@ -25,18 +25,16 @@ public final class NavigationShell {
             "/com/example/fxml/styles.css";
 
     private static final List<NavigationItem> ITEMS = List.of(
-            new NavigationItem("Inicio", "dashboard", "dashboard.fxml"),
+            new NavigationItem("Salidas", "trips", "salidas.fxml"),
             new NavigationItem("Rutas", "routes", "rutas.fxml"),
-            new NavigationItem("Checkpoints", "checkpoints", "checkpoints.fxml"),
-            new NavigationItem("Equipamiento", "equipment", "equipamiento.fxml"),
             new NavigationItem("Clientes", "clients", "lista-clientes.fxml"),
-            new NavigationItem("Recorridos", "trips", "recorridos.fxml"));
+            new NavigationItem("Inventario", "inventory", "equipamiento.fxml"));
 
     private NavigationShell() {
     }
 
     public static void install(Scene scene) {
-        install(scene, "dashboard");
+        install(scene, "trips");
     }
 
     public static void install(Scene scene, String activeSection) {

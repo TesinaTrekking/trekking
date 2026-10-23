@@ -1,0 +1,113 @@
+package com.example.dao;
+
+import com.example.database.ConexionDB;
+import com.example.model.Ruta;
+import com.example.model.Salida;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SalidaDAO {
+    private final RutaDAO rutaDAO = new RutaDAO();
+
+    public List<Salida> obtenerTodas() {
+        String sql = "SELECT * FROM salidas ORDER BY fecha DESC, id DESC";
+        List<Salida> salidas = new ArrayList<>();
+        try (Connection c = ConexionDB.conectar();
+             Statement s = c.createStatement(); ResultSet rs = s.executeQuery(sql)) {
+            while (rs.next()) salidas.add(mapear(rs));
+        } catch (SQLException | RuntimeException e) {
+            throw new IllegalStateException("No se pudieron cargar las salidas.", e);
+        }
+        return salidas;
+    }
+
+    public Map<String, Integer> obtenerIndicadores() {
+        LocalDate hoy = LocalDate.now();
+        try (Connection c = ConexionDB.conectar(); Statement s = c.createStatement()) {
+            int proximas = contar(s, "SELECT COUNT(*) FROM salidas WHERE estado = 'planificada' AND fecha BETWEEN '" + hoy + "' AND '" + hoy.plusDays(7) + "'");
+            int rutas = contar(s, "SELECT COUNT(*) FROM rutas WHERE activo = 1");
+            int clientes = contar(s, "SELECT COUNT(*) FROM clientes WHERE activo = 1");
+            int criticos = contar(s, """
+                    SELECT COUNT(*) FROM equipamiento e
+                    WHERE e.activo = 1 AND (
+                        e.cantidad - COALESCE((SELECT SUM(se.cantidad) FROM salida_equipamiento se
+                            JOIN salidas sa ON sa.id = se.salida_id
+                            WHERE se.equipamiento_id = e.id AND sa.estado = 'planificada'), 0) <= 2
+                        OR e.estado IN ('En Reparación', 'Fuera de Servicio', 'Extraviado'))
+                    """);
+            return Map.of("proximas", proximas, "rutas", rutas, "clientes", clientes, "criticos", criticos);
+        } catch (SQLException e) {
+            throw new IllegalStateException("No se pudieron calcular los indicadores.", e);
+        }
+    }
+
+    private int contar(Statement s, String sql) throws SQLException {
+        try (ResultSet rs = s.executeQuery(sql)) { return rs.next() ? rs.getInt(1) : 0; }
+    }
+
+    public int crear(LocalDate fecha, int rutaId) throws SQLException {
+        try (Connection c = ConexionDB.conectar()) {
+            c.setAutoCommit(false);
+            try {
+                Ruta ruta = rutaDAO.obtenerPorId(c, rutaId);
+                if (ruta == null) throw new SQLException("La ruta seleccionada no existe.");
+                try (PreparedStatement activa = c.prepareStatement(
+                        "SELECT activo FROM rutas WHERE id = ?")) {
+                    activa.setInt(1, rutaId);
+                    try (ResultSet rs = activa.executeQuery()) {
+                        if (!rs.next() || rs.getInt(1) != 1)
+                            throw new SQLException("Selecciona una ruta activa para crear la salida.");
+                    }
+                }
+                String sql = """
+                        INSERT INTO salidas (ruta_id, fecha, estado, ruta_nombre,
+                            ruta_altitud_maxima, ruta_tipo_terreno,
+                            ruta_dificultad_tecnica, ruta_dificultad_fisica)
+                        VALUES (?, ?, 'planificada', ?, ?, ?, ?, ?)
+                        """;
+                int id;
+                try (PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, rutaId); ps.setString(2, fecha.toString());
+                    ps.setString(3, ruta.getNombre()); ps.setDouble(4, ruta.getAltitudMaxima());
+                    ps.setString(5, ruta.getTipoTerreno()); ps.setString(6, ruta.getDificultadTecnica());
+                    ps.setString(7, ruta.getDificultadFisica()); ps.executeUpdate();
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        if (!keys.next()) throw new SQLException("No se obtuvo el ID de la salida.");
+                        id = keys.getInt(1);
+                    }
+                }
+                c.commit();
+                return id;
+            } catch (SQLException e) {
+                c.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public void cambiarEstado(int id, String nuevoEstado) throws SQLException {
+        if (!List.of("realizada", "cancelada").contains(nuevoEstado))
+            throw new SQLException("Estado de cierre inválido.");
+        try (Connection c = ConexionDB.conectar(); PreparedStatement ps = c.prepareStatement(
+                "UPDATE salidas SET estado = ? WHERE id = ? AND estado = 'planificada'")) {
+            ps.setString(1, nuevoEstado); ps.setInt(2, id);
+            if (ps.executeUpdate() != 1)
+                throw new SQLException("Solo se puede cerrar una salida planificada.");
+        }
+    }
+
+    private Salida mapear(ResultSet rs) throws SQLException {
+        return new Salida(rs.getInt("id"), rs.getInt("ruta_id"),
+                LocalDate.parse(rs.getString("fecha")), rs.getString("estado"),
+                rs.getString("ruta_nombre"), rs.getDouble("ruta_altitud_maxima"),
+                rs.getString("ruta_tipo_terreno"), rs.getString("ruta_dificultad_tecnica"),
+                rs.getString("ruta_dificultad_fisica"));
+    }
+}

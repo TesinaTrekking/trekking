@@ -17,14 +17,14 @@ public class App extends Application {
 
         FXMLLoader loader = new FXMLLoader(
                 App.class.getResource(
-                        "/com/example/fxml/dashboard.fxml"
+                        "/com/example/fxml/salidas.fxml"
                 )
         );
 
         Parent root = loader.load();
 
         Scene scene = new Scene(root, 1280, 800);
-        NavigationShell.install(scene);
+        NavigationShell.install(scene, "trips");
 
         stage.setTitle("Trekking App");
         stage.setScene(scene);

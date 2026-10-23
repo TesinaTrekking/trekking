@@ -17,8 +17,8 @@ public class CheckpointDAO {
 
         String sql = """
                 INSERT INTO checkpoints
-                (nombre, hora, latitud, longitud, descripcion)
-                VALUES (?, ?, ?, ?, ?)
+                (nombre, hora, latitud, longitud, altitud, descripcion)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """;
 
         long generatedId = -1;
@@ -69,6 +69,23 @@ public class CheckpointDAO {
         return checkpoints;
     }
 
+    public List<Checkpoint> obtenerDisponiblesParaRuta() throws SQLException {
+        String sql = """
+                SELECT c.* FROM checkpoints c
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM ruta_checkpoints rc WHERE rc.checkpoint_id = c.id
+                )
+                ORDER BY c.hora, c.nombre COLLATE NOCASE
+                """;
+        List<Checkpoint> checkpoints = new ArrayList<>();
+        try (Connection conexion = ConexionDB.conectar();
+             Statement statement = conexion.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) checkpoints.add(mapRow(resultSet));
+        }
+        return checkpoints;
+    }
+
     public int actualizar(Checkpoint checkpoint) throws SQLException {
 
         String sql = """
@@ -77,6 +94,7 @@ public class CheckpointDAO {
                     hora = ?,
                     latitud = ?,
                     longitud = ?,
+                    altitud = ?,
                     descripcion = ?
                 WHERE id = ?
                 """;
@@ -87,7 +105,7 @@ public class CheckpointDAO {
         ) {
 
             bindCheckpointValues(statement, checkpoint);
-            statement.setLong(6, checkpoint.getId());
+            statement.setLong(7, checkpoint.getId());
 
             return statement.executeUpdate();
         }
@@ -119,7 +137,8 @@ public class CheckpointDAO {
         statement.setString(2, checkpoint.getHora());
         statement.setDouble(3, checkpoint.getLatitud());
         statement.setDouble(4, checkpoint.getLongitud());
-        statement.setString(5, checkpoint.getDescripcion());
+        statement.setDouble(5, checkpoint.getAltitud());
+        statement.setString(6, checkpoint.getDescripcion());
     }
 
     private static Checkpoint mapRow(ResultSet resultSet)
@@ -131,6 +150,7 @@ public class CheckpointDAO {
                 resultSet.getString("hora"),
                 resultSet.getDouble("latitud"),
                 resultSet.getDouble("longitud"),
+                resultSet.getDouble("altitud"),
                 resultSet.getString("descripcion")
         );
     }

@@ -2,21 +2,20 @@ package com.example.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.Set;
 
-import com.example.model.Ruta;
 
 public class ConexionDB {
 
     private static final String URL = "jdbc:sqlite:trekking.db";
 
     public static Connection conectar() throws SQLException {
-        return DriverManager.getConnection(URL);
+        Connection conexion = DriverManager.getConnection(URL);
+        try (Statement statement = conexion.createStatement()) {
+            statement.execute("PRAGMA foreign_keys = ON");
+        }
+        return conexion;
     }
 
     public static void crearTabla() {
@@ -36,8 +35,9 @@ public class ConexionDB {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nombre TEXT NOT NULL,
                     hora TEXT NOT NULL,
-                    latitud REAL NOT NULL,
-                    longitud REAL NOT NULL,
+                    latitud REAL NOT NULL CHECK (latitud BETWEEN -90 AND 90),
+                    longitud REAL NOT NULL CHECK (longitud BETWEEN -180 AND 180),
+                    altitud REAL NOT NULL DEFAULT 0 CHECK (altitud >= 0),
                     descripcion TEXT
                 )
                 """;
@@ -48,6 +48,7 @@ public class ConexionDB {
                     orden INTEGER NOT NULL,
                     PRIMARY KEY (ruta_id, checkpoint_id),
                     UNIQUE (ruta_id, orden),
+                    UNIQUE (checkpoint_id),
                     FOREIGN KEY (ruta_id) REFERENCES rutas(id),
                     FOREIGN KEY (checkpoint_id) REFERENCES checkpoints(id)
                 )
@@ -100,6 +101,64 @@ public class ConexionDB {
                     FOREIGN KEY (cliente_id) REFERENCES clientes(id)
                 )
                 """;
+        String sqlSalidas = """
+                CREATE TABLE IF NOT EXISTS salidas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ruta_id INTEGER NOT NULL,
+                    fecha TEXT NOT NULL,
+                    estado TEXT NOT NULL DEFAULT 'planificada'
+                        CHECK (estado IN ('planificada', 'realizada', 'cancelada')),
+                    ruta_nombre TEXT NOT NULL,
+                    ruta_altitud_maxima REAL NOT NULL CHECK (ruta_altitud_maxima >= 0),
+                    ruta_tipo_terreno TEXT NOT NULL,
+                    ruta_dificultad_tecnica TEXT NOT NULL,
+                    ruta_dificultad_fisica TEXT NOT NULL,
+                    FOREIGN KEY (ruta_id) REFERENCES rutas(id)
+                )
+                """;
+        String sqlSalidaCheckpoints = """
+                CREATE TABLE IF NOT EXISTS salida_checkpoints (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    salida_id INTEGER NOT NULL,
+                    nombre TEXT NOT NULL,
+                    hora TEXT NOT NULL,
+                    latitud REAL NOT NULL CHECK (latitud BETWEEN -90 AND 90),
+                    longitud REAL NOT NULL CHECK (longitud BETWEEN -180 AND 180),
+                    altitud REAL NOT NULL CHECK (altitud >= 0),
+                    descripcion TEXT,
+                    orden INTEGER NOT NULL,
+                    FOREIGN KEY (salida_id) REFERENCES salidas(id) ON DELETE CASCADE,
+                    UNIQUE (salida_id, orden)
+                )
+                """;
+        String sqlSalidaEquipamiento = """
+                CREATE TABLE IF NOT EXISTS salida_equipamiento (
+                    salida_id INTEGER NOT NULL,
+                    equipamiento_id INTEGER NOT NULL,
+                    nombre_copia TEXT NOT NULL,
+                    categoria_copia TEXT NOT NULL,
+                    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+                    PRIMARY KEY (salida_id, equipamiento_id),
+                    FOREIGN KEY (salida_id) REFERENCES salidas(id) ON DELETE CASCADE,
+                    FOREIGN KEY (equipamiento_id) REFERENCES equipamiento(id)
+                )
+                """;
+        String sqlSalidaParticipantes = """
+                CREATE TABLE IF NOT EXISTS salida_participantes (
+                    salida_id INTEGER NOT NULL,
+                    cliente_id INTEGER NOT NULL,
+                    dni_copia TEXT NOT NULL,
+                    nombre_copia TEXT NOT NULL,
+                    apellido_copia TEXT NOT NULL,
+                    telefono_copia TEXT,
+                    emergencia_nombre_copia TEXT,
+                    emergencia_telefono_copia TEXT,
+                    emergencia_relacion_copia TEXT,
+                    PRIMARY KEY (salida_id, cliente_id),
+                    FOREIGN KEY (salida_id) REFERENCES salidas(id) ON DELETE CASCADE,
+                    FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+                )
+                """;
         try (
                 Connection conexion = conectar(); Statement statement = conexion.createStatement()) {
             statement.execute(sql);
@@ -113,6 +172,12 @@ public class ConexionDB {
             statement.execute(sqlContactosEmergencia); // Valores iniciales de la tabla sexos 
             statement.execute(sqlRecorridos);
             statement.execute(sqlRecorridoCliente);
+            statement.execute(sqlSalidas);
+            statement.execute(sqlSalidaCheckpoints);
+            statement.execute(sqlSalidaEquipamiento);
+            statement.execute(sqlSalidaParticipantes);
+            statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_salidas_fecha_estado ON salidas(fecha, estado)");
+            statement.executeUpdate("CREATE INDEX IF NOT EXISTS idx_salida_equipamiento_elemento ON salida_equipamiento(equipamiento_id)");
             statement.executeUpdate("""
                     CREATE UNIQUE INDEX IF NOT EXISTS idx_recorrido_cliente_unico
                     ON recorrido_cliente (recorrido_id, cliente_id)
@@ -120,16 +185,7 @@ public class ConexionDB {
             statement.executeUpdate(""" 
                 INSERT OR IGNORE INTO sexos (nombre) VALUES ('Masculino'), ('Femenino'), ('No binario'), ('Otro'), ('Prefiero no decir') 
                 """);
-            normalizarDatosExistentes(conexion);
-
-            statement.executeUpdate(
-                    "DROP INDEX IF EXISTS idx_rutas_nombre_unique");
-
-            statement.executeUpdate(
-                    "CREATE UNIQUE INDEX idx_rutas_nombre_unique "
-                    + "ON rutas(nombre COLLATE NOCASE)");
-
-            System.out.println("Tabla 'rutas' lista.");
+            System.out.println("Esquema de trekking listo.");
 
         } catch (SQLException e) {
             System.out.println(
@@ -138,38 +194,4 @@ public class ConexionDB {
         }
     }
 
-    private static void normalizarDatosExistentes(Connection conexion)
-            throws SQLException {
-
-        Set<String> nombresUsados = new HashSet<>();
-
-        String consulta = "SELECT id, nombre FROM rutas ORDER BY id";
-
-        try (
-                Statement statement = conexion.createStatement(); ResultSet resultSet = statement.executeQuery(consulta); PreparedStatement actualizar = conexion.prepareStatement(
-                "UPDATE rutas SET nombre = ? WHERE id = ?")) {
-            while (resultSet.next()) {
-
-                int id = resultSet.getInt("id");
-
-                String nombre = Ruta.normalizarNombre(
-                        resultSet.getString("nombre"));
-
-                if (!Ruta.nombreValido(nombre)) {
-                    nombre = "Ruta " + id;
-                }
-
-                String nombreBase = nombre;
-                int sufijo = 2;
-
-                while (!nombresUsados.add(Ruta.claveNombre(nombre))) {
-                    nombre = nombreBase + " " + sufijo++;
-                }
-
-                actualizar.setString(1, nombre);
-                actualizar.setInt(2, id);
-                actualizar.executeUpdate();
-            }
-        }
-    }
 }

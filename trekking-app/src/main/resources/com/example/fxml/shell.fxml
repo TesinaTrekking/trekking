@@ -15,17 +15,13 @@
             <Label text="TREKKING" styleClass="sidebar-brand"/>
             <Label text="GESTIÓN DE ACTIVIDADES" styleClass="sidebar-caption"/>
             <VBox fx:id="navigationBox" styleClass="sidebar-navigation" VBox.vgrow="ALWAYS">
-                <Button fx:id="btnInicio" text="Inicio" onAction="#onInicio"
+                <Button fx:id="btnSalidas" text="Salidas" onAction="#onSalidas"
                         maxWidth="Infinity" styleClass="sidebar-button"/>
                 <Button fx:id="btnRutas" text="Rutas" onAction="#onRutas"
                         maxWidth="Infinity" styleClass="sidebar-button"/>
-                <Button fx:id="btnCheckpoints" text="Checkpoints" onAction="#onCheckpoints"
-                        maxWidth="Infinity" styleClass="sidebar-button"/>
-                <Button fx:id="btnEquipamiento" text="Equipamiento" onAction="#onEquipamiento"
+                <Button fx:id="btnInventario" text="Inventario" onAction="#onInventario"
                         maxWidth="Infinity" styleClass="sidebar-button"/>
                 <Button fx:id="btnClientes" text="Clientes" onAction="#onClientes"
-                        maxWidth="Infinity" styleClass="sidebar-button"/>
-                <Button fx:id="btnRecorridos" text="Recorridos" onAction="#onRecorridos"
                         maxWidth="Infinity" styleClass="sidebar-button"/>
             </VBox>
             <Label text="Sistema de gestión de trekking" styleClass="sidebar-footer"/>

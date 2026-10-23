@@ -138,6 +138,10 @@
                                    onAction="#agregarCheckpoint"
                                    styleClass="action-add" />
 
+                            <Button text="Nuevo Checkpoint"
+                                   onAction="#nuevoCheckpoint"
+                                   styleClass="action-edit" />
+
                      </HBox>
 
 
@@ -153,6 +157,10 @@
                                    text="Quitar"
                                    onAction="#quitarCheckpoint"
                                    styleClass="action-delete" />
+
+                            <Button text="Editar"
+                                   onAction="#editarCheckpoint"
+                                   styleClass="action-edit" />
 
                             <Button fx:id="subirCheckpointButton"
                                    text="Subir"

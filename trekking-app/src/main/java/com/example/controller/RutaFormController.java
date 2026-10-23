@@ -21,6 +21,10 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -33,6 +37,7 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Comparator;
 import java.util.function.UnaryOperator;
 
 public class RutaFormController {
@@ -168,7 +173,7 @@ public class RutaFormController {
                 try {
 
                         checkpointCombo.getItems().setAll(
-                                        checkpointDAO.obtenerTodos());
+                                        checkpointDAO.obtenerDisponiblesParaRuta());
 
                 } catch (Exception e) {
 
@@ -239,6 +244,72 @@ public class RutaFormController {
                 FormValidation.reset(checkpointCombo);
 
                 checkpointsListView.getSelectionModel().selectLast();
+        }
+
+        @FXML
+        private void nuevoCheckpoint() {
+                Checkpoint checkpoint = editarDatosCheckpoint(null);
+                if (checkpoint != null) {
+                        checkpointsSeleccionados.add(checkpoint);
+                        checkpointsListView.getSelectionModel().selectLast();
+                }
+        }
+
+        @FXML
+        private void editarCheckpoint() {
+                int indice = checkpointsListView.getSelectionModel().getSelectedIndex();
+                if (indice < 0) {
+                        mostrarError("Checkpoint", "Selecciona un Checkpoint del Itinerario.");
+                        return;
+                }
+                Checkpoint editado = editarDatosCheckpoint(checkpointsSeleccionados.get(indice));
+                if (editado != null) checkpointsSeleccionados.set(indice, editado);
+        }
+
+        private Checkpoint editarDatosCheckpoint(Checkpoint original) {
+                Dialog<ButtonType> dialog = new Dialog<>();
+                dialog.setTitle(original == null ? "Nuevo Checkpoint" : "Editar Checkpoint");
+                dialog.setHeaderText("Datos del Checkpoint de esta Ruta");
+                dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+                TextField nombre = new TextField(original == null ? "" : original.getNombre());
+                TextField hora = new TextField(original == null ? "" : original.getHora());
+                TextField latitud = new TextField(original == null ? "" : String.valueOf(original.getLatitud()));
+                TextField longitud = new TextField(original == null ? "" : String.valueOf(original.getLongitud()));
+                TextField altitud = new TextField(original == null ? "" : String.valueOf(original.getAltitud()));
+                TextArea descripcion = new TextArea(original == null ? "" : original.getDescripcion());
+                descripcion.setPrefRowCount(2);
+                GridPane campos = new GridPane();
+                campos.setHgap(10);
+                campos.setVgap(8);
+                String[] etiquetas = {"Nombre", "Hora (HH:mm)", "Latitud", "Longitud", "Altitud (m)", "Descripción"};
+                javafx.scene.Node[] controles = {nombre, hora, latitud, longitud, altitud, descripcion};
+                for (int fila = 0; fila < etiquetas.length; fila++) {
+                        campos.add(new Label(etiquetas[fila]), 0, fila);
+                        campos.add(controles[fila], 1, fila);
+                }
+                dialog.getDialogPane().setContent(campos);
+                if (dialog.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return null;
+                try {
+                        String nombreNormalizado = nombre.getText().trim();
+                        java.time.LocalTime.parse(hora.getText().trim(),
+                                        java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+                                                        .withResolverStyle(java.time.format.ResolverStyle.STRICT));
+                        double lat = Double.parseDouble(latitud.getText().trim().replace(',', '.'));
+                        double lon = Double.parseDouble(longitud.getText().trim().replace(',', '.'));
+                        double alt = Double.parseDouble(altitud.getText().trim().replace(',', '.'));
+                        if (nombreNormalizado.isBlank() || !Double.isFinite(lat) || lat < -90 || lat > 90
+                                        || !Double.isFinite(lon) || lon < -180 || lon > 180
+                                        || !Double.isFinite(alt) || alt < 0) {
+                                throw new IllegalArgumentException();
+                        }
+                        return new Checkpoint(original == null ? 0L : original.getId(),
+                                        nombreNormalizado, hora.getText().trim(), lat, lon, alt,
+                                        descripcion.getText().trim());
+                } catch (RuntimeException ex) {
+                        mostrarError("Datos inválidos",
+                                        "Completa el nombre y una hora HH:mm válida. Coordenadas: latitud -90..90, longitud -180..180; altitud desde 0 m.");
+                        return null;
+                }
         }
 
         @FXML
@@ -514,7 +585,7 @@ public class RutaFormController {
                 FormValidation.validateNow(dificultadTecnicaCombo);
                 FormValidation.validateNow(dificultadFisicaCombo);
 
-                String nombre = Ruta.formatearNombre(
+                String nombre = Ruta.normalizarNombre(
                                 nombreField.getText());
 
                 if (!validarNombre(nombre)) {
@@ -549,6 +620,22 @@ public class RutaFormController {
                 Double altitudMaxima = obtenerAltitud();
 
                 if (altitudMaxima == null) {
+                        return;
+                }
+
+                if (checkpointsSeleccionados.size() == 1) {
+                        mostrarError("Itinerario incompleto",
+                                        "El itinerario necesita inicio y fin: agregue cero o al menos dos Checkpoints.");
+                        return;
+                }
+
+                double altitudCheckpointMaxima = checkpointsSeleccionados.stream()
+                                .mapToDouble(Checkpoint::getAltitud).max().orElse(0);
+                if (altitudCheckpointMaxima > altitudMaxima) {
+                        mostrarError("Altitud máxima",
+                                        "La altitud máxima de la Ruta debe ser igual o superior a la mayor altitud de sus Checkpoints ("
+                                                        + altitudCheckpointMaxima + " m).");
+                        altitudMaximaField.requestFocus();
                         return;
                 }
 
@@ -598,9 +685,12 @@ public class RutaFormController {
                         rutaId = ruta.getId();
                 }
 
+                List<Checkpoint> itinerarioOrdenado = checkpointsSeleccionados.stream()
+                                .sorted(Comparator.comparing(Checkpoint::getHora))
+                                .toList();
                 boolean checkpointsGuardados = rutaCheckpointDAO.reemplazarPorRuta(
                                 rutaId,
-                                checkpointsSeleccionados);
+                                itinerarioOrdenado);
 
                 if (!checkpointsGuardados) {
                         mostrarError(

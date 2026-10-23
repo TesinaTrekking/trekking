@@ -494,3 +494,7 @@
 .list-view .list-cell:filled:selected:hover {
     -fx-background-color: #dce8f8;
 }
+
+.table-view .table-row-cell.salida-pendiente-vencida {
+    -fx-background-color: #fff2e0;
+}

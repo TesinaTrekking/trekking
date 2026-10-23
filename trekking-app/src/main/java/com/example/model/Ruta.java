@@ -7,7 +7,7 @@ public class Ruta {
     public static String normalizarNombre(String nombre) {
         return nombre == null
                 ? ""
-                : nombre.trim().replaceAll("\\s+", " ");
+                : nombre.strip().replaceAll("(?U)\\s+", " ");
     }
 
     public static String formatearNombre(String nombre) {
