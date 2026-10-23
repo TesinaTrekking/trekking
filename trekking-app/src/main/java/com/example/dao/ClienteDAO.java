@@ -16,6 +16,47 @@ import javafx.collections.ObservableList;
 
 public class ClienteDAO {
 
+    /** Inserta un Cliente dentro de la transacción de confirmación de una Salida. */
+    public int insertarEnTransaccion(Connection conexion, Cliente cliente, byte[] fichaMedica,
+            String nombreFichaMedica) throws SQLException {
+        String sql = """
+                INSERT INTO clientes (dni, nombre, apellido, fecha_nacimiento, email, telefono, sexo,
+                    contacto_emergencia_nombre, contacto_emergencia_telefono,
+                    contacto_emergencia_relacion, autorizacion_menores, tutor_nombre,
+                    tutor_apellido, tutor_dni, tutor_telefono, activo, ficha_medica,
+                    nombre_ficha_medica, fecha_alta, fecha_modificacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, CURRENT_DATE, CURRENT_DATE)
+                """;
+        try (PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, cliente.getDni());
+            ps.setString(2, cliente.getNombre());
+            ps.setString(3, cliente.getApellido());
+            ps.setString(4, cliente.getFechaNacimiento().toString());
+            ps.setString(5, textoONull(cliente.getEmail()));
+            ps.setString(6, cliente.getTelefono());
+            ps.setString(7, cliente.getSexo());
+            ps.setString(8, textoONull(cliente.getContactoEmergenciaNombre()));
+            ps.setString(9, textoONull(cliente.getContactoEmergenciaTelefono()));
+            ps.setString(10, textoONull(cliente.getContactoEmergenciaRelacion()));
+            ps.setBoolean(11, cliente.isAutorizacionMenores());
+            ps.setString(12, textoONull(cliente.getTutorNombre()));
+            ps.setString(13, textoONull(cliente.getTutorApellido()));
+            ps.setString(14, textoONull(cliente.getTutorDni()));
+            ps.setString(15, textoONull(cliente.getTutorTelefono()));
+            ps.setBytes(16, fichaMedica);
+            ps.setString(17, textoONull(nombreFichaMedica));
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (!keys.next()) throw new SQLException("No se pudo guardar el Cliente nuevo.");
+                int id = keys.getInt(1);
+                sincronizarSexoYContacto(conexion, id, cliente.getSexo(),
+                        cliente.getContactoEmergenciaNombre(), cliente.getContactoEmergenciaTelefono(),
+                        cliente.getContactoEmergenciaRelacion());
+                return id;
+            }
+        }
+    }
+
     // =========================================================
     // INSERTAR CLIENTE
     // =========================================================

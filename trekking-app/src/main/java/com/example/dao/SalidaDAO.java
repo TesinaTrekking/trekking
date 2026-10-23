@@ -6,6 +6,8 @@ import com.example.model.Salida;
 import com.example.model.Checkpoint;
 import com.example.model.Equipamiento;
 import com.example.model.AsignacionEquipamiento;
+import com.example.model.AsignacionParticipante;
+import com.example.model.Cliente;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -104,6 +106,12 @@ public class SalidaDAO {
     /** Confirma la Salida y sus reservas de Inventario de forma atómica. */
     public int confirmar(LocalDate fecha, Integer rutaId, Ruta rutaNueva,
             List<AsignacionEquipamiento> asignaciones) throws SQLException {
+        return confirmar(fecha, rutaId, rutaNueva, asignaciones, List.of());
+    }
+
+    /** Confirma la Salida, sus reservas y sus Participantes en una sola transacción. */
+    public int confirmar(LocalDate fecha, Integer rutaId, Ruta rutaNueva,
+            List<AsignacionEquipamiento> asignaciones, List<AsignacionParticipante> participantes) throws SQLException {
         if (fecha == null) throw new SQLException("La fecha de la Salida es obligatoria.");
         if ((rutaId == null) == (rutaNueva == null))
             throw new SQLException("Selecciona una Ruta o completa una Ruta nueva.");
@@ -158,12 +166,70 @@ public class SalidaDAO {
                     ps.executeBatch();
                 }
                 guardarAsignaciones(c, salidaId, asignaciones);
+                guardarParticipantes(c, salidaId, participantes);
                 c.commit();
                 return salidaId;
             } catch (SQLException | RuntimeException e) {
                 c.rollback();
                 if (e instanceof SQLException sqlException) throw sqlException;
                 throw new SQLException("No se pudo confirmar la Salida.", e);
+            }
+        }
+    }
+
+    private void guardarParticipantes(Connection c, int salidaId,
+            List<AsignacionParticipante> participantes) throws SQLException {
+        if (participantes == null) throw new SQLException("La lista de Participantes es inválida.");
+        java.util.Set<Integer> ids = new java.util.HashSet<>();
+        java.util.Set<String> dnis = new java.util.HashSet<>();
+        ClienteDAO clienteDAO = new ClienteDAO();
+        for (AsignacionParticipante asignacion : participantes) {
+            if (asignacion == null || asignacion.cliente() == null)
+                throw new SQLException("Hay un Participante inválido.");
+            Cliente cliente = asignacion.cliente();
+            String dni = cliente.getDni() == null ? "" : cliente.getDni().trim();
+            if (dni.isEmpty() || !dnis.add(dni))
+                throw new SQLException("No se puede asociar dos veces el mismo Cliente.");
+            int clienteId = cliente.getId();
+            if (asignacion.nuevo()) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT activo FROM clientes WHERE dni = ?")) {
+                    ps.setString(1, dni);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            if (rs.getInt("activo") != 1)
+                                throw new SQLException("El DNI ya pertenece a un Cliente inactivo. Reactívalo desde Clientes antes de asociarlo.");
+                            throw new SQLException("El DNI ya pertenece a un Cliente activo. Busca y selecciona el registro existente.");
+                        }
+                    }
+                }
+                clienteId = clienteDAO.insertarEnTransaccion(c, cliente,
+                        asignacion.fichaMedica(), asignacion.nombreFichaMedica());
+            } else {
+                try (PreparedStatement ps = c.prepareStatement("SELECT dni, activo FROM clientes WHERE id = ?")) {
+                    ps.setInt(1, clienteId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new SQLException("El Cliente seleccionado ya no existe.");
+                        if (rs.getInt("activo") != 1)
+                            throw new SQLException("El Cliente está inactivo. Reactívalo desde Clientes antes de asociarlo.");
+                        if (!dni.equals(rs.getString("dni")))
+                            throw new SQLException("El DNI del Cliente seleccionado cambió. Actualiza la lista y vuelve a seleccionarlo.");
+                    }
+                }
+            }
+            if (!ids.add(clienteId)) throw new SQLException("No se puede asociar dos veces el mismo Cliente.");
+            try (PreparedStatement ps = c.prepareStatement("""
+                    INSERT INTO salida_participantes
+                        (salida_id, cliente_id, dni_copia, nombre_copia, apellido_copia, telefono_copia,
+                         emergencia_nombre_copia, emergencia_telefono_copia, emergencia_relacion_copia)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """)) {
+                ps.setInt(1, salidaId); ps.setInt(2, clienteId); ps.setString(3, dni);
+                ps.setString(4, cliente.getNombre()); ps.setString(5, cliente.getApellido());
+                ps.setString(6, cliente.getTelefono());
+                ps.setString(7, cliente.getContactoEmergenciaNombre());
+                ps.setString(8, cliente.getContactoEmergenciaTelefono());
+                ps.setString(9, cliente.getContactoEmergenciaRelacion());
+                ps.executeUpdate();
             }
         }
     }

@@ -8,7 +8,13 @@ import com.example.model.Salida;
 import com.example.model.Equipamiento;
 import com.example.model.AsignacionEquipamiento;
 import com.example.dao.EquipamientoDAO;
+import com.example.dao.ClienteDAO;
+import com.example.model.Cliente;
+import com.example.model.AsignacionParticipante;
 import java.sql.SQLException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
@@ -18,7 +24,9 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -93,6 +101,8 @@ public class SalidasController {
     private final class WizardSalida {
         private final RutaCheckpointDAO checkpointDAO = new RutaCheckpointDAO();
         private final List<AsignacionEquipamiento> asignaciones = new ArrayList<>();
+        private final List<AsignacionParticipante> participantes = new ArrayList<>();
+        private final ClienteDAO clienteDAO = new ClienteDAO();
         private final Stage stage = new Stage();
         private final VBox content = new VBox(14);
         private final Label heading = new Label();
@@ -108,6 +118,10 @@ public class SalidasController {
         private final ComboBox<Equipamiento> inventario = new ComboBox<>();
         private final TextField cantidadAsignada = new TextField("1");
         private final ListView<AsignacionEquipamiento> listaAsignaciones = new ListView<>();
+        private final ComboBox<Cliente> clientes = new ComboBox<>();
+        private final TextField buscarCliente = new TextField();
+        private final ListView<AsignacionParticipante> listaParticipantes = new ListView<>();
+        private List<Cliente> todosLosClientes = List.of();
         private final TextField nuevoNombre = new TextField();
         private final ComboBox<String> nuevaCategoria = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.CATEGORIAS));
         private final ComboBox<String> nuevoEstado = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.ESTADOS));
@@ -134,6 +148,18 @@ public class SalidasController {
                             + (item.nuevo() ? " · nuevo" : ""));
                 }
             });
+            clientes.setConverter(new StringConverter<>() {
+                public String toString(Cliente c) { return c == null ? "" : c.getApellido() + ", " + c.getNombre() + " · DNI " + c.getDni(); }
+                public Cliente fromString(String s) { return null; }
+            });
+            listaParticipantes.setCellFactory(view -> new ListCell<>() {
+                @Override protected void updateItem(AsignacionParticipante item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.cliente().getApellido() + ", " + item.cliente().getNombre()
+                            + " · DNI " + item.cliente().getDni() + (item.nuevo() ? " · nuevo" : ""));
+                }
+            });
+            buscarCliente.textProperty().addListener((o, a, b) -> actualizarClientesFiltrados());
             modo.valueProperty().addListener((o, a, b) -> render()); rutas.valueProperty().addListener((o,a,b) -> actualizarDetalle());
             anterior.setOnAction(e -> { if (paso > 0) { paso--; render(); } });
             siguiente.setOnAction(e -> avanzar()); cancelar.setOnAction(e -> stage.close());
@@ -143,6 +169,7 @@ public class SalidasController {
         void mostrar() {
             rutasActivas = rutaDAO.obtenerTodas(); rutas.setItems(FXCollections.observableArrayList(rutasActivas));
             inventario.setItems(FXCollections.observableArrayList(EquipamientoDAO.obtenerTodos()));
+            todosLosClientes = clienteDAO.obtenerTodosLosClientes();
             render();
             ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true);
             stage.setScene(new Scene(scroll, 700, 680)); stage.showAndWait();
@@ -161,7 +188,7 @@ public class SalidasController {
                 } else { content.getChildren().addAll(new Label("Ruta activa"), rutas, detalle); actualizarDetalle(); }
             }
             if (paso == 2) renderEquipamiento();
-            if (paso == 3) content.getChildren().addAll(new Label("Participantes"), new Label("Sin participantes. Puedes confirmar la Salida sin clientes asociados."));
+            if (paso == 3) renderParticipantes();
             if (paso == 4) content.getChildren().add(new Label(resumen()));
             anterior.setDisable(paso == 0); siguiente.setText(paso == 4 ? "Confirmar Salida" : "Siguiente");
             content.getChildren().addAll(new javafx.scene.layout.Region(), new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
@@ -180,6 +207,122 @@ public class SalidasController {
                     new Label("Crear un Elemento de inventario para esta Salida"), campo("Nombre", nuevoNombre),
                     new javafx.scene.layout.HBox(8, nuevaCategoria, nuevoEstado),
                     new javafx.scene.layout.HBox(8, campo("Cantidad total", nuevoTotal), campo("Cantidad a asignar", nuevaCantidadAsignada)), crear);
+        }
+        private void renderParticipantes() {
+            buscarCliente.setPromptText("Buscar por DNI, nombre o apellido");
+            actualizarClientesFiltrados();
+            listaParticipantes.setItems(FXCollections.observableArrayList(participantes));
+            Button agregar = new Button("Agregar Cliente seleccionado");
+            agregar.setOnAction(e -> agregarClienteExistente());
+            Button crear = new Button("Crear Cliente nuevo");
+            crear.setOnAction(e -> crearClienteParticipante());
+            Button quitar = new Button("Quitar seleccionado");
+            quitar.setOnAction(e -> {
+                AsignacionParticipante seleccionado = listaParticipantes.getSelectionModel().getSelectedItem();
+                if (seleccionado != null) { participantes.remove(seleccionado); render(); }
+            });
+            content.getChildren().addAll(new Label("Clientes activos · puedes confirmar sin Participantes"),
+                    buscarCliente, clientes, agregar, crear, new Label("Participantes de esta Salida"), listaParticipantes, quitar);
+        }
+        private void actualizarClientesFiltrados() {
+            String consulta = buscarCliente.getText() == null ? "" : buscarCliente.getText().trim().toLowerCase();
+            var filtrados = todosLosClientes.stream().filter(Cliente::isActivo)
+                    .filter(c -> consulta.isEmpty() || c.getDni().toLowerCase().contains(consulta)
+                            || c.getNombre().toLowerCase().contains(consulta) || c.getApellido().toLowerCase().contains(consulta))
+                    .toList();
+            clientes.setItems(FXCollections.observableArrayList(filtrados));
+            if (clientes.getValue() != null && !filtrados.contains(clientes.getValue())) clientes.setValue(null);
+        }
+        private void agregarClienteExistente() {
+            Cliente cliente = clientes.getValue();
+            if (cliente == null) { aviso(Alert.AlertType.WARNING, "Selecciona un Cliente", "Busca y selecciona un Cliente activo."); return; }
+            if (participantes.stream().anyMatch(p -> p.cliente().getId() == cliente.getId())) {
+                aviso(Alert.AlertType.INFORMATION, "Cliente ya asociado", "Ese Cliente ya está asociado a esta Salida."); return;
+            }
+            participantes.add(new AsignacionParticipante(cliente, false)); render();
+        }
+        private void crearClienteParticipante() {
+            Dialog<Cliente> dialog = new Dialog<>();
+            dialog.initOwner(stage); dialog.initModality(Modality.WINDOW_MODAL); dialog.setTitle("Nuevo Cliente para la Salida");
+            ButtonType guardar = new ButtonType("Agregar a la Salida", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(guardar, ButtonType.CANCEL);
+            TextField dni = new TextField(), nombre = new TextField(), apellido = new TextField(), email = new TextField(), telefono = new TextField();
+            DatePicker nacimiento = new DatePicker();
+            ComboBox<String> sexo = new ComboBox<>(FXCollections.observableArrayList("Masculino", "Femenino", "No binario", "Otro", "Prefiero no decir"));
+            TextField emergenciaNombre = new TextField(), emergenciaTelefono = new TextField(), emergenciaRelacion = new TextField();
+            CheckBox autorizacion = new CheckBox("Autorización de menores confirmada");
+            TextField tutorNombre = new TextField(), tutorApellido = new TextField(), tutorDni = new TextField(), tutorTelefono = new TextField();
+            Label fichaMedica = new Label("Sin archivo seleccionado");
+            File[] archivoFicha = {null};
+            Button seleccionarFicha = new Button("Seleccionar ficha médica PDF");
+            seleccionarFicha.setOnAction(e -> {
+                FileChooser selector = new FileChooser(); selector.setTitle("Seleccionar ficha médica");
+                selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos PDF", "*.pdf", "*.PDF"));
+                File archivo = selector.showOpenDialog(stage);
+                if (archivo != null) { archivoFicha[0] = archivo; fichaMedica.setText(archivo.getName()); }
+            });
+            GridPane formulario = new GridPane(); formulario.setHgap(10); formulario.setVgap(7); formulario.setPadding(new javafx.geometry.Insets(12));
+            Object[][] campos = {{"DNI *", dni}, {"Nombre *", nombre}, {"Apellido *", apellido}, {"Nacimiento *", nacimiento},
+                    {"Email", email}, {"Teléfono *", telefono}, {"Sexo *", sexo}, {"Contacto de emergencia", emergenciaNombre},
+                    {"Teléfono de emergencia", emergenciaTelefono}, {"Relación", emergenciaRelacion}, {"Tutor", tutorNombre},
+                    {"Apellido del tutor", tutorApellido}, {"DNI del tutor", tutorDni}, {"Teléfono del tutor", tutorTelefono},
+                    {"Ficha médica (opcional)", new javafx.scene.layout.HBox(8, seleccionarFicha, fichaMedica)}};
+            for (int i = 0; i < campos.length; i++) {
+                formulario.add(new Label((String) campos[i][0]), 0, i); formulario.add((javafx.scene.Node) campos[i][1], 1, i);
+                if (campos[i][1] instanceof Control control) control.setMaxWidth(Double.MAX_VALUE);
+            }
+            formulario.add(autorizacion, 1, campos.length);
+            dialog.getDialogPane().setContent(new ScrollPane(formulario));
+            dialog.setResultConverter(button -> button == guardar ? new Cliente(0, dni.getText().trim(), nombre.getText().trim(),
+                    apellido.getText().trim(), nacimiento.getValue(), email.getText().trim(), telefono.getText().trim(), sexo.getValue(),
+                    emergenciaNombre.getText().trim(), emergenciaTelefono.getText().trim(), emergenciaRelacion.getText().trim(),
+                    autorizacion.isSelected(), tutorNombre.getText().trim(), tutorApellido.getText().trim(), tutorDni.getText().trim(),
+                    tutorTelefono.getText().trim(), true, LocalDate.now(), LocalDate.now()) : null);
+            Cliente nuevo = dialog.showAndWait().orElse(null);
+            if (nuevo == null) return;
+            String error = ClienteValidator.validar(nuevo.getDni(), nuevo.getNombre(), nuevo.getApellido(), nuevo.getFechaNacimiento(),
+                    nuevo.getEmail(), nuevo.getTelefono(), nuevo.getSexo(), nuevo.getContactoEmergenciaNombre(),
+                    nuevo.getContactoEmergenciaTelefono(), nuevo.getContactoEmergenciaRelacion(), nuevo.isAutorizacionMenores(),
+                    nuevo.getTutorNombre(), nuevo.getTutorApellido(), nuevo.getTutorDni(), nuevo.getTutorTelefono());
+            if (error != null) { aviso(Alert.AlertType.ERROR, "Revisa los datos del Cliente", error); return; }
+            byte[] contenidoFicha = null;
+            String nombreFicha = null;
+            if (archivoFicha[0] != null) {
+                if (archivoFicha[0].length() > 2L * 1024 * 1024
+                        || !archivoFicha[0].getName().toLowerCase().endsWith(".pdf")) {
+                    aviso(Alert.AlertType.ERROR, "Ficha médica no válida", "Elige un PDF de hasta 2 MB."); return;
+                }
+                try {
+                    contenidoFicha = Files.readAllBytes(archivoFicha[0].toPath());
+                    if (contenidoFicha.length < 5 || contenidoFicha[0] != '%'
+                            || contenidoFicha[1] != 'P' || contenidoFicha[2] != 'D'
+                            || contenidoFicha[3] != 'F' || contenidoFicha[4] != '-') {
+                        aviso(Alert.AlertType.ERROR, "Ficha médica no válida", "El archivo seleccionado no tiene formato PDF válido."); return;
+                    }
+                    nombreFicha = archivoFicha[0].getName();
+                } catch (IOException ex) {
+                    aviso(Alert.AlertType.ERROR, "No se pudo leer la ficha médica", ex.getMessage()); return;
+                }
+            }
+            Cliente existente = todosLosClientes.stream().filter(c -> c.getDni().trim().equals(nuevo.getDni())).findFirst().orElse(null);
+            if (existente != null) {
+                if (!existente.isActivo()) {
+                    aviso(Alert.AlertType.WARNING, "DNI de Cliente inactivo", "Ese DNI pertenece a un Cliente inactivo. Debe reactivarse desde Clientes antes de asociarlo.");
+                } else {
+                    Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirmar.setTitle("DNI ya registrado"); confirmar.setHeaderText("Usar el Cliente existente");
+                    confirmar.setContentText("El DNI pertenece a " + existente.getNombre() + " " + existente.getApellido() + ". ¿Quieres asociar ese registro?");
+                    if (confirmar.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                        if (participantes.stream().noneMatch(p -> p.cliente().getId() == existente.getId())) participantes.add(new AsignacionParticipante(existente, false));
+                        render();
+                    }
+                }
+                return;
+            }
+            if (participantes.stream().anyMatch(p -> p.cliente().getDni().equals(nuevo.getDni()))) {
+                aviso(Alert.AlertType.INFORMATION, "Cliente ya asociado", "Ese DNI ya está asociado a esta Salida."); return;
+            }
+            participantes.add(new AsignacionParticipante(nuevo, true, contenidoFicha, nombreFicha)); render();
         }
         private void agregarExistente() {
             Equipamiento seleccionado = inventario.getValue();
@@ -222,7 +365,10 @@ public class SalidasController {
         private String resumen() {
             String ruta = isCreandoRuta() ? nombre.getText().trim() : rutas.getValue() == null ? "(sin Ruta)" : rutas.getValue().getNombre();
             String equipo = asignaciones.isEmpty() ? "ninguno" : asignaciones.stream().map(a -> a.equipamiento().getNombre() + " × " + a.cantidad()).collect(java.util.stream.Collectors.joining(", "));
-            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta + "\nEstado inicial: planificada\nEquipamiento: " + equipo + "\nParticipantes: ninguno\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), los Elementos nuevos asociados, las reservas, su copia operativa y la Salida en una sola operación.";
+            String detalleParticipantes = participantes.isEmpty() ? "ninguno" : participantes.stream()
+                    .map(p -> p.cliente().getApellido() + ", " + p.cliente().getNombre() + " · DNI " + p.cliente().getDni())
+                    .collect(java.util.stream.Collectors.joining(", "));
+            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta + "\nEstado inicial: planificada\nEquipamiento: " + equipo + "\nParticipantes: " + detalleParticipantes + "\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), los Elementos nuevos asociados, los Clientes nuevos seleccionados, las reservas, las copias operativas y la Salida en una sola operación.";
         }
         private void avanzar() {
             if (paso == 0 && fecha.getValue() == null) { aviso(Alert.AlertType.WARNING, "Fecha obligatoria", "Selecciona la fecha de la Salida."); return; }
@@ -238,7 +384,7 @@ public class SalidasController {
                 Ruta nueva = null; Integer rutaId = null;
                 if (isCreandoRuta()) nueva = new Ruta(Ruta.normalizarNombre(nombre.getText()), Double.parseDouble(altitud.getText().trim()), terreno.getValue(), tecnica.getValue(), fisica.getValue());
                 else rutaId = rutas.getValue().getId();
-                salidaDAO.confirmar(fecha.getValue(), rutaId, nueva, List.copyOf(asignaciones));
+                salidaDAO.confirmar(fecha.getValue(), rutaId, nueva, List.copyOf(asignaciones), List.copyOf(participantes));
                 stage.close(); actualizarIndicadores(); actualizarTabla();
             } catch (SQLException | RuntimeException ex) { aviso(Alert.AlertType.ERROR,"No se pudo confirmar la Salida",ex.getMessage()); }
         }
