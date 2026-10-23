@@ -3,6 +3,7 @@ package com.example.dao;
 import com.example.database.ConexionDB;
 import com.example.model.Ruta;
 import com.example.model.Salida;
+import com.example.model.Checkpoint;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -88,6 +89,95 @@ public class SalidaDAO {
             } catch (SQLException e) {
                 c.rollback();
                 throw e;
+            }
+        }
+    }
+
+    /** Confirma una Salida y, opcionalmente, su Ruta nueva en una única transacción. */
+    public int confirmar(LocalDate fecha, Integer rutaId, Ruta rutaNueva) throws SQLException {
+        if (fecha == null) throw new SQLException("La fecha de la Salida es obligatoria.");
+        if ((rutaId == null) == (rutaNueva == null))
+            throw new SQLException("Selecciona una Ruta o completa una Ruta nueva.");
+        try (Connection c = ConexionDB.conectar()) {
+            c.setAutoCommit(false);
+            try {
+                int idRuta = rutaId == null ? insertarRuta(c, rutaNueva) : rutaId;
+                Ruta ruta = rutaDAO.obtenerPorId(c, idRuta);
+                if (ruta == null) throw new SQLException("La Ruta seleccionada no existe.");
+                if (rutaId != null) {
+                    try (PreparedStatement ps = c.prepareStatement("SELECT activo FROM rutas WHERE id = ?")) {
+                        ps.setInt(1, idRuta);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (!rs.next() || rs.getInt(1) != 1)
+                                throw new SQLException("Selecciona una Ruta activa.");
+                        }
+                    }
+                }
+                String sql = """
+                        INSERT INTO salidas (ruta_id, fecha, estado, ruta_nombre, ruta_altitud_maxima,
+                            ruta_tipo_terreno, ruta_dificultad_tecnica, ruta_dificultad_fisica)
+                        VALUES (?, ?, 'planificada', ?, ?, ?, ?, ?)
+                        """;
+                int salidaId;
+                try (PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, idRuta); ps.setString(2, fecha.toString());
+                    ps.setString(3, ruta.getNombre()); ps.setDouble(4, ruta.getAltitudMaxima());
+                    ps.setString(5, ruta.getTipoTerreno()); ps.setString(6, ruta.getDificultadTecnica());
+                    ps.setString(7, ruta.getDificultadFisica()); ps.executeUpdate();
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        if (!keys.next()) throw new SQLException("No se obtuvo el ID de la Salida.");
+                        salidaId = keys.getInt(1);
+                    }
+                }
+                List<Checkpoint> puntos = new RutaCheckpointDAO().obtenerPorRuta(c, idRuta);
+                try (PreparedStatement ps = c.prepareStatement("""
+                        INSERT INTO salida_checkpoints
+                            (salida_id, nombre, hora, latitud, longitud, altitud, descripcion, orden)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """)) {
+                    int orden = 0;
+                    for (Checkpoint cp : puntos) {
+                        if (cp.getAltitud() > ruta.getAltitudMaxima())
+                            throw new SQLException("Un Checkpoint supera la altitud máxima de la Ruta.");
+                        ps.setInt(1, salidaId); ps.setString(2, cp.getNombre()); ps.setString(3, cp.getHora());
+                        ps.setDouble(4, cp.getLatitud()); ps.setDouble(5, cp.getLongitud());
+                        ps.setDouble(6, cp.getAltitud()); ps.setString(7, cp.getDescripcion());
+                        ps.setInt(8, orden++); ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                c.commit();
+                return salidaId;
+            } catch (SQLException | RuntimeException e) {
+                c.rollback();
+                if (e instanceof SQLException sqlException) throw sqlException;
+                throw new SQLException("No se pudo confirmar la Salida.", e);
+            }
+        }
+    }
+
+    private int insertarRuta(Connection c, Ruta ruta) throws SQLException {
+        String nombre = Ruta.normalizarNombre(ruta.getNombre());
+        if (nombre.isBlank() || nombre.length() > 100 || !Ruta.nombreValido(nombre))
+            throw new SQLException("El nombre de la Ruta es obligatorio y debe tener hasta 100 caracteres válidos.");
+        if (ruta.getAltitudMaxima() < 0 || !Double.isFinite(ruta.getAltitudMaxima()))
+            throw new SQLException("La altitud máxima debe ser un número mayor o igual a cero.");
+        try (PreparedStatement check = c.prepareStatement("SELECT 1 FROM rutas WHERE nombre = ? COLLATE NOCASE")) {
+            check.setString(1, nombre);
+            try (ResultSet rs = check.executeQuery()) {
+                if (rs.next()) throw new SQLException("Ya existe una Ruta con ese nombre.");
+            }
+        }
+        try (PreparedStatement ps = c.prepareStatement("""
+                INSERT INTO rutas (nombre, altitud_maxima, tipo_terreno, dificultad_tecnica, dificultad_fisica)
+                VALUES (?, ?, ?, ?, ?)
+                """, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, nombre); ps.setDouble(2, ruta.getAltitudMaxima());
+            ps.setString(3, ruta.getTipoTerreno()); ps.setString(4, ruta.getDificultadTecnica());
+            ps.setString(5, ruta.getDificultadFisica()); ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (!keys.next()) throw new SQLException("No se pudo guardar la Ruta nueva.");
+                return keys.getInt(1);
             }
         }
     }

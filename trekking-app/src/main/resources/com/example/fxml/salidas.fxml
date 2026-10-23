@@ -2,7 +2,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -29,9 +28,7 @@
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Inventario crítico" styleClass="form-label"/><Label fx:id="kpiInventario" text="0" styleClass="brand-title"/></VBox>
     </HBox>
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <VBox spacing="6"><Label text="Fecha *" styleClass="form-label"/><DatePicker fx:id="fechaPicker"/></VBox>
-        <VBox spacing="6"><Label text="Ruta activa *" styleClass="form-label"/><ComboBox fx:id="rutaComboBox" prefWidth="260" promptText="Seleccionar Ruta"/></VBox>
-        <Button text="Crear Salida planificada" onAction="#crearSalida" styleClass="action-add" translateY="10"/>
+        <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
     </HBox>
     <HBox spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="buscarField" promptText="Buscar por Ruta" HBox.hgrow="ALWAYS"/>
