@@ -5,9 +5,13 @@ import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.SalidaDAO;
 import com.example.model.Ruta;
 import com.example.model.Salida;
+import com.example.model.Equipamiento;
+import com.example.model.AsignacionEquipamiento;
+import com.example.dao.EquipamientoDAO;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -88,6 +92,7 @@ public class SalidasController {
 
     private final class WizardSalida {
         private final RutaCheckpointDAO checkpointDAO = new RutaCheckpointDAO();
+        private final List<AsignacionEquipamiento> asignaciones = new ArrayList<>();
         private final Stage stage = new Stage();
         private final VBox content = new VBox(14);
         private final Label heading = new Label();
@@ -100,6 +105,14 @@ public class SalidasController {
         private final ComboBox<String> tecnica = opciones("Baja", "Media", "Alta");
         private final ComboBox<String> fisica = opciones("Baja", "Media", "Alta");
         private final Label detalle = new Label();
+        private final ComboBox<Equipamiento> inventario = new ComboBox<>();
+        private final TextField cantidadAsignada = new TextField("1");
+        private final ListView<AsignacionEquipamiento> listaAsignaciones = new ListView<>();
+        private final TextField nuevoNombre = new TextField();
+        private final ComboBox<String> nuevaCategoria = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.CATEGORIAS));
+        private final ComboBox<String> nuevoEstado = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.ESTADOS));
+        private final TextField nuevoTotal = new TextField("0");
+        private final TextField nuevaCantidadAsignada = new TextField("1");
         private final Button anterior = new Button("Anterior"), siguiente = new Button("Siguiente"), cancelar = new Button("Cancelar");
         private int paso;
         private List<Ruta> rutasActivas;
@@ -109,13 +122,31 @@ public class SalidasController {
             stage.setTitle("Nueva Salida");
             modo.setItems(FXCollections.observableArrayList("Elegir Ruta activa", "Crear Ruta nueva")); modo.setValue("Elegir Ruta activa");
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
+            inventario.setConverter(new StringConverter<>() {
+                public String toString(Equipamiento item) { return item == null ? "" : item.getNombre() + " · disponible: " + item.getCantidadDisponible(); }
+                public Equipamiento fromString(String s) { return null; }
+            });
+            nuevaCategoria.setValue("Campamento"); nuevoEstado.setValue("Disponible");
+            listaAsignaciones.setCellFactory(view -> new ListCell<>() {
+                @Override protected void updateItem(AsignacionEquipamiento item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.equipamiento().getNombre() + " · " + item.cantidad()
+                            + (item.nuevo() ? " · nuevo" : ""));
+                }
+            });
             modo.valueProperty().addListener((o, a, b) -> render()); rutas.valueProperty().addListener((o,a,b) -> actualizarDetalle());
             anterior.setOnAction(e -> { if (paso > 0) { paso--; render(); } });
             siguiente.setOnAction(e -> avanzar()); cancelar.setOnAction(e -> stage.close());
             content.setStyle("-fx-padding: 22;");
         }
         private ComboBox<String> opciones(String... valores) { return new ComboBox<>(FXCollections.observableArrayList(valores)); }
-        void mostrar() { rutasActivas = rutaDAO.obtenerTodas(); rutas.setItems(FXCollections.observableArrayList(rutasActivas)); render(); stage.setScene(new Scene(content, 620, 520)); stage.showAndWait(); }
+        void mostrar() {
+            rutasActivas = rutaDAO.obtenerTodas(); rutas.setItems(FXCollections.observableArrayList(rutasActivas));
+            inventario.setItems(FXCollections.observableArrayList(EquipamientoDAO.obtenerTodos()));
+            render();
+            ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true);
+            stage.setScene(new Scene(scroll, 700, 680)); stage.showAndWait();
+        }
         private void render() {
             String[] titulos = {"Paso 1 de 5 · Datos de la salida", "Paso 2 de 5 · Ruta", "Paso 3 de 5 · Equipamiento", "Paso 4 de 5 · Participantes", "Paso 5 de 5 · Revisión"};
             heading.setText(titulos[paso]); content.getChildren().setAll(heading);
@@ -129,13 +160,55 @@ public class SalidasController {
                             new Label("La Ruta nueva se guardará solo al confirmar la Salida. Se crea como borrador, sin Checkpoints."));
                 } else { content.getChildren().addAll(new Label("Ruta activa"), rutas, detalle); actualizarDetalle(); }
             }
-            if (paso == 2) content.getChildren().addAll(new Label("Equipamiento"), new Label("Sin equipamiento asignado. Puedes confirmar la Salida sin elementos."));
+            if (paso == 2) renderEquipamiento();
             if (paso == 3) content.getChildren().addAll(new Label("Participantes"), new Label("Sin participantes. Puedes confirmar la Salida sin clientes asociados."));
             if (paso == 4) content.getChildren().add(new Label(resumen()));
             anterior.setDisable(paso == 0); siguiente.setText(paso == 4 ? "Confirmar Salida" : "Siguiente");
             content.getChildren().addAll(new javafx.scene.layout.Region(), new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
         }
         private VBox campo(String titulo, TextField field) { return new VBox(4, new Label(titulo), field); }
+        private void renderEquipamiento() {
+            listaAsignaciones.setItems(FXCollections.observableArrayList(asignaciones));
+            Button agregar = new Button("Agregar elemento"); agregar.setOnAction(e -> agregarExistente());
+            Button quitar = new Button("Quitar seleccionado"); quitar.setOnAction(e -> {
+                AsignacionEquipamiento seleccionado = listaAsignaciones.getSelectionModel().getSelectedItem();
+                if (seleccionado != null) { asignaciones.remove(seleccionado); renderEquipamiento(); }
+            });
+            Button crear = new Button("Crear y agregar"); crear.setOnAction(e -> crearYAgregar());
+            content.getChildren().addAll(new Label("Elementos activos · disponible = total menos reservas"),
+                    new javafx.scene.layout.HBox(8, inventario, cantidadAsignada, agregar), listaAsignaciones, quitar,
+                    new Label("Crear un Elemento de inventario para esta Salida"), campo("Nombre", nuevoNombre),
+                    new javafx.scene.layout.HBox(8, nuevaCategoria, nuevoEstado),
+                    new javafx.scene.layout.HBox(8, campo("Cantidad total", nuevoTotal), campo("Cantidad a asignar", nuevaCantidadAsignada)), crear);
+        }
+        private void agregarExistente() {
+            Equipamiento seleccionado = inventario.getValue();
+            int cantidad;
+            try { cantidad = Integer.parseInt(cantidadAsignada.getText().trim()); }
+            catch (RuntimeException e) { cantidad = 0; }
+            if (seleccionado == null || cantidad <= 0) { aviso(Alert.AlertType.WARNING, "Cantidad inválida", "Selecciona un Elemento y una cantidad entera positiva."); return; }
+            int acumulada = asignaciones.stream().filter(a -> !a.nuevo() && a.equipamiento().getId() == seleccionado.getId()).mapToInt(AsignacionEquipamiento::cantidad).sum();
+            if (acumulada + cantidad > seleccionado.getCantidadDisponible()) {
+                aviso(Alert.AlertType.WARNING, "Stock insuficiente", "Disponible para " + seleccionado.getNombre() + ": " + seleccionado.getCantidadDisponible() + "."); return;
+            }
+            int indice = -1;
+            for (int i = 0; i < asignaciones.size(); i++) if (!asignaciones.get(i).nuevo() && asignaciones.get(i).equipamiento().getId() == seleccionado.getId()) indice = i;
+            if (indice >= 0) { AsignacionEquipamiento anterior = asignaciones.get(indice); asignaciones.set(indice, new AsignacionEquipamiento(seleccionado, anterior.cantidad() + cantidad, false)); }
+            else asignaciones.add(new AsignacionEquipamiento(seleccionado, cantidad, false));
+            cantidadAsignada.setText("1"); renderEquipamiento();
+        }
+        private void crearYAgregar() {
+            String nombre = nuevoNombre.getText() == null ? "" : nuevoNombre.getText().trim();
+            int total, cantidad;
+            try { total = Integer.parseInt(nuevoTotal.getText().trim()); cantidad = Integer.parseInt(nuevaCantidadAsignada.getText().trim()); }
+            catch (RuntimeException e) { total = -1; cantidad = 0; }
+            if (nombre.isBlank() || total < 0 || cantidad <= 0 || cantidad > total || nuevaCategoria.getValue() == null || nuevoEstado.getValue() == null) {
+                aviso(Alert.AlertType.WARNING, "Datos inválidos", "Completa el nombre, categoría y estado; el total debe ser no negativo y la asignación positiva, sin superar el total."); return;
+            }
+            Equipamiento nuevo = new Equipamiento(0, nombre, nuevaCategoria.getValue(), total, nuevoEstado.getValue());
+            asignaciones.add(new AsignacionEquipamiento(nuevo, cantidad, true));
+            nuevoNombre.clear(); nuevoTotal.setText("0"); nuevaCantidadAsignada.setText("1"); renderEquipamiento();
+        }
         private void actualizarDetalle() {
             Ruta r = rutas.getValue();
             if (r == null) { detalle.setText("Selecciona una Ruta para ver sus datos."); return; }
@@ -148,7 +221,8 @@ public class SalidasController {
         }
         private String resumen() {
             String ruta = isCreandoRuta() ? nombre.getText().trim() : rutas.getValue() == null ? "(sin Ruta)" : rutas.getValue().getNombre();
-            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta + "\nEstado inicial: planificada\nEquipamiento: ninguno\nParticipantes: ninguno\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), su copia operativa y la Salida en una sola operación.";
+            String equipo = asignaciones.isEmpty() ? "ninguno" : asignaciones.stream().map(a -> a.equipamiento().getNombre() + " × " + a.cantidad()).collect(java.util.stream.Collectors.joining(", "));
+            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta + "\nEstado inicial: planificada\nEquipamiento: " + equipo + "\nParticipantes: ninguno\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), los Elementos nuevos asociados, las reservas, su copia operativa y la Salida en una sola operación.";
         }
         private void avanzar() {
             if (paso == 0 && fecha.getValue() == null) { aviso(Alert.AlertType.WARNING, "Fecha obligatoria", "Selecciona la fecha de la Salida."); return; }
@@ -164,7 +238,7 @@ public class SalidasController {
                 Ruta nueva = null; Integer rutaId = null;
                 if (isCreandoRuta()) nueva = new Ruta(Ruta.normalizarNombre(nombre.getText()), Double.parseDouble(altitud.getText().trim()), terreno.getValue(), tecnica.getValue(), fisica.getValue());
                 else rutaId = rutas.getValue().getId();
-                salidaDAO.confirmar(fecha.getValue(), rutaId, nueva);
+                salidaDAO.confirmar(fecha.getValue(), rutaId, nueva, List.copyOf(asignaciones));
                 stage.close(); actualizarIndicadores(); actualizarTabla();
             } catch (SQLException | RuntimeException ex) { aviso(Alert.AlertType.ERROR,"No se pudo confirmar la Salida",ex.getMessage()); }
         }

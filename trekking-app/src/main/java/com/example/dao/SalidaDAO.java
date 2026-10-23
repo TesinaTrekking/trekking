@@ -4,6 +4,8 @@ import com.example.database.ConexionDB;
 import com.example.model.Ruta;
 import com.example.model.Salida;
 import com.example.model.Checkpoint;
+import com.example.model.Equipamiento;
+import com.example.model.AsignacionEquipamiento;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
 
 public class SalidaDAO {
     private final RutaDAO rutaDAO = new RutaDAO();
@@ -95,12 +98,20 @@ public class SalidaDAO {
 
     /** Confirma una Salida y, opcionalmente, su Ruta nueva en una única transacción. */
     public int confirmar(LocalDate fecha, Integer rutaId, Ruta rutaNueva) throws SQLException {
+        return confirmar(fecha, rutaId, rutaNueva, List.of());
+    }
+
+    /** Confirma la Salida y sus reservas de Inventario de forma atómica. */
+    public int confirmar(LocalDate fecha, Integer rutaId, Ruta rutaNueva,
+            List<AsignacionEquipamiento> asignaciones) throws SQLException {
         if (fecha == null) throw new SQLException("La fecha de la Salida es obligatoria.");
         if ((rutaId == null) == (rutaNueva == null))
             throw new SQLException("Selecciona una Ruta o completa una Ruta nueva.");
         try (Connection c = ConexionDB.conectar()) {
+            try (Statement timeout = c.createStatement()) { timeout.execute("PRAGMA busy_timeout = 5000"); }
             c.setAutoCommit(false);
             try {
+                bloquearInventario(c, asignaciones);
                 int idRuta = rutaId == null ? insertarRuta(c, rutaNueva) : rutaId;
                 Ruta ruta = rutaDAO.obtenerPorId(c, idRuta);
                 if (ruta == null) throw new SQLException("La Ruta seleccionada no existe.");
@@ -146,6 +157,7 @@ public class SalidaDAO {
                     }
                     ps.executeBatch();
                 }
+                guardarAsignaciones(c, salidaId, asignaciones);
                 c.commit();
                 return salidaId;
             } catch (SQLException | RuntimeException e) {
@@ -153,6 +165,74 @@ public class SalidaDAO {
                 if (e instanceof SQLException sqlException) throw sqlException;
                 throw new SQLException("No se pudo confirmar la Salida.", e);
             }
+        }
+    }
+
+    private void bloquearInventario(Connection c, List<AsignacionEquipamiento> asignaciones)
+            throws SQLException {
+        // SQLite obtains its database write lock on this statement, before reading availability.
+        try (PreparedStatement ps = c.prepareStatement("UPDATE equipamiento SET cantidad = cantidad WHERE id = ?")) {
+            for (AsignacionEquipamiento item : asignaciones.stream()
+                    .filter(a -> !a.nuevo()).sorted(Comparator.comparingInt(a -> a.equipamiento().getId())).toList()) {
+                ps.setInt(1, item.equipamiento().getId());
+                if (ps.executeUpdate() != 1) throw new SQLException("El Elemento de inventario ya no existe.");
+            }
+        }
+    }
+
+    private void guardarAsignaciones(Connection c, int salidaId,
+            List<AsignacionEquipamiento> asignaciones) throws SQLException {
+        if (asignaciones == null) throw new SQLException("La lista de Equipamiento es inválida.");
+        String insertItem = "INSERT INTO equipamiento (nombre, categoria, cantidad, estado, activo) VALUES (?, ?, ?, ?, 1)";
+        String insertAsignacion = """
+                INSERT INTO salida_equipamiento (salida_id, equipamiento_id, nombre_copia, categoria_copia, cantidad)
+                VALUES (?, ?, ?, ?, ?)
+                """;
+        for (AsignacionEquipamiento asignacion : asignaciones) {
+            if (asignacion == null || asignacion.equipamiento() == null || asignacion.cantidad() <= 0)
+                throw new SQLException("La cantidad asignada debe ser un entero positivo.");
+            Equipamiento item = asignacion.equipamiento();
+            int id = item.getId();
+            int total = item.getCantidad();
+            if (asignacion.nuevo()) {
+                if (item.getNombre() == null || item.getNombre().isBlank())
+                    throw new SQLException("El nombre del Elemento de inventario es obligatorio.");
+                if (total < 0) throw new SQLException("La cantidad total debe ser mayor o igual a cero.");
+                if (!Equipamiento.categoriaValida(item.getCategoria()))
+                    throw new SQLException("Selecciona una categoría válida para el Elemento de inventario.");
+                if (!Equipamiento.estadoValido(item.getEstado()))
+                    throw new SQLException("Selecciona un estado válido para el Elemento de inventario.");
+                try (PreparedStatement ps = c.prepareStatement(insertItem, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setString(1, item.getNombre()); ps.setString(2, item.getCategoria());
+                    ps.setInt(3, total); ps.setString(4, item.getEstado()); ps.executeUpdate();
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        if (!keys.next()) throw new SQLException("No se pudo guardar el Elemento de inventario nuevo.");
+                        id = keys.getInt(1);
+                    }
+                }
+            } else {
+                Equipamiento actual = EquipamientoDAO.obtenerPorId(c, id);
+                if (actual == null || actual.getId() != id) throw new SQLException("El Elemento de inventario seleccionado ya no existe.");
+                if (!esActivo(c, id)) throw new SQLException("El Elemento de inventario está dado de baja y no puede asignarse.");
+                total = actual.getCantidad();
+                int disponible = total - actual.getCantidadReservada();
+                if (asignacion.cantidad() > disponible)
+                    throw new SQLException("No hay cantidad suficiente de " + actual.getNombre() + ". Disponible: " + disponible + ".");
+                item = actual;
+            }
+            if (asignacion.cantidad() > total)
+                throw new SQLException("No hay cantidad suficiente de " + item.getNombre() + ". Disponible: " + total + ".");
+            try (PreparedStatement ps = c.prepareStatement(insertAsignacion)) {
+                ps.setInt(1, salidaId); ps.setInt(2, id); ps.setString(3, item.getNombre());
+                ps.setString(4, item.getCategoria()); ps.setInt(5, asignacion.cantidad()); ps.executeUpdate();
+            }
+        }
+    }
+
+    private boolean esActivo(Connection c, int id) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT activo FROM equipamiento WHERE id = ?")) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next() && rs.getInt(1) == 1; }
         }
     }
 

@@ -1,6 +1,21 @@
 package com.example.model;
 
+import java.util.List;
+
 public class Equipamiento {
+
+    public static final List<String> CATEGORIAS = List.of("Campamento", "Navegación", "Comunicación", "Seguridad",
+            "Escalada", "Vestimenta", "Hidratación", "Primeros Auxilios", "Herramientas", "Transporte");
+    public static final List<String> ESTADOS = List.of("Disponible", "Asignado", "En Reparación",
+            "En Inspección", "Fuera de Servicio", "Extraviado");
+
+    public static boolean categoriaValida(String categoria) {
+        return categoria != null && CATEGORIAS.contains(categoria);
+    }
+
+    public static boolean estadoValido(String estado) {
+        return estado != null && ESTADOS.contains(estado);
+    }
 
     private int id;
     private String nombre;
