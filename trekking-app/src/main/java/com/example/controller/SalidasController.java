@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.RutaDAO;
 import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.SalidaDAO;
+import com.example.service.FichaOperativaPDFService;
 import com.example.model.Ruta;
 import com.example.model.Salida;
 import com.example.model.Checkpoint;
@@ -35,6 +36,7 @@ import javafx.util.StringConverter;
 
 public class SalidasController {
     private final SalidaDAO salidaDAO = new SalidaDAO();
+    private final FichaOperativaPDFService fichaPDFService = new FichaOperativaPDFService();
     private final RutaDAO rutaDAO = new RutaDAO();
     @FXML private TableView<Salida> tablaSalidas;
     @FXML private TableColumn<Salida, Integer> colId;
@@ -80,6 +82,26 @@ public class SalidasController {
     }
     @FXML private void marcarRealizada() { cerrar("realizada"); }
     @FXML private void cancelarSalida() { cerrar("cancelada"); }
+
+    @FXML private void generarFichaPDF() {
+        Salida salida = tablaSalidas.getSelectionModel().getSelectedItem();
+        if (salida == null) {
+            aviso(Alert.AlertType.INFORMATION, "Selecciona una Salida", "Selecciona la Salida cuya ficha quieres generar.");
+            return;
+        }
+        FileChooser selector = new FileChooser();
+        selector.setTitle("Guardar ficha operativa");
+        selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Documento PDF", "*.pdf"));
+        selector.setInitialFileName(fichaPDFService.nombreArchivo(salida));
+        java.io.File archivo = selector.showSaveDialog(tablaSalidas.getScene().getWindow());
+        if (archivo == null) return;
+        try {
+            fichaPDFService.exportar(salida.id(), archivo.toPath());
+            aviso(Alert.AlertType.INFORMATION, "Ficha generada", "La ficha operativa se guardó correctamente.");
+        } catch (SQLException | IOException e) {
+            aviso(Alert.AlertType.ERROR, "No se pudo generar la ficha", e.getMessage());
+        }
+    }
 
     private void cerrar(String estado) {
         Salida salida = tablaSalidas.getSelectionModel().getSelectedItem();
