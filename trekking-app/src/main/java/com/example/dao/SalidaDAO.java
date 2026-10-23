@@ -27,8 +27,8 @@ public class SalidaDAO {
 
     public List<AsignacionEquipamiento> obtenerEquipamiento(int salidaId) throws SQLException {
         List<AsignacionEquipamiento> result = new ArrayList<>();
-        try (Connection c=ConexionDB.conectar(); PreparedStatement ps=c.prepareStatement("SELECT e.*, se.nombre_copia, se.categoria_copia, se.cantidad FROM salida_equipamiento se JOIN equipamiento e ON e.id=se.equipamiento_id WHERE se.salida_id=? ORDER BY se.nombre_copia COLLATE NOCASE")) {
-            ps.setInt(1,salidaId); try(ResultSet rs=ps.executeQuery()){ while(rs.next()) result.add(new AsignacionEquipamiento(new Equipamiento(rs.getInt("id"),rs.getString("nombre_copia"),rs.getString("categoria_copia"),rs.getInt("cantidad"),rs.getString("estado")),rs.getInt("cantidad"),false)); }
+        try (Connection c=ConexionDB.conectar(); PreparedStatement ps=c.prepareStatement("SELECT e.id, e.estado, e.cantidad AS cantidad_total, se.nombre_copia, se.categoria_copia, se.cantidad AS cantidad_asignada FROM salida_equipamiento se JOIN equipamiento e ON e.id=se.equipamiento_id WHERE se.salida_id=? ORDER BY se.nombre_copia COLLATE NOCASE")) {
+            ps.setInt(1,salidaId); try(ResultSet rs=ps.executeQuery()){ while(rs.next()) result.add(new AsignacionEquipamiento(new Equipamiento(rs.getInt("id"),rs.getString("nombre_copia"),rs.getString("categoria_copia"),rs.getInt("cantidad_total"),rs.getString("estado")),rs.getInt("cantidad_asignada"),false)); }
         }
         return result;
     }
@@ -560,19 +560,19 @@ public class SalidaDAO {
             throw new SQLException("El nombre de la Ruta es obligatorio y debe tener hasta 100 caracteres válidos.");
         if (ruta.getAltitudMaxima() < 0 || !Double.isFinite(ruta.getAltitudMaxima()))
             throw new SQLException("La altitud máxima debe ser un número mayor o igual a cero.");
-        try (PreparedStatement check = c.prepareStatement("SELECT 1 FROM rutas WHERE nombre = ? COLLATE NOCASE")) {
-            check.setString(1, nombre);
+        try (PreparedStatement check = c.prepareStatement("SELECT 1 FROM rutas WHERE nombre_clave = ?")) {
+            check.setString(1, Ruta.claveNombre(nombre));
             try (ResultSet rs = check.executeQuery()) {
                 if (rs.next()) throw new SQLException("Ya existe una Ruta con ese nombre.");
             }
         }
         try (PreparedStatement ps = c.prepareStatement("""
-                INSERT INTO rutas (nombre, altitud_maxima, tipo_terreno, dificultad_tecnica, dificultad_fisica)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO rutas (nombre, nombre_clave, altitud_maxima, tipo_terreno, dificultad_tecnica, dificultad_fisica)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, nombre); ps.setDouble(2, ruta.getAltitudMaxima());
-            ps.setString(3, ruta.getTipoTerreno()); ps.setString(4, ruta.getDificultadTecnica());
-            ps.setString(5, ruta.getDificultadFisica()); ps.executeUpdate();
+            ps.setString(1, nombre); ps.setString(2, Ruta.claveNombre(nombre)); ps.setDouble(3, ruta.getAltitudMaxima());
+            ps.setString(4, ruta.getTipoTerreno()); ps.setString(5, ruta.getDificultadTecnica());
+            ps.setString(6, ruta.getDificultadFisica()); ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (!keys.next()) throw new SQLException("No se pudo guardar la Ruta nueva.");
                 return keys.getInt(1);

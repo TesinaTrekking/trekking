@@ -253,7 +253,7 @@ public class SalidasController {
         }
 
         private void configurarAsignaciones() {
-            var equipos = new ArrayList<Equipamiento>(EquipamientoDAO.obtenerTodos());
+            var equipos = new ArrayList<Equipamiento>(EquipamientoDAO.obtenerTodosParaEdicion(original.id()));
             equipos.forEach(e->equiposActivos.add(e.getId()));
             EquipamientoDAO.obtenerDadosDeBaja().forEach(e -> { if (equipamiento.stream().anyMatch(a -> a.equipamiento().getId()==e.getId())) equipos.add(e); });
             equipamiento.forEach(a -> { if(equipos.stream().noneMatch(e->e.getId()==a.equipamiento().getId())) equipos.add(a.equipamiento()); });
@@ -319,7 +319,14 @@ public class SalidasController {
                 if (cp.getNombre().isBlank() || !cp.getHora().matches("(?:[01]\\d|2[0-3]):[0-5]\\d") || cp.getLatitud() < -90 || cp.getLatitud() > 90
                         || cp.getLongitud() < -180 || cp.getLongitud() > 180 || cp.getAltitud() < 0 || cp.getAltitud() > altitudMaxima)
                     throw new IllegalArgumentException("Verifica los campos; la altitud debe estar entre cero y " + altitudMaxima + " m.");
-                if (existente == null) checkpoints.add(cp); else { int index = checkpoints.indexOf(existente); checkpoints.set(index, cp); }
+                if (existente == null) {
+                    checkpoints.add(cp);
+                } else {
+                    int index = checkpoints.indexOf(existente);
+                    checkpoints.set(index, cp);
+                    int indexRuta = checkpointsGuardarEnRuta.indexOf(existente);
+                    if (indexRuta >= 0) checkpointsGuardarEnRuta.set(indexRuta, cp);
+                }
                 if (guardarRuta.isSelected()) checkpointsGuardarEnRuta.add(cp);
                 actualizarPuntos();
             } catch (RuntimeException ex) { aviso(Alert.AlertType.WARNING, "Checkpoint inválido", ex.getMessage() == null ? "Completa correctamente todos los campos." : ex.getMessage()); }
@@ -425,7 +432,12 @@ public class SalidasController {
             }
             if (paso == 2) renderEquipamiento();
             if (paso == 3) renderParticipantes();
-            if (paso == 4) content.getChildren().add(new Label(resumen()));
+            if (paso == 4) {
+                Label revision = new Label(resumen());
+                revision.setWrapText(true);
+                revision.setMaxWidth(Double.MAX_VALUE);
+                content.getChildren().add(revision);
+            }
             anterior.setDisable(paso == 0); siguiente.setText(paso == 4 ? "Confirmar Salida" : "Siguiente");
             content.getChildren().addAll(new javafx.scene.layout.Region(), new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
         }
@@ -599,12 +611,47 @@ public class SalidasController {
                     + "\nCheckpoints que se copiarán:\n" + (puntos.isEmpty() ? "Sin Checkpoints" : puntos));
         }
         private String resumen() {
-            String ruta = isCreandoRuta() ? nombre.getText().trim() : rutas.getValue() == null ? "(sin Ruta)" : rutas.getValue().getNombre();
-            String equipo = asignaciones.isEmpty() ? "ninguno" : asignaciones.stream().map(a -> a.equipamiento().getNombre() + " × " + a.cantidad()).collect(java.util.stream.Collectors.joining(", "));
+            Ruta rutaSeleccionada = rutas.getValue();
+            String ruta;
+            String puntos;
+            if (isCreandoRuta()) {
+                ruta = nombre.getText().trim();
+                puntos = "Sin Checkpoints";
+            } else if (rutaSeleccionada == null) {
+                ruta = "(sin Ruta)";
+                puntos = "Sin Checkpoints";
+            } else {
+                ruta = rutaSeleccionada.getNombre();
+                puntos = checkpointDAO.obtenerPorRuta(rutaSeleccionada.getId()).stream()
+                        .map(cp -> cp.getHora() + " · " + cp.getNombre() + " · " + cp.getLatitud() + ", "
+                                + cp.getLongitud() + " · " + cp.getAltitud() + " m"
+                                + (cp.getDescripcion() == null || cp.getDescripcion().isBlank() ? "" : " · " + cp.getDescripcion()))
+                        .collect(java.util.stream.Collectors.joining("\n"));
+                if (puntos.isBlank()) puntos = "Sin Checkpoints";
+            }
+            String datosRuta = isCreandoRuta()
+                    ? "Altitud máxima: " + altitud.getText().trim() + " m · Terreno: " + terreno.getValue()
+                            + " · Dificultad técnica: " + tecnica.getValue() + " · Dificultad física: " + fisica.getValue()
+                    : rutaSeleccionada == null ? "" : "Altitud máxima: " + rutaSeleccionada.getAltitudMaxima()
+                            + " m · Terreno: " + rutaSeleccionada.getTipoTerreno() + " · Dificultad técnica: "
+                            + rutaSeleccionada.getDificultadTecnica() + " · Dificultad física: "
+                            + rutaSeleccionada.getDificultadFisica();
+            String equipo = asignaciones.isEmpty() ? "ninguno" : asignaciones.stream()
+                    .map(a -> "Ref #" + a.equipamiento().getId() + " · " + a.equipamiento().getNombre()
+                            + " · " + a.equipamiento().getCategoria() + " × " + a.cantidad())
+                    .collect(java.util.stream.Collectors.joining("\n"));
             String detalleParticipantes = participantes.isEmpty() ? "ninguno" : participantes.stream()
-                    .map(p -> p.cliente().getApellido() + ", " + p.cliente().getNombre() + " · DNI " + p.cliente().getDni())
-                    .collect(java.util.stream.Collectors.joining(", "));
-            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta + "\nEstado inicial: planificada\nEquipamiento: " + equipo + "\nParticipantes: " + detalleParticipantes + "\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), los Elementos nuevos asociados, los Clientes nuevos seleccionados, las reservas, las copias operativas y la Salida en una sola operación.";
+                    .map(p -> "Ref #" + p.cliente().getId() + " · DNI " + p.cliente().getDni() + " · "
+                            + p.cliente().getApellido() + ", " + p.cliente().getNombre()
+                            + " · Teléfono: " + textoResumen(p.cliente().getTelefono())
+                            + " · Emergencia: " + textoResumen(p.cliente().getContactoEmergenciaNombre())
+                            + " / " + textoResumen(p.cliente().getContactoEmergenciaTelefono())
+                            + " / " + textoResumen(p.cliente().getContactoEmergenciaRelacion()))
+                    .collect(java.util.stream.Collectors.joining("\n"));
+            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta
+                    + (datosRuta.isBlank() ? "" : "\n" + datosRuta) + "\nCheckpoints:\n" + puntos
+                    + "\nEstado inicial: planificada\nEquipamiento: " + equipo + "\nParticipantes: " + detalleParticipantes
+                    + "\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), los Elementos nuevos asociados, los Clientes nuevos seleccionados, las reservas, las copias operativas y la Salida en una sola operación.";
         }
         private void avanzar() {
             if (paso == 0 && fecha.getValue() == null) { aviso(Alert.AlertType.WARNING, "Fecha obligatoria", "Selecciona la fecha de la Salida."); return; }

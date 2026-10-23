@@ -185,6 +185,31 @@ public class EquipamientoDAO {
         return equipamientos;
     }
 
+    /** Returns active equipment availability excluding the reservation of the edited Salida. */
+    public static ObservableList<Equipamiento> obtenerTodosParaEdicion(int salidaId) {
+        ObservableList<Equipamiento> equipamientos = FXCollections.observableArrayList();
+        String sql = """
+                SELECT e.*, COALESCE(SUM(CASE WHEN s.estado = 'planificada'
+                    THEN se.cantidad ELSE 0 END), 0) AS cantidad_reservada
+                FROM equipamiento e
+                LEFT JOIN salida_equipamiento se ON se.equipamiento_id = e.id
+                LEFT JOIN salidas s ON s.id = se.salida_id AND s.id <> ?
+                WHERE e.activo = 1
+                GROUP BY e.id
+                ORDER BY e.nombre COLLATE NOCASE
+                """;
+        try (Connection conexion = ConexionDB.conectar();
+             PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, salidaId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) equipamientos.add(mapRow(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("No se pudo consultar la disponibilidad para editar la Salida.", e);
+        }
+        return equipamientos;
+    }
+
     public static ObservableList<Equipamiento> obtenerDadosDeBaja() {
 
         ObservableList<Equipamiento> equipamientos = FXCollections.observableArrayList();

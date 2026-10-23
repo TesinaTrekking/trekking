@@ -47,12 +47,13 @@ public class RutaDAO {
                 INSERT INTO rutas
                 (
                     nombre,
+                    nombre_clave,
                     altitud_maxima,
                     tipo_terreno,
                     dificultad_tecnica,
                     dificultad_fisica
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """;
 
         try (
@@ -61,11 +62,13 @@ public class RutaDAO {
                         sql,
                         Statement.RETURN_GENERATED_KEYS)) {
 
-            statement.setString(1, ruta.getNombre());
-            statement.setDouble(2, ruta.getAltitudMaxima());
-            statement.setString(3, ruta.getTipoTerreno());
-            statement.setString(4, ruta.getDificultadTecnica());
-            statement.setString(5, ruta.getDificultadFisica());
+            String nombre = Ruta.normalizarNombre(ruta.getNombre());
+            statement.setString(1, nombre);
+            statement.setString(2, Ruta.claveNombre(nombre));
+            statement.setDouble(3, ruta.getAltitudMaxima());
+            statement.setString(4, ruta.getTipoTerreno());
+            statement.setString(5, ruta.getDificultadTecnica());
+            statement.setString(6, ruta.getDificultadFisica());
 
             statement.executeUpdate();
 
@@ -104,6 +107,7 @@ public class RutaDAO {
                 UPDATE rutas
                 SET
                     nombre = ?,
+                    nombre_clave = ?,
                     altitud_maxima = ?,
                     tipo_terreno = ?,
                     dificultad_tecnica = ?,
@@ -115,12 +119,14 @@ public class RutaDAO {
                 Connection conexion = ConexionDB.conectar();
                 PreparedStatement statement = conexion.prepareStatement(sql)) {
 
-            statement.setString(1, ruta.getNombre());
-            statement.setDouble(2, ruta.getAltitudMaxima());
-            statement.setString(3, ruta.getTipoTerreno());
-            statement.setString(4, ruta.getDificultadTecnica());
-            statement.setString(5, ruta.getDificultadFisica());
-            statement.setInt(6, ruta.getId());
+            String nombre = Ruta.normalizarNombre(ruta.getNombre());
+            statement.setString(1, nombre);
+            statement.setString(2, Ruta.claveNombre(nombre));
+            statement.setDouble(3, ruta.getAltitudMaxima());
+            statement.setString(4, ruta.getTipoTerreno());
+            statement.setString(5, ruta.getDificultadTecnica());
+            statement.setString(6, ruta.getDificultadFisica());
+            statement.setInt(7, ruta.getId());
 
             int filasAfectadas = statement.executeUpdate();
 

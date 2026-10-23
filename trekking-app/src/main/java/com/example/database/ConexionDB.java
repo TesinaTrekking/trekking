@@ -23,6 +23,7 @@ public class ConexionDB {
                             CREATE TABLE IF NOT EXISTS rutas (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nombre TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                    nombre_clave TEXT NOT NULL UNIQUE,
                     altitud_maxima REAL NOT NULL,
                     tipo_terreno TEXT NOT NULL,
                     dificultad_tecnica TEXT NOT NULL,
