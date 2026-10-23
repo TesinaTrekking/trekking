@@ -5,3 +5,10 @@ target/
 *.class
 *.db
 fichas_medicas/
+
+.agents/
+.scratch/
+AGENTS.md
+GLOSSARY.md
+docs/
+skill-lock.json
