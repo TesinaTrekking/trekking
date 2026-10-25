@@ -8,34 +8,34 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane styleClass="app-shell" xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.example.controller.ShellController"
-      stylesheets="@styles.css">
-    <top>
-        <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="8.0">
-            <Label text="Trekrisk" styleClass="app-header-brand"/>
-            <Label text="Gestión operativa de salidas de montaña" styleClass="app-header-caption"/>
-        </HBox>
-    </top>
-    <left>
-        <VBox styleClass="app-sidebar" minWidth="230.0" prefWidth="230.0" maxWidth="230.0">
-            <VBox fx:id="navigationBox" styleClass="sidebar-navigation" VBox.vgrow="ALWAYS">
-                <Button fx:id="btnSalidas" text="Salidas" onAction="#onSalidas"
-                        maxWidth="Infinity" styleClass="sidebar-button"/>
-                <Button fx:id="btnRutas" text="Rutas" onAction="#onRutas"
-                        maxWidth="Infinity" styleClass="sidebar-button"/>
-                <Button fx:id="btnInventario" text="Inventario" onAction="#onInventario"
-                        maxWidth="Infinity" styleClass="sidebar-button"/>
-                <Button fx:id="btnClientes" text="Clientes" onAction="#onClientes"
-                        maxWidth="Infinity" styleClass="sidebar-button"/>
-            </VBox>
-            <Label text="Sistema de gestión de trekking" styleClass="sidebar-footer"/>
-        </VBox>
-    </left>
-    <center>
-        <VBox styleClass="app-content" minWidth="0.0" minHeight="0.0" spacing="8.0">
-            <HBox fx:id="breadcrumbBar" styleClass="breadcrumb-bar" alignment="CENTER_LEFT" spacing="8.0"/>
-            <StackPane fx:id="contentContainer" styleClass="app-page-container" minWidth="0.0" minHeight="0.0" VBox.vgrow="ALWAYS"/>
-        </VBox>
-    </center>
+  xmlns:fx="http://javafx.com/fxml/1"
+  fx:controller="com.example.controller.ShellController"
+  stylesheets="@styles.css">
+  <top>
+    <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="8.0">
+      <Label text="Trekrisk" styleClass="app-header-brand" />
+      <Label text="Gestión operativa de salidas de montaña" styleClass="app-header-caption" />
+    </HBox>
+  </top>
+  <left>
+    <VBox styleClass="app-sidebar" minWidth="230.0" prefWidth="230.0" maxWidth="230.0">
+      <VBox fx:id="navigationBox" styleClass="sidebar-navigation" VBox.vgrow="ALWAYS">
+        <Button fx:id="btnSalidas" text="Salidas" onAction="#onSalidas"
+          maxWidth="Infinity" styleClass="sidebar-button" />
+        <Button fx:id="btnRutas" text="Rutas" onAction="#onRutas"
+          maxWidth="Infinity" styleClass="sidebar-button" />
+        <Button fx:id="btnInventario" text="Inventario" onAction="#onInventario"
+          maxWidth="Infinity" styleClass="sidebar-button" />
+        <Button fx:id="btnClientes" text="Clientes" onAction="#onClientes"
+          maxWidth="Infinity" styleClass="sidebar-button" />
+      </VBox>
+    </VBox>
+  </left>
+  <center>
+    <VBox styleClass="app-content" minWidth="0.0" minHeight="0.0" spacing="8.0">
+      <HBox fx:id="breadcrumbBar" styleClass="breadcrumb-bar" alignment="CENTER_LEFT" spacing="8.0" />
+      <StackPane fx:id="contentContainer" styleClass="app-page-container" minWidth="0.0"
+        minHeight="0.0" VBox.vgrow="ALWAYS" />
+    </VBox>
+  </center>
 </BorderPane>
