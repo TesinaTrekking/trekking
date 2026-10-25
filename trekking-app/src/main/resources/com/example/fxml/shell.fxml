@@ -18,7 +18,7 @@
     </HBox>
   </top>
   <left>
-    <VBox styleClass="app-sidebar" minWidth="230.0" prefWidth="230.0" maxWidth="230.0">
+    <VBox fx:id="appSidebar" styleClass="app-sidebar" minWidth="230.0" prefWidth="230.0" maxWidth="230.0">
       <VBox fx:id="navigationBox" styleClass="sidebar-navigation" VBox.vgrow="ALWAYS">
         <Button fx:id="btnSalidas" text="Salidas" onAction="#onSalidas"
           maxWidth="Infinity" styleClass="sidebar-button" />
@@ -29,6 +29,10 @@
         <Button fx:id="btnClientes" text="Clientes" onAction="#onClientes"
           maxWidth="Infinity" styleClass="sidebar-button" />
       </VBox>
+      <HBox styleClass="sidebar-toggle-row" alignment="CENTER_RIGHT">
+        <Button fx:id="btnToggleSidebar" onAction="#onToggleSidebar"
+          styleClass="sidebar-toggle-button" />
+      </HBox>
     </VBox>
   </left>
   <center>

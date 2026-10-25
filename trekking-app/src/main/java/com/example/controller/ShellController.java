@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -34,6 +35,12 @@ public class ShellController implements Initializable {
     private VBox navigationBox;
 
     @FXML
+    private VBox appSidebar;
+
+    @FXML
+    private Button btnToggleSidebar;
+
+    @FXML
     private Button btnRutas;
 
     @FXML
@@ -46,6 +53,7 @@ public class ShellController implements Initializable {
     private Button btnSalidas;
 
     private String activeSection = "trips";
+    private boolean sidebarCollapsed;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -53,7 +61,45 @@ public class ShellController implements Initializable {
         btnRutas.setGraphic(SidebarIcon.load("RUTAS.svg"));
         btnInventario.setGraphic(SidebarIcon.load("INVENTARIO.svg"));
         btnClientes.setGraphic(SidebarIcon.load("CLIENTES.svg"));
+        updateSidebarState();
         refreshActiveStyles();
+    }
+
+    @FXML
+    private void onToggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+        updateSidebarState();
+    }
+
+    private void updateSidebarState() {
+        if (appSidebar == null) return;
+
+        double width = sidebarCollapsed ? 64.0 : 230.0;
+        appSidebar.setMinWidth(width);
+        appSidebar.setPrefWidth(width);
+        appSidebar.setMaxWidth(width);
+        appSidebar.getStyleClass().remove("app-sidebar-collapsed");
+        if (sidebarCollapsed) appSidebar.getStyleClass().add("app-sidebar-collapsed");
+
+        setNavigationButtonState(btnSalidas, "Salidas");
+        setNavigationButtonState(btnRutas, "Rutas");
+        setNavigationButtonState(btnInventario, "Inventario");
+        setNavigationButtonState(btnClientes, "Clientes");
+
+        String toggleText = sidebarCollapsed ? "Expandir menú" : "Contraer menú";
+        btnToggleSidebar.setGraphic(SidebarIcon.load(
+                sidebarCollapsed ? "LEFT-PANE-OPEN.svg" : "LEFT-PANE-CLOSE.svg"));
+        btnToggleSidebar.setTooltip(new Tooltip(toggleText));
+        btnToggleSidebar.setAccessibleText(toggleText);
+        btnToggleSidebar.setAccessibleHelp(toggleText);
+    }
+
+    private void setNavigationButtonState(Button button, String label) {
+        if (button == null) return;
+        button.setText(sidebarCollapsed ? "" : label);
+        button.setTooltip(sidebarCollapsed ? new Tooltip(label) : null);
+        button.setAccessibleText(label);
+        button.setAccessibleHelp(label);
     }
 
     public void setActiveSection(String section) {

@@ -65,6 +65,10 @@
   -fx-spacing: 8px;
 }
 
+.app-sidebar-collapsed {
+  -fx-padding: 26px 8px 18px 8px;
+}
+
 .sidebar-brand {
   -fx-font-family: "Segoe UI";
   -fx-font-size: 22px;
@@ -95,6 +99,50 @@
   -fx-font-size: 14px;
   -fx-padding: 12px 14px;
   -fx-cursor: hand;
+}
+
+.sidebar-toggle-button {
+  -fx-alignment: center-right;
+  -fx-background-color: transparent;
+  -fx-background-radius: 7px;
+  -fx-graphic-text-gap: 12px;
+  -fx-min-width: 36px;
+  -fx-pref-width: 36px;
+  -fx-max-width: 36px;
+  -fx-min-height: 36px;
+  -fx-pref-height: 36px;
+  -fx-max-height: 36px;
+  -fx-padding: 8px;
+  -fx-cursor: hand;
+}
+
+.sidebar-toggle-button .sidebar-icon {
+  -fx-fill: #e3e9f2;
+}
+
+.sidebar-toggle-button:hover {
+  -fx-background-color: #263f63;
+}
+
+.sidebar-toggle-button:hover .sidebar-icon {
+  -fx-fill: white;
+}
+
+.app-sidebar-collapsed .sidebar-button {
+  -fx-alignment: center;
+  -fx-min-width: 40px;
+  -fx-pref-width: 40px;
+  -fx-max-width: 40px;
+  -fx-padding: 12px 10px;
+  -fx-graphic-text-gap: 0;
+}
+
+.app-sidebar-collapsed .sidebar-navigation {
+  -fx-alignment: top-center;
+}
+
+.app-sidebar-collapsed .sidebar-toggle-row {
+  -fx-alignment: center;
 }
 
 .sidebar-button .sidebar-icon {
