@@ -45,8 +45,8 @@ public final class SearchFieldIcon {
             icon.getStyleClass().add("search-icon");
             icon.setMouseTransparent(true);
             icon.setManaged(false);
-            icon.setLayoutX(12);
-            icon.setLayoutY(10);
+            icon.setLayoutX(10);
+            icon.setLayoutY(26);
             return icon;
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo leer el icono: " + ICON_RESOURCE, exception);
