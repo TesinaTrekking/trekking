@@ -104,25 +104,6 @@ public class ListaClientesController implements Initializable {
                 new PropertyValueFactory<>("activo"));
         colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
 
-        tablaClientes.setEditable(true);
-        tablaClientes.setRowFactory(table -> new javafx.scene.control.TableRow<>() {
-            @Override protected void updateItem(Cliente cliente, boolean empty) {
-                super.updateItem(cliente, empty);
-                setEditable(!empty && cliente != null && cliente.isActivo());
-            }
-        });
-        configurarTextoInline(colNombre, "nombre"); configurarTextoInline(colApellido, "apellido");
-        configurarTextoInline(colEmail, "email"); configurarTextoInline(colTelefono, "telefono");
-        colSexo.setCellFactory(javafx.scene.control.cell.ComboBoxTableCell.forTableColumn(
-                javafx.collections.FXCollections.observableArrayList("Masculino", "Femenino", "No binario", "Otro", "Prefiero no decir")));
-        colSexo.setOnEditCommit(event -> guardarCampoInline(event.getRowValue(), "sexo", event.getNewValue()));
-        colFechaNacimiento.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn(new javafx.util.converter.LocalDateStringConverter()));
-        colFechaNacimiento.setOnEditCommit(event -> {
-            Cliente c = event.getRowValue();
-            if (event.getNewValue() == null) { mostrarAlerta(Alert.AlertType.ERROR, "Fecha inválida", "Indica una fecha válida."); cargarClientes(); return; }
-            guardarCampoInline(c, "fecha", event.getNewValue().toString());
-        });
-
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
             @Override protected void updateItem(Cliente cliente, boolean empty) {
                 super.updateItem(cliente, empty);
@@ -150,33 +131,6 @@ public class ListaClientesController implements Initializable {
         estadoFiltroCombo.valueProperty().addListener(
                 (observable, anterior, actual) -> aplicarFiltros());
 
-        cargarClientes();
-    }
-
-    private void configurarTextoInline(TableColumn<Cliente, String> columna, String campo) {
-        columna.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn());
-        columna.setOnEditCommit(event -> guardarCampoInline(event.getRowValue(), campo, event.getNewValue()));
-    }
-
-    private void guardarCampoInline(Cliente c, String campo, String valor) {
-        if (!c.isActivo()) { mostrarAlerta(Alert.AlertType.WARNING, "Cliente inactivo", "Reactiva el Cliente antes de editar sus celdas."); cargarClientes(); return; }
-        String nombre = campo.equals("nombre") ? valor.trim() : c.getNombre();
-        String apellido = campo.equals("apellido") ? valor.trim() : c.getApellido();
-        String email = campo.equals("email") ? valor.trim() : c.getEmail();
-        String telefono = campo.equals("telefono") ? valor.trim() : c.getTelefono();
-        String sexo = campo.equals("sexo") ? valor : c.getSexo();
-        java.time.LocalDate fecha = c.getFechaNacimiento();
-        try { if (campo.equals("fecha")) fecha = java.time.LocalDate.parse(valor); }
-        catch (RuntimeException ex) { mostrarAlerta(Alert.AlertType.ERROR, "Fecha inválida", "Indica una fecha válida."); cargarClientes(); return; }
-        String error = ClienteValidator.validar(c.getDni(), nombre, apellido, fecha, email == null ? "" : email,
-                telefono == null ? "" : telefono, sexo, c.getContactoEmergenciaNombre(),
-                c.getContactoEmergenciaTelefono(), c.getContactoEmergenciaRelacion(), c.isAutorizacionMenores(),
-                c.getTutorNombre(), c.getTutorApellido(), c.getTutorDni(), c.getTutorTelefono());
-        if (error != null) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar el cambio", error); cargarClientes(); return; }
-        boolean ok = clienteDAO.actualizarCliente(c.getId(), c.getDni(), nombre, apellido, fecha, email, telefono, sexo,
-                c.getContactoEmergenciaNombre(), c.getContactoEmergenciaTelefono(), c.getContactoEmergenciaRelacion(), c.isActivo(),
-                c.isAutorizacionMenores(), c.getTutorNombre(), c.getTutorApellido(), c.getTutorDni(), c.getTutorTelefono(), null, null, false);
-        if (!ok) mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar", "El Cliente conserva sus datos anteriores.");
         cargarClientes();
     }
 

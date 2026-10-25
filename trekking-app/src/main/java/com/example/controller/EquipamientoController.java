@@ -88,21 +88,6 @@ public class EquipamientoController {
                 new PropertyValueFactory<>("estado"));
         colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
 
-        tablaEquipamiento.setEditable(true);
-        configurarTextoInline(colNombre, "nombre");
-        colCategoria.setCellFactory(javafx.scene.control.cell.ComboBoxTableCell.forTableColumn(
-                javafx.collections.FXCollections.observableArrayList(Equipamiento.CATEGORIAS)));
-        colCategoria.setOnEditCommit(event -> guardarTextoInline(event.getRowValue(), "categoria", event.getNewValue()));
-        colCantidad.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn(new javafx.util.converter.IntegerStringConverter()));
-        colCantidad.setOnEditCommit(event -> {
-            Equipamiento item = event.getRowValue();
-            try {
-                if (event.getNewValue() == null || event.getNewValue() < 0) throw new IllegalArgumentException("El total debe ser un entero no negativo.");
-                EquipamientoDAO.actualizar(new Equipamiento(item.getId(), item.getNombre(), item.getCategoria(), event.getNewValue(), item.getEstado()));
-                cargarEquipamiento();
-            } catch (RuntimeException ex) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar el total", ex.getMessage()); cargarEquipamiento(); }
-        });
-
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
             @Override protected void updateItem(Equipamiento item, boolean empty) {
                 super.updateItem(item, empty);
@@ -136,21 +121,6 @@ public class EquipamientoController {
         cargarEquipamiento();
     }
 
-    private void configurarTextoInline(TableColumn<Equipamiento, String> columna, String campo) {
-        columna.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn());
-        columna.setOnEditCommit(event -> guardarTextoInline(event.getRowValue(), campo, event.getNewValue()));
-    }
-
-    private void guardarTextoInline(Equipamiento item, String campo, String valor) {
-            String nombre = campo.equals("nombre") ? valor.trim() : item.getNombre();
-            String categoria = campo.equals("categoria") ? valor : item.getCategoria();
-            if (nombre.isBlank() || !Equipamiento.categoriaValida(categoria)) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Dato inválido", "El nombre y una categoría válida son obligatorios."); cargarEquipamiento(); return;
-            }
-            try { EquipamientoDAO.actualizar(new Equipamiento(item.getId(), nombre, categoria, item.getCantidad(), item.getEstado())); cargarEquipamiento(); }
-            catch (RuntimeException ex) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar el cambio", ex.getMessage()); cargarEquipamiento(); }
-    }
-
     private void cargarEquipamiento() {
 
         equipamientoOriginal = "Inactivo".equals(estadoFiltroCombo.getValue())
@@ -168,8 +138,6 @@ public class EquipamientoController {
                 || item.getNombre().toLowerCase().contains(consulta)
                 || item.getCategoria().toLowerCase().contains(consulta)
                 || item.getEstado().toLowerCase().contains(consulta));
-        tablaEquipamiento.setEditable("Activo".equals(estadoFiltroCombo.getValue()));
-
         boolean hayEquipamiento = equipamientoOriginal != null && !equipamientoOriginal.isEmpty();
         boolean filtroActivo = !consulta.isEmpty();
         TableEmptyState.update(tablaEquipamiento, hayEquipamiento, filtroActivo,

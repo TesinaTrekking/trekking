@@ -123,26 +123,6 @@ public class RutaController implements Initializable {
                                 new PropertyValueFactory<>("dificultadFisica"));
                 colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
 
-                tablaRutas.setEditable(true);
-                tablaRutas.setRowFactory(table -> new javafx.scene.control.TableRow<>() {
-                        @Override protected void updateItem(Ruta ruta, boolean empty) {
-                                super.updateItem(ruta, empty);
-                                setEditable(!empty && ruta != null && rutaDAO.estaActiva(ruta.getId()));
-                        }
-                });
-                configurarTextoInline(colNombre, "nombre");
-                configurarComboInline(colTipoTerreno, "terreno", List.of("Rocoso", "Boscoso", "Sendero", "Mixto"));
-                configurarComboInline(colDificultadTecnica, "tecnica", List.of("Baja", "Media", "Alta"));
-                configurarComboInline(colDificultadFisica, "fisica", List.of("Baja", "Media", "Alta"));
-                colAltitudMaxima.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn(new javafx.util.converter.DoubleStringConverter()));
-                colAltitudMaxima.setOnEditCommit(event -> {
-                        Ruta ruta = event.getRowValue();
-                        try {
-                                if (event.getNewValue() == null || event.getNewValue() < 0) throw new IllegalArgumentException("La altitud debe ser mayor o igual a cero.");
-                                ruta.setAltitudMaxima(event.getNewValue()); guardarRutaInline(ruta);
-                        } catch (RuntimeException ex) { mostrarAlerta("Dato inválido", ex.getMessage()); cargarRutas(); }
-                });
-
                 colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
                         @Override protected void updateItem(Ruta ruta, boolean empty) {
                                 super.updateItem(ruta, empty);
@@ -176,42 +156,6 @@ public class RutaController implements Initializable {
                                         cargarEquipamientoDeRuta(actual);
                                 });
                 actualizarEstadoTabla();
-        }
-
-        private void configurarTextoInline(TableColumn<Ruta, String> columna, String campo) {
-                columna.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn());
-                columna.setOnEditCommit(event -> {
-                        Ruta ruta = event.getRowValue(); String valor = event.getNewValue() == null ? "" : event.getNewValue().trim();
-                        if (valor.isBlank()) { mostrarAlerta("Dato inválido", "El valor no puede estar vacío."); cargarRutas(); return; }
-                        switch (campo) {
-                                case "nombre" -> { if (!Ruta.nombreValido(valor)) { mostrarAlerta("Nombre inválido", "Usa palabras separadas por espacios."); cargarRutas(); return; } ruta.setNombre(Ruta.formatearNombre(valor)); }
-                                case "terreno" -> ruta.setTipoTerreno(valor);
-                                case "tecnica" -> ruta.setDificultadTecnica(valor);
-                                case "fisica" -> ruta.setDificultadFisica(valor);
-                                default -> { return; }
-                        }
-                        guardarRutaInline(ruta);
-                });
-        }
-
-        private void configurarComboInline(TableColumn<Ruta, String> columna, String campo, List<String> opciones) {
-                columna.setCellFactory(javafx.scene.control.cell.ComboBoxTableCell.forTableColumn(FXCollections.observableArrayList(opciones)));
-                columna.setOnEditCommit(event -> {
-                        Ruta ruta = event.getRowValue(); String valor = event.getNewValue();
-                        switch (campo) {
-                                case "terreno" -> ruta.setTipoTerreno(valor);
-                                case "tecnica" -> ruta.setDificultadTecnica(valor);
-                                case "fisica" -> ruta.setDificultadFisica(valor);
-                                default -> { return; }
-                        }
-                        guardarRutaInline(ruta);
-                });
-        }
-
-        private void guardarRutaInline(Ruta ruta) {
-                if (!rutaDAO.estaActiva(ruta.getId())) { mostrarAlerta("Ruta inactiva", "Reactiva la Ruta antes de editar sus celdas."); cargarRutas(); return; }
-                if (!rutaDAO.actualizar(ruta)) { mostrarAlerta("No se pudo guardar", "La Ruta conserva sus datos anteriores."); }
-                cargarRutas(); tablaRutas.getSelectionModel().select(ruta);
         }
 
         private void configurarCheckpoints() {
