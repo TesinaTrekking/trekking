@@ -11,6 +11,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 
@@ -47,11 +48,12 @@
 
                         <HBox styleClass="list-filter-bar">
 
-                                <TextField fx:id="buscarField"
-                                        promptText="Buscar por nombre"
-                                        prefWidth="200.0"
-                                        HBox.hgrow="ALWAYS"
-                                        styleClass="list-search-field"/>
+                                <StackPane styleClass="search-container" HBox.hgrow="ALWAYS">
+                                        <TextField fx:id="buscarField"
+                                                promptText="Buscar por nombre"
+                                                prefWidth="200.0"
+                                                styleClass="list-search-field"/>
+                                </StackPane>
 
                                 <ComboBox fx:id="filtroTerrenoCombo"
                                         prefWidth="180.0"

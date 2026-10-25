@@ -9,6 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -44,8 +45,10 @@
         </HBox>
 
         <HBox styleClass="list-filter-bar">
-            <TextField fx:id="txtBuscar" promptText="Buscar por nombre, categoría o estado"
-                       HBox.hgrow="ALWAYS" styleClass="list-search-field" />
+            <StackPane styleClass="search-container" HBox.hgrow="ALWAYS">
+                <TextField fx:id="txtBuscar" promptText="Buscar por nombre, categoría o estado"
+                           styleClass="list-search-field" />
+            </StackPane>
             <ComboBox fx:id="estadoFiltroCombo" prefWidth="170.0"
                       promptText="Estado" styleClass="list-filter-control" />
             <Button text="+ Nuevo elemento" styleClass="action-add" onAction="#nuevoEquipamiento" />

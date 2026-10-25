@@ -14,6 +14,7 @@ import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
 import com.example.model.AsignacionParticipante;
 import com.example.util.NavigationShell;
+import com.example.util.SearchFieldIcon;
 import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
@@ -58,6 +59,7 @@ public class SalidasController {
     private List<Salida> salidasOriginales = List.of();
 
     @FXML private void initialize() {
+        SearchFieldIcon.install(buscarField);
         tablaSalidas.getStyleClass().add("listing-table");
         tablaSalidas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colId.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().id()));
@@ -671,6 +673,7 @@ public class SalidasController {
             listaParticipantes.setPrefHeight(150);
             listaParticipantes.setMaxHeight(220);
             buscarCliente.setPromptText("Buscar por DNI, nombre o apellido");
+            buscarCliente.getStyleClass().add("list-search-field");
             actualizarClientesFiltrados();
             listaParticipantes.setItems(FXCollections.observableArrayList(participantes));
             Button agregar = new Button("Agregar Cliente seleccionado");
@@ -683,7 +686,8 @@ public class SalidasController {
                 if (seleccionado != null) { participantes.remove(seleccionado); render(); }
             });
             content.getChildren().addAll(new Label("Clientes activos · puedes confirmar sin Participantes"),
-                    buscarCliente, clientes, agregar, crear, new Label("Participantes de esta Salida"), listaParticipantes, quitar);
+                    SearchFieldIcon.wrap(buscarCliente), clientes, agregar, crear,
+                    new Label("Participantes de esta Salida"), listaParticipantes, quitar);
         }
         private void actualizarClientesFiltrados() {
             String consulta = buscarCliente.getText() == null ? "" : buscarCliente.getText().trim().toLowerCase();

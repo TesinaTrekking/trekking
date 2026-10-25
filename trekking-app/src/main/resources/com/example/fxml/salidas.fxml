@@ -8,6 +8,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ScrollPane?>
 
@@ -30,7 +31,9 @@
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Inventario crítico" styleClass="form-label"/><Label fx:id="kpiInventario" text="0" styleClass="brand-title"/></VBox>
     </HBox>
     <HBox styleClass="list-filter-bar">
-        <TextField fx:id="buscarField" promptText="Buscar por Ruta o Cliente" HBox.hgrow="ALWAYS" styleClass="list-search-field"/>
+        <StackPane styleClass="search-container" HBox.hgrow="ALWAYS">
+            <TextField fx:id="buscarField" promptText="Buscar por Ruta o Cliente" styleClass="list-search-field"/>
+        </StackPane>
         <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Estado" styleClass="list-filter-control"/>
         <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
     </HBox>

@@ -14,6 +14,7 @@ import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
 import com.example.util.AlertUtils;
+import com.example.util.SearchFieldIcon;
 
 import java.io.IOException;
 import java.net.URL;
@@ -98,6 +99,8 @@ public class RutaController implements Initializable {
 
         @Override
         public void initialize(URL url, ResourceBundle rb) {
+
+                SearchFieldIcon.install(buscarField);
 
                 tablaRutas.getStyleClass().add("listing-table");
                 tablaRutas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

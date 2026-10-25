@@ -7,6 +7,7 @@ import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
 import com.example.util.AlertUtils;
+import com.example.util.SearchFieldIcon;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -63,6 +64,8 @@ public class EquipamientoController {
 
     @FXML
     public void initialize() {
+
+        SearchFieldIcon.install(txtBuscar);
 
         tablaEquipamiento.getStyleClass().add("listing-table");
         tablaEquipamiento.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

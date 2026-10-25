@@ -13,6 +13,7 @@ import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
 import com.example.util.AlertUtils;
+import com.example.util.SearchFieldIcon;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -74,6 +75,8 @@ public class ListaClientesController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
+        SearchFieldIcon.install(buscarField);
 
         tablaClientes.getStyleClass().add("listing-table");
 

@@ -358,6 +358,10 @@
   -fx-background-color: transparent;
 }
 
+.search-icon {
+  -fx-fill: #68778d;
+}
+
 .search-field {
   -fx-background-color: #ffffff;
   -fx-border-color: #e1e5eb;
@@ -375,7 +379,7 @@
   -fx-border-color: #d7dee8;
   -fx-border-radius: 7px;
   -fx-background-radius: 7px;
-  -fx-padding: 8px 12px;
+  -fx-padding: 8px 12px 8px 38px;
   -fx-min-width: 0;
   -fx-focus-color: #188038;
   -fx-faint-focus-color: rgba(24, 128, 56, 0.14);

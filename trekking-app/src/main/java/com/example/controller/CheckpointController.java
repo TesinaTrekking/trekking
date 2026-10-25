@@ -5,6 +5,7 @@ import com.example.model.Checkpoint;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
+import com.example.util.SearchFieldIcon;
 
 import java.io.IOException;
 import java.net.URL;
@@ -95,6 +96,7 @@ public class CheckpointController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        SearchFieldIcon.install(filterField);
         tablaCheckpoints.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tablaCheckpoints.setItems(sortedList);
         sortedList.comparatorProperty().bind(tablaCheckpoints.comparatorProperty());

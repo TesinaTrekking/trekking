@@ -9,6 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -28,8 +29,10 @@
             <Region HBox.hgrow="ALWAYS"/>
         </HBox>
         <HBox styleClass="list-filter-bar">
-            <TextField fx:id="buscarField" promptText="Buscar por DNI, nombre o apellido"
-                       prefWidth="300.0" HBox.hgrow="ALWAYS" styleClass="list-search-field"/>
+            <StackPane styleClass="search-container" HBox.hgrow="ALWAYS">
+                <TextField fx:id="buscarField" promptText="Buscar por DNI, nombre o apellido"
+                           prefWidth="300.0" styleClass="list-search-field"/>
+            </StackPane>
             <ComboBox fx:id="estadoFiltroCombo" prefWidth="170.0"
                       promptText="Estado" styleClass="list-filter-control"/>
             <Button text="+ Nuevo Cliente" onAction="#irAgregarCliente"
