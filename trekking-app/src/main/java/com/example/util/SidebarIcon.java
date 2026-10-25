@@ -8,8 +8,7 @@ import java.util.regex.Pattern;
 
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.SVGPath;
-import javafx.scene.transform.Scale;
-import javafx.scene.transform.Translate;
+import javafx.scene.transform.Affine;
 
 /** Loads the path data from one of the sidebar's SVG icon resources. */
 public final class SidebarIcon {
@@ -35,9 +34,8 @@ public final class SidebarIcon {
 
             SVGPath icon = new SVGPath();
             icon.setContent(matcher.group(1));
-            icon.getTransforms().addAll(
-                    new Scale(ICON_SIZE / VIEWBOX_SIZE, ICON_SIZE / VIEWBOX_SIZE, 0, 0),
-                    new Translate(0, ICON_SIZE));
+            double scale = ICON_SIZE / VIEWBOX_SIZE;
+            icon.getTransforms().add(new Affine(scale, 0, 0, 0, scale, ICON_SIZE));
             icon.getStyleClass().add("sidebar-icon");
             icon.setManaged(false);
 
