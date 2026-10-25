@@ -38,18 +38,18 @@ public final class NavigationShell {
             new NavigationItem("Inventario", "inventory", "equipamiento.fxml"));
 
     private static final Map<String, Screen> SCREENS = Map.ofEntries(
-            Map.entry("salidas", new Screen("Salidas", "trips", "salidas.fxml", List.of("Salidas"))),
-            Map.entry("dashboard", new Screen("Salidas", "trips", "salidas.fxml", List.of("Salidas"))),
-            Map.entry("rutas", new Screen("Listado", "routes", "rutas.fxml", List.of("Salidas", "Rutas", "Listado"))),
-            Map.entry("clientes", new Screen("Listado", "clients", "lista-clientes.fxml", List.of("Salidas", "Clientes", "Listado"))),
-            Map.entry("inventario", new Screen("Listado", "inventory", "equipamiento.fxml", List.of("Salidas", "Inventario", "Listado"))),
+            Map.entry("salidas", new Screen("Salidas", "trips", "salidas.fxml", List.of())),
+            Map.entry("dashboard", new Screen("Salidas", "trips", "salidas.fxml", List.of())),
+            Map.entry("rutas", new Screen("Rutas", "routes", "rutas.fxml", List.of("Salidas", "Rutas"))),
+            Map.entry("clientes", new Screen("Clientes", "clients", "lista-clientes.fxml", List.of("Salidas", "Clientes"))),
+            Map.entry("inventario", new Screen("Inventario", "inventory", "equipamiento.fxml", List.of("Salidas", "Inventario"))),
             Map.entry("checkpoints", new Screen("Checkpoints", "routes", "checkpoints.fxml", List.of("Salidas", "Rutas", "Checkpoints"))),
-            Map.entry("cliente-alta", new Screen("Alta de Cliente", "clients", "agregar-cliente.fxml", List.of("Salidas", "Clientes", "Listado", "Alta de Cliente"))),
-            Map.entry("cliente-edicion", new Screen("Edición de Cliente", "clients", "editar-cliente.fxml", List.of("Salidas", "Clientes", "Listado", "Edición de Cliente"))),
-            Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Listado", "Alta de Ruta"))),
-            Map.entry("ruta-edicion", new Screen("Edición de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Listado", "Edición de Ruta"))),
-            Map.entry("inventario-alta", new Screen("Alta de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Listado", "Alta de Elemento"))),
-            Map.entry("inventario-edicion", new Screen("Edición de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Listado", "Edición de Elemento"))));
+            Map.entry("cliente-alta", new Screen("Alta de Cliente", "clients", "agregar-cliente.fxml", List.of("Salidas", "Clientes", "Alta de Cliente"))),
+            Map.entry("cliente-edicion", new Screen("Edición de Cliente", "clients", "editar-cliente.fxml", List.of("Salidas", "Clientes", "Edición de Cliente"))),
+            Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Alta de Ruta"))),
+            Map.entry("ruta-edicion", new Screen("Edición de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Edición de Ruta"))),
+            Map.entry("inventario-alta", new Screen("Alta de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Alta de Elemento"))),
+            Map.entry("inventario-edicion", new Screen("Edición de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Edición de Elemento"))));
 
     private NavigationShell() {
     }
@@ -104,7 +104,7 @@ public final class NavigationShell {
         HBox bar = controller.getBreadcrumbBar();
         bar.getChildren().clear();
         Screen screen = SCREENS.get(screenId);
-        boolean visible = screen != null;
+        boolean visible = screen != null && !screen.crumbs().isEmpty();
         bar.setVisible(visible);
         bar.setManaged(visible);
         if (!visible) return;
