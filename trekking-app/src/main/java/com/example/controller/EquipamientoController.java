@@ -309,7 +309,7 @@ public class EquipamientoController {
                     .getScene()
                     .getWindow();
 
-            NavigationShell.setRoot(stage.getScene(), root);
+            NavigationShell.setRoot(stage.getScene(), root, equipamiento == null ? "inventario-alta" : "inventario-edicion");
             stage.setTitle(
                     equipamiento == null
                             ? "Nuevo equipamiento"

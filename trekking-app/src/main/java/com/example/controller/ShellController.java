@@ -10,6 +10,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -24,6 +25,9 @@ public class ShellController implements Initializable {
 
     @FXML
     private StackPane contentContainer;
+
+    @FXML
+    private HBox breadcrumbBar;
 
     @FXML
     private VBox navigationBox;
@@ -59,10 +63,16 @@ public class ShellController implements Initializable {
     public void setContent(Parent page) {
         if (page != null) {
             contentContainer.getChildren().setAll(page);
+            NavigationShell.renderBreadcrumbs(this, page.getId());
         } else {
             contentContainer.getChildren().clear();
+            breadcrumbBar.getChildren().clear();
+            breadcrumbBar.setManaged(false);
+            breadcrumbBar.setVisible(false);
         }
     }
+
+    public HBox getBreadcrumbBar() { return breadcrumbBar; }
 
     @FXML
     private void onSalidas() {

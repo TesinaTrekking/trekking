@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ScrollPane?>
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" xmlns="http://javafx.com/javafx/17"
+<ScrollPane id="cliente-edicion" fitToWidth="true" hbarPolicy="NEVER" xmlns="http://javafx.com/javafx/17"
     xmlns:fx="http://javafx.com/fxml/1" stylesheets="@styles.css">
     <content>
         <VBox alignment="TOP_CENTER" spacing="20.0">

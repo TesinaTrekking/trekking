@@ -12,7 +12,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+<ScrollPane id="clientes" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
       styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.controller.ListaClientesController"

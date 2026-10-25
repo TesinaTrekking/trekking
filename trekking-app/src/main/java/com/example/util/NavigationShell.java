@@ -3,6 +3,7 @@ package com.example.util;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 import com.example.controller.ShellController;
@@ -11,6 +12,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 
 /**
  * Shell de navegación lateral de la aplicación.
@@ -32,6 +36,21 @@ public final class NavigationShell {
             new NavigationItem("Rutas", "routes", "rutas.fxml"),
             new NavigationItem("Clientes", "clients", "lista-clientes.fxml"),
             new NavigationItem("Inventario", "inventory", "equipamiento.fxml"));
+
+    private static final Map<String, Screen> SCREENS = Map.ofEntries(
+            Map.entry("salidas", new Screen("Salidas", "trips", "salidas.fxml", List.of("Salidas"))),
+            Map.entry("dashboard", new Screen("Salidas", "trips", "salidas.fxml", List.of("Salidas"))),
+            Map.entry("rutas", new Screen("Listado", "routes", "rutas.fxml", List.of("Salidas", "Rutas", "Listado"))),
+            Map.entry("clientes", new Screen("Listado", "clients", "lista-clientes.fxml", List.of("Salidas", "Clientes", "Listado"))),
+            Map.entry("inventario", new Screen("Listado", "inventory", "equipamiento.fxml", List.of("Salidas", "Inventario", "Listado"))),
+            Map.entry("checkpoints", new Screen("Checkpoints", "routes", "checkpoints.fxml", List.of("Salidas", "Rutas", "Checkpoints"))),
+            Map.entry("inventario-baja", new Screen("Dados de baja", "inventory", "equipamiento-baja.fxml", List.of("Salidas", "Inventario", "Dados de baja"))),
+            Map.entry("cliente-alta", new Screen("Alta de Cliente", "clients", "agregar-cliente.fxml", List.of("Salidas", "Clientes", "Listado", "Alta de Cliente"))),
+            Map.entry("cliente-edicion", new Screen("Edición de Cliente", "clients", "editar-cliente.fxml", List.of("Salidas", "Clientes", "Listado", "Edición de Cliente"))),
+            Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Listado", "Alta de Ruta"))),
+            Map.entry("ruta-edicion", new Screen("Edición de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Listado", "Edición de Ruta"))),
+            Map.entry("inventario-alta", new Screen("Alta de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Listado", "Alta de Elemento"))),
+            Map.entry("inventario-edicion", new Screen("Edición de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Listado", "Edición de Elemento"))));
 
     private NavigationShell() {
     }
@@ -70,7 +89,61 @@ public final class NavigationShell {
             throw new IllegalStateException(
                     "La navegación lateral no está instalada en esta ventana.");
         }
-        controller.setContent(page);
+        if ("dashboard".equals(page.getId())) {
+            navigate(scene, "trips");
+        } else {
+            controller.setContent(page);
+        }
+    }
+
+    public static void setRoot(Scene scene, Parent page, String screenId) {
+        page.setId(screenId);
+        setRoot(scene, page);
+    }
+
+    public static void renderBreadcrumbs(ShellController controller, String screenId) {
+        HBox bar = controller.getBreadcrumbBar();
+        bar.getChildren().clear();
+        Screen screen = SCREENS.get(screenId);
+        boolean visible = screen != null;
+        bar.setVisible(visible);
+        bar.setManaged(visible);
+        if (!visible) return;
+        for (int i = 0; i < screen.crumbs().size(); i++) {
+            if (i > 0) {
+                Label chevron = new Label("›");
+                chevron.getStyleClass().add("breadcrumb-chevron");
+                bar.getChildren().add(chevron);
+            }
+            String crumb = screen.crumbs().get(i);
+            boolean current = i == screen.crumbs().size() - 1;
+            if (current) {
+                Label label = new Label(crumb);
+                label.getStyleClass().add("breadcrumb-current");
+                bar.getChildren().add(label);
+            } else {
+                Button link = new Button(crumb);
+                link.getStyleClass().add("breadcrumb-link");
+                int destination = i;
+                link.setOnAction(event -> navigateToCrumb(controller, screen, destination));
+                bar.getChildren().add(link);
+            }
+        }
+    }
+
+    private static void navigateToCrumb(ShellController controller, Screen current, int crumbIndex) {
+        Scene scene = controller.getBreadcrumbBar().getScene();
+        Object guard = scene.getProperties().get(NAVIGATION_GUARD_KEY);
+        if (guard instanceof BooleanSupplier canLeave && !canLeave.getAsBoolean()) return;
+        String crumb = current.crumbs().get(crumbIndex);
+        String targetId;
+        if (crumbIndex == 0) targetId = "salidas";
+        else if (crumbIndex == 1) targetId = current.section().equals("routes") ? "rutas"
+                : current.section().equals("clients") ? "clientes" : "inventario";
+        else targetId = crumb.equals("Listado") ? (current.section().equals("routes") ? "rutas"
+                : current.section().equals("clients") ? "clientes" : "inventario") : "salidas";
+        Screen target = SCREENS.get(targetId);
+        loadScreen(scene, controller, target);
     }
 
     public static void navigate(Scene scene, String section) {
@@ -91,24 +164,35 @@ public final class NavigationShell {
             controller = sc2;
         }
         Object guard = scene.getProperties().get(NAVIGATION_GUARD_KEY);
-        if (guard instanceof BooleanSupplier canLeave && !canLeave.getAsBoolean()) {
-            return;
-        }
+        if (guard instanceof BooleanSupplier canLeave && !canLeave.getAsBoolean()) return;
+        Screen screen = SCREENS.get(switch (target.section()) {
+            case "trips" -> "salidas";
+            case "routes" -> "rutas";
+            case "clients" -> "clientes";
+            default -> "inventario";
+        });
+        loadScreen(scene, controller, screen);
+    }
+
+    private static void loadScreen(Scene scene, ShellController controller, Screen target) {
         try {
-            Parent page = new FXMLLoader(
-                    NavigationShell.class.getResource(
-                            "/com/example/fxml/" + target.fxml()))
-                    .load();
-            controller.setActiveSection(section);
+            FXMLLoader loader = new FXMLLoader(NavigationShell.class.getResource("/com/example/fxml/" + target.fxml()));
+            Parent page = loader.load();
+            page.setId(screenId(target));
+            controller.setActiveSection(target.section());
             controller.setContent(page);
         } catch (IOException | RuntimeException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("No se pudo abrir la sección");
+            alert.setTitle("No se pudo abrir la pantalla");
             alert.setHeaderText(null);
-            alert.setContentText(
-                    "No se pudo abrir " + target.label() + ": " + e.getMessage());
+            alert.setContentText("No se pudo abrir " + target.label() + ": " + e.getMessage());
             alert.showAndWait();
         }
+    }
+
+    private static String screenId(Screen screen) {
+        return SCREENS.entrySet().stream().filter(entry -> entry.getValue() == screen)
+                .map(Map.Entry::getKey).findFirst().orElse("unknown");
     }
 
     /** Registers a page-specific check before replacing the central shell content. */
@@ -127,4 +211,6 @@ public final class NavigationShell {
 
     private record NavigationItem(String label, String section, String fxml) {
     }
+
+    private record Screen(String label, String section, String fxml, List<String> crumbs) { }
 }

@@ -345,7 +345,7 @@ public class RutaController implements Initializable {
 
                 controller.setRutaEnEdicion(null);
 
-                NavigationShell.setRoot(stage.getScene(), root);
+                NavigationShell.setRoot(stage.getScene(), root, "ruta-alta");
         }
 
         @FXML
@@ -373,7 +373,7 @@ public class RutaController implements Initializable {
                 controller.setRutaEnEdicion(rutaSeleccionada);
 
 
-                NavigationShell.setRoot(stage.getScene(), root);
+                NavigationShell.setRoot(stage.getScene(), root, "ruta-edicion");
         }
 
         private void abrirEdicion(Ruta rutaSeleccionada) {
@@ -382,7 +382,7 @@ public class RutaController implements Initializable {
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fxml/ruta-form.fxml"));
                         Parent root = loader.load();
                         loader.<RutaFormController>getController().setRutaEnEdicion(rutaSeleccionada);
-                        NavigationShell.setRoot(stage.getScene(), root);
+                        NavigationShell.setRoot(stage.getScene(), root, "ruta-edicion");
                 } catch (IOException ex) { mostrarAlerta("Error", "No se pudo abrir el formulario de Ruta."); }
         }
 

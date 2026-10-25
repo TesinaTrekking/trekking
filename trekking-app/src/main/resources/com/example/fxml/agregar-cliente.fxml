@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ScrollPane?>
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" xmlns="http://javafx.com/javafx/17"
+<ScrollPane id="cliente-alta" fitToWidth="true" hbarPolicy="NEVER" xmlns="http://javafx.com/javafx/17"
     xmlns:fx="http://javafx.com/fxml/1"
     fx:controller="com.example.controller.AgregarClienteController"
     stylesheets="@styles.css"

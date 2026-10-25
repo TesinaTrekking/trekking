@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
-<ScrollPane fitToWidth="true"
+<ScrollPane id="inventario-baja" fitToWidth="true"
     hbarPolicy="NEVER"
     vbarPolicy="AS_NEEDED"
     styleClass="pantalla-scroll"

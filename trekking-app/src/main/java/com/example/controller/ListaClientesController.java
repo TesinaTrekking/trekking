@@ -286,7 +286,7 @@ public class ListaClientesController implements Initializable {
                             "/com/example/fxml/editar-cliente.fxml"));
             loader.setController(new EditarClienteController(clienteSeleccionado));
             Parent root = loader.load();
-            NavigationShell.setRoot(tablaClientes.getScene(), root);
+            NavigationShell.setRoot(tablaClientes.getScene(), root, "cliente-edicion");
 
         } catch (IOException e) {
             mostrarAlerta(
@@ -300,7 +300,7 @@ public class ListaClientesController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fxml/editar-cliente.fxml"));
             loader.setController(new EditarClienteController(clienteSeleccionado));
-            NavigationShell.setRoot(tablaClientes.getScene(), loader.load());
+            NavigationShell.setRoot(tablaClientes.getScene(), loader.load(), "cliente-edicion");
         } catch (IOException e) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo abrir la edición", e.getMessage()); }
     }
 

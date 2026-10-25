@@ -39,6 +39,26 @@
   -fx-background-color: #f5f7fa;
 }
 
+.app-header {
+  -fx-background-color: white;
+  -fx-border-color: transparent transparent #e1e5eb transparent;
+  -fx-border-width: 0 0 1 0;
+  -fx-padding: 14px 24px;
+}
+
+.app-header-brand {
+  -fx-font-family: "Segoe UI";
+  -fx-font-size: 20px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #172b4d;
+}
+
+.app-header-caption {
+  -fx-font-family: "Segoe UI";
+  -fx-font-size: 13px;
+  -fx-text-fill: #68778d;
+}
+
 .app-sidebar {
   -fx-background-color: #172b4d;
   -fx-padding: 26px 16px 18px 16px;
@@ -97,6 +117,37 @@
 .app-content {
   -fx-background-color: #f5f7fa;
   -fx-padding: 14px;
+}
+
+.app-page-container {
+  -fx-background-color: #f5f7fa;
+  -fx-min-width: 0;
+  -fx-min-height: 0;
+}
+
+.breadcrumb-bar {
+  -fx-padding: 0 20px 2px 20px;
+}
+
+.breadcrumb-link {
+  -fx-background-color: transparent;
+  -fx-padding: 3px 0;
+  -fx-text-fill: #41648f;
+  -fx-underline: true;
+  -fx-cursor: hand;
+}
+
+.breadcrumb-link:hover {
+  -fx-text-fill: #172b4d;
+}
+
+.breadcrumb-current {
+  -fx-font-weight: bold;
+  -fx-text-fill: #172b4d;
+}
+
+.breadcrumb-chevron {
+  -fx-text-fill: #8794a6;
 }
 
 .top-bar {
