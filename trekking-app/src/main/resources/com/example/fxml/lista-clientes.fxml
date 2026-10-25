@@ -9,12 +9,16 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/17"
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+      styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.controller.ListaClientesController"
       stylesheets="@styles.css">
+    <content>
+    <VBox alignment="TOP_CENTER" spacing="10.0">
     <children>
         <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="top-bar">
             <VBox spacing="3.0">
@@ -33,8 +37,7 @@
             <CheckBox fx:id="mostrarInactivosCheckBox"
                       text="Mostrar clientes dados de baja"/>
         </HBox>
-        <TableView fx:id="tablaClientes" prefHeight="300.0" prefWidth="600.0"
-                   VBox.vgrow="ALWAYS">
+        <TableView fx:id="tablaClientes" prefHeight="300.0" prefWidth="600.0">
             <columns>
                 <TableColumn fx:id="colDni" prefWidth="90.0" text="DNI"/>
                 <TableColumn fx:id="colNombre" prefWidth="150.0" text="Nombre"/>
@@ -47,8 +50,14 @@
                 <TableColumn fx:id="colAcciones" prefWidth="110.0" text="Acciones"/>
             </columns>
         </TableView>
+        <HBox alignment="CENTER_LEFT" styleClass="table-add-row">
+            <Button fx:id="filaAltaButton" text="+ Nuevo Cliente"
+                    onAction="#irAgregarCliente" styleClass="table-add-button"/>
+        </HBox>
     </children>
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
     </padding>
-</VBox>
+    </VBox>
+    </content>
+</ScrollPane>

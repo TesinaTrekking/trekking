@@ -49,10 +49,6 @@
                 <TableColumn fx:id="colLongitud" prefWidth="120.0" text="Longitud"/>
                 <TableColumn fx:id="colDescripcion" prefWidth="200.0" text="Descripción"/>
             </columns>
-            <placeholder>
-                <Label text='No hay checkpoints registrados. Use "+ Nuevo Checkpoint" para agregar uno.'
-                       styleClass="table-placeholder"/>
-            </placeholder>
         </TableView>
         <HBox alignment="CENTER_LEFT" styleClass="footer-container">
             <Label fx:id="counterLabel" styleClass="counter-badge"/>

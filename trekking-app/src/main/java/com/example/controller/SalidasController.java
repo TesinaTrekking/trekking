@@ -14,6 +14,8 @@ import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
 import com.example.model.AsignacionParticipante;
 import com.example.util.NavigationShell;
+import com.example.util.TableEmptyState;
+import com.example.util.TableCreateRow;
 import java.sql.SQLException;
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +42,7 @@ public class SalidasController {
     private final FichaOperativaPDFService fichaPDFService = new FichaOperativaPDFService();
     private final RutaDAO rutaDAO = new RutaDAO();
     @FXML private TableView<Salida> tablaSalidas;
+    @FXML private Button filaAltaButton;
     @FXML private TableColumn<Salida, Integer> colId;
     @FXML private TableColumn<Salida, LocalDate> colFecha;
     @FXML private TableColumn<Salida, String> colRuta;
@@ -52,8 +55,11 @@ public class SalidasController {
     @FXML private ComboBox<String> estadoFiltro;
     @FXML private Button btnRealizada, btnCancelar;
     private Map<Integer, SalidaDAO.ResumenOperativo> resumenes = Map.of();
+    private List<Salida> salidasOriginales = List.of();
 
     @FXML private void initialize() {
+        tablaSalidas.getStyleClass().add("table-with-create-row");
+        tablaSalidas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colId.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().id()));
         colFecha.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().fecha()));
         colRuta.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().rutaNombre()));
@@ -82,6 +88,7 @@ public class SalidasController {
         });
         estadoFiltro.setItems(FXCollections.observableArrayList(
                 "Todos los estados", "Planificada", "Realizada", "Cancelada"));
+        estadoFiltro.setValue("Todos los estados");
         actualizarIndicadores(); actualizarTabla();
         tablaSalidas.getSelectionModel().selectedItemProperty().addListener((obs, anterior, seleccionada) -> actualizarAcciones(seleccionada));
         actualizarAcciones(null);
@@ -164,7 +171,8 @@ public class SalidasController {
     private void actualizarTabla() {
         try {
             resumenes = salidaDAO.obtenerResumenesOperativos();
-            FilteredList<Salida> filas = new FilteredList<>(FXCollections.observableArrayList(salidaDAO.obtenerTodas()), s -> true);
+            salidasOriginales = salidaDAO.obtenerTodas();
+            FilteredList<Salida> filas = new FilteredList<>(FXCollections.observableArrayList(salidasOriginales), s -> true);
             tablaSalidas.setItems(filas); aplicarFiltros();
         } catch (RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudieron cargar las Salidas", e.getMessage()); }
     }
@@ -182,6 +190,13 @@ public class SalidasController {
         filas.setPredicate(s -> (consulta.isEmpty() || s.rutaNombre().toLowerCase(Locale.ROOT).contains(consulta)
                         || contieneCliente(s, consulta))
                 && (estado == null || s.estado().equals(estado)));
+        boolean filtrosActivos = !consulta.isEmpty() || estado != null;
+        boolean haySalidas = !salidasOriginales.isEmpty();
+        TableEmptyState.update(tablaSalidas, haySalidas, filtrosActivos,
+                "Todavía no hay Salidas", "Planifica una Salida para comenzar a organizar una actividad.",
+                "No hay Salidas que coincidan", "Prueba con otra Ruta, Cliente o estado.",
+                "+ Nueva Salida", event -> iniciarWizard());
+        TableCreateRow.update(tablaSalidas, filaAltaButton, filas.size(), filtrosActivos, 500);
     }
 
     private boolean contieneCliente(Salida salida, String consulta) {

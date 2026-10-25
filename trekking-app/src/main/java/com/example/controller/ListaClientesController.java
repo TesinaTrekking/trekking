@@ -9,6 +9,8 @@ import java.util.ResourceBundle;
 import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
 import com.example.util.NavigationShell;
+import com.example.util.TableEmptyState;
+import com.example.util.TableCreateRow;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -62,13 +64,17 @@ public class ListaClientesController implements Initializable {
     private TableColumn<Cliente, java.time.LocalDate> colFechaNacimiento;
 
     @FXML private TableColumn<Cliente, Cliente> colAcciones;
+    @FXML private javafx.scene.control.Button filaAltaButton;
 
     private final ClienteDAO clienteDAO = new ClienteDAO();
 
     private FilteredList<Cliente> clientesFiltrados;
+    private ObservableList<Cliente> clientesOriginales;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
+        tablaClientes.getStyleClass().add("table-with-create-row");
 
         tablaClientes.setColumnResizePolicy(
                 TableView.CONSTRAINED_RESIZE_POLICY);
@@ -173,8 +179,8 @@ public class ListaClientesController implements Initializable {
 
     private void cargarClientes() {
 
-        ObservableList<Cliente> clientes =
-                clienteDAO.obtenerTodosLosClientes();
+        ObservableList<Cliente> clientes = clienteDAO.obtenerTodosLosClientes();
+        clientesOriginales = clientes;
 
         clientesFiltrados = new FilteredList<>(clientes);
 
@@ -206,6 +212,30 @@ public class ListaClientesController implements Initializable {
             return coincideTexto
                     && (mostrarInactivos || cliente.isActivo());
         });
+        actualizarEstadoTabla();
+    }
+
+    private void actualizarEstadoTabla() {
+        boolean filtrosActivos = !buscarField.getText().isBlank()
+                || (!mostrarInactivosCheckBox.isSelected() && clientesOriginales != null
+                        && !clientesOriginales.isEmpty()
+                        && clientesOriginales.stream().noneMatch(Cliente::isActivo));
+        boolean busquedaActiva = !buscarField.getText().isBlank()
+                || mostrarInactivosCheckBox.isSelected();
+        boolean hayClientes = clientesOriginales != null && !clientesOriginales.isEmpty();
+        TableEmptyState.update(tablaClientes, hayClientes, filtrosActivos,
+                "Todavía no hay clientes", "Agrega un Cliente para empezar a planificar Salidas.",
+                "No hay clientes que coincidan", "Prueba con otro DNI, nombre o apellido.",
+                "+ Nuevo Cliente", event -> {
+                    try {
+                        irAgregarCliente(event);
+                    } catch (IOException e) {
+                        mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo abrir el alta de Cliente.");
+                    }
+                });
+        TableCreateRow.update(tablaClientes, filaAltaButton,
+                tablaClientes.getItems() == null ? 0 : tablaClientes.getItems().size(),
+                busquedaActiva, 300);
     }
 
     private boolean contiene(String valor, String texto) {

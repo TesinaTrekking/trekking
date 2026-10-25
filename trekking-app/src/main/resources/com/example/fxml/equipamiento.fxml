@@ -8,14 +8,17 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER"
-      spacing="10.0"
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+      styleClass="pantalla-scroll"
       xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.controller.EquipamientoController"
       stylesheets="@styles.css">
+    <content>
+    <VBox alignment="TOP_CENTER" spacing="10.0">
 
     <children>
 
@@ -51,8 +54,7 @@
 
         <TableView fx:id="tablaEquipamiento"
                    prefHeight="300.0"
-                   prefWidth="600.0"
-                   VBox.vgrow="ALWAYS">
+                   prefWidth="600.0">
 
             <columns>
                 <TableColumn fx:id="colId"
@@ -82,6 +84,11 @@
 
         </TableView>
 
+        <HBox alignment="CENTER_LEFT" styleClass="table-add-row">
+            <Button fx:id="filaAltaButton" text="+ Nuevo elemento"
+                    onAction="#nuevoEquipamiento" styleClass="table-add-button"/>
+        </HBox>
+
     </children>
 
     <padding>
@@ -91,4 +98,6 @@
                 top="20.0"/>
     </padding>
 
-</VBox>
+    </VBox>
+    </content>
+</ScrollPane>

@@ -332,6 +332,62 @@
   -fx-text-fill: #68778d;
 }
 
+.table-empty-state {
+  -fx-padding: 22px;
+  -fx-translate-y: -18px;
+}
+
+.table-empty-icon {
+  -fx-font-size: 34px;
+  -fx-text-fill: #8b9bb0;
+}
+
+.table-empty-title {
+  -fx-font-size: 16px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #26364a;
+}
+
+.table-empty-description {
+  -fx-font-size: 13px;
+  -fx-text-fill: #68778d;
+  -fx-text-alignment: center;
+}
+
+.table-empty-action {
+  -fx-background-color: #188038;
+  -fx-text-fill: white;
+  -fx-cursor: hand;
+  -fx-padding: 8px 16px;
+}
+
+.table-empty-action:hover {
+  -fx-background-color: #137333;
+}
+
+.table-add-row {
+  -fx-padding: 0 0 4px 4px;
+  -fx-border-color: transparent;
+}
+
+.table-add-button {
+  -fx-background-color: transparent;
+  -fx-text-fill: #5f6f83;
+  -fx-cursor: hand;
+  -fx-alignment: center-left;
+  -fx-padding: 8px 12px;
+}
+
+.table-add-button:hover {
+  -fx-background-color: #eaf1fb;
+  -fx-text-fill: #174ea6;
+}
+
+.table-view.table-with-create-row {
+  -fx-border-color: #e1e5eb #e1e5eb transparent #e1e5eb;
+  -fx-border-width: 1px 1px 0 1px;
+}
+
 .dialog-form-card {
   -fx-background-color: #ffffff;
   -fx-border-color: #e1e5eb;

@@ -3,6 +3,8 @@ package com.example.controller;
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
 import com.example.util.NavigationShell;
+import com.example.util.TableEmptyState;
+import com.example.util.TableCreateRow;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -49,9 +51,16 @@ public class EquipamientoController {
     @FXML
     private TableColumn<Equipamiento, String> colEstado;
     @FXML private TableColumn<Equipamiento, Equipamiento> colAcciones;
+    @FXML private javafx.scene.control.Button filaAltaButton;
+
+    private ObservableList<Equipamiento> equipamientoOriginal;
+    private FilteredList<Equipamiento> equipamientoFiltrado;
 
     @FXML
     public void initialize() {
+
+        tablaEquipamiento.getStyleClass().add("table-with-create-row");
+        tablaEquipamiento.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         colId.setCellValueFactory(
                 new PropertyValueFactory<>("id"));
@@ -105,6 +114,8 @@ public class EquipamientoController {
             }
         });
 
+        txtBuscar.textProperty().addListener((observable, anterior, actual) -> aplicarFiltro());
+
         cargarEquipamiento();
     }
 
@@ -125,16 +136,28 @@ public class EquipamientoController {
 
     private void cargarEquipamiento() {
 
-        ObservableList<Equipamiento> equipamientos = EquipamientoDAO.obtenerTodos();
-        FilteredList<Equipamiento> filtrados = new FilteredList<>(equipamientos, item -> true);
-        txtBuscar.textProperty().addListener((observable, anterior, actual) -> {
-            String consulta = actual == null ? "" : actual.trim().toLowerCase();
-            filtrados.setPredicate(item -> consulta.isEmpty()
-                    || item.getNombre().toLowerCase().contains(consulta)
-                    || item.getCategoria().toLowerCase().contains(consulta)
-                    || item.getEstado().toLowerCase().contains(consulta));
-        });
-        tablaEquipamiento.setItems(filtrados);
+        equipamientoOriginal = EquipamientoDAO.obtenerTodos();
+        equipamientoFiltrado = new FilteredList<>(equipamientoOriginal, item -> true);
+        tablaEquipamiento.setItems(equipamientoFiltrado);
+        aplicarFiltro();
+    }
+
+    private void aplicarFiltro() {
+        if (equipamientoFiltrado == null) return;
+        String consulta = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase();
+        equipamientoFiltrado.setPredicate(item -> consulta.isEmpty()
+                || item.getNombre().toLowerCase().contains(consulta)
+                || item.getCategoria().toLowerCase().contains(consulta)
+                || item.getEstado().toLowerCase().contains(consulta));
+
+        boolean hayEquipamiento = equipamientoOriginal != null && !equipamientoOriginal.isEmpty();
+        boolean filtroActivo = !consulta.isEmpty();
+        TableEmptyState.update(tablaEquipamiento, hayEquipamiento, filtroActivo,
+                "Todavía no hay elementos", "Agrega elementos para administrar el Inventario.",
+                "No hay elementos que coincidan", "Prueba con otro nombre, categoría o estado.",
+                "+ Nuevo elemento", event -> nuevoEquipamiento());
+        TableCreateRow.update(tablaEquipamiento, filaAltaButton,
+                equipamientoFiltrado.size(), filtroActivo, 300);
     }
 
     @FXML

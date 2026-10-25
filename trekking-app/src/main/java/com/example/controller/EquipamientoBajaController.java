@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
 import com.example.util.NavigationShell;
+import com.example.util.TableEmptyState;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -85,6 +86,10 @@ public class EquipamientoBajaController {
         ObservableList<Equipamiento> equipamientos = EquipamientoDAO.obtenerDadosDeBaja();
 
         tablaEquipamientoBaja.setItems(equipamientos);
+        TableEmptyState.update(tablaEquipamientoBaja, !equipamientos.isEmpty(), false,
+                "No hay elementos dados de baja", "Los elementos dados de baja aparecerán aquí.",
+                "No hay elementos dados de baja", "Los elementos dados de baja aparecerán aquí.",
+                null, null);
     }
 
     @FXML

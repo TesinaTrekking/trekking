@@ -10,6 +10,8 @@ import com.example.model.Ruta;
 import com.example.model.RutaEquipamiento;
 import com.example.model.Equipamiento;
 import com.example.util.NavigationShell;
+import com.example.util.TableEmptyState;
+import com.example.util.TableCreateRow;
 
 import java.io.IOException;
 import java.net.URL;
@@ -69,6 +71,7 @@ public class RutaController implements Initializable {
         @FXML
         private TableColumn<Ruta, String> colDificultadFisica;
         @FXML private TableColumn<Ruta, Ruta> colAcciones;
+        @FXML private Button filaAltaButton;
 
         @FXML
         private TextField buscarField;
@@ -95,6 +98,9 @@ public class RutaController implements Initializable {
 
         @Override
         public void initialize(URL url, ResourceBundle rb) {
+
+                tablaRutas.getStyleClass().add("table-with-create-row");
+                tablaRutas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
                 colId.setCellValueFactory(
                                 new PropertyValueFactory<>("id"));
@@ -170,6 +176,7 @@ public class RutaController implements Initializable {
                                         cargarCheckpointsDeRuta(actual);
                                         cargarEquipamientoDeRuta(actual);
                                 });
+                actualizarEstadoTabla();
         }
 
         private void configurarTextoInline(TableColumn<Ruta, String> columna, String campo) {
@@ -526,6 +533,29 @@ public class RutaController implements Initializable {
                                         && coincideDificultadTecnica
                                         && coincideDificultadFisica;
                 });
+                actualizarEstadoTabla();
+        }
+
+        private void actualizarEstadoTabla() {
+                boolean filtrosActivos = !buscarField.getText().isBlank()
+                                || !"Todos".equals(filtroTerrenoCombo.getValue())
+                                || !"Todas".equals(filtroDificultadTecnicaCombo.getValue())
+                                || !"Todas".equals(filtroDificultadFisicaCombo.getValue())
+                                || mostrarInactivasCheckBox.isSelected();
+                boolean hayRutas = rutas != null && !rutas.isEmpty();
+                TableEmptyState.update(tablaRutas, hayRutas, filtrosActivos,
+                                "Todavía no hay rutas", "Crea una Ruta para empezar a planificar Salidas.",
+                                "No hay rutas que coincidan", "Prueba con otra búsqueda o cambia los filtros.",
+                                "+ Nueva Ruta", event -> {
+                                        try {
+                                                nuevaRuta();
+                                        } catch (IOException e) {
+                                                mostrarAlerta("Error", "No se pudo abrir el formulario de Ruta.");
+                                        }
+                                });
+                TableCreateRow.update(tablaRutas, filaAltaButton,
+                                tablaRutas.getItems() == null ? 0 : tablaRutas.getItems().size(),
+                                filtrosActivos, 430);
         }
 
         private void mostrarAlerta(

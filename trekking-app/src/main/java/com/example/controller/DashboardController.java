@@ -5,6 +5,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import com.example.service.DashboardService;
+import com.example.util.TableEmptyState;
 import com.example.util.NavigationShell;
 
 import javafx.beans.property.SimpleObjectProperty;
@@ -87,7 +88,8 @@ public class DashboardController {
                         ? null
                         : celda.getValue().participantes()));
         tablaProximos.setPlaceholder(
-                new Label("Sin recorridos próximos en los siguientes 7 días."));
+                TableEmptyState.create("No hay Salidas próximas",
+                        "Las Salidas planificadas para los próximos 7 días aparecerán aquí.", null, null));
         cargar();
     }
 

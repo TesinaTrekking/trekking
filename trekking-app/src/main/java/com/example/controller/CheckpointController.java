@@ -4,6 +4,7 @@ import com.example.dao.CheckpointDAO;
 import com.example.model.Checkpoint;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
+import com.example.util.TableEmptyState;
 
 import java.io.IOException;
 import java.net.URL;
@@ -103,7 +104,10 @@ public class CheckpointController implements Initializable {
         configureRowInteractions();
 
         filterField.textProperty()
-                .addListener((obs, oldValue, newValue) -> filteredList.setPredicate(createFilterPredicate(newValue)));
+                .addListener((obs, oldValue, newValue) -> {
+                    filteredList.setPredicate(createFilterPredicate(newValue));
+                    updateEmptyState();
+                });
         clearButton.visibleProperty().bind(filterField.textProperty().isNotEmpty());
 
         editarButton.disableProperty()
@@ -145,6 +149,7 @@ public class CheckpointController implements Initializable {
     }
 
     private void updateCounter() {
+        updateEmptyState();
         if (counterLabel == null) {
             return;
         }
@@ -152,6 +157,15 @@ public class CheckpointController implements Initializable {
         int visibles = filteredList.size();
         String unidad = total == 1 ? " checkpoint" : " checkpoints";
         counterLabel.setText(total == visibles ? total + unidad : "Mostrando " + visibles + " de " + total + unidad);
+    }
+
+    private void updateEmptyState() {
+        boolean hayCheckpoints = !checkpointList.isEmpty();
+        boolean filtroActivo = filterField != null && !filterField.getText().isBlank();
+        TableEmptyState.update(tablaCheckpoints, hayCheckpoints, filtroActivo,
+                "Todavía no hay Checkpoints", "Agrega un Checkpoint para definir los puntos de control.",
+                "No hay Checkpoints que coincidan", "Prueba con otro nombre, horario o descripción.",
+                "+ Nuevo Checkpoint", event -> mostrarCrear());
     }
 
     private static Predicate<Checkpoint> createFilterPredicate(String texto) {

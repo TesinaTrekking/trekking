@@ -77,7 +77,6 @@
                         </HBox>
 
                         <TableView fx:id="tablaRutas"
-                                VBox.vgrow="ALWAYS"
                                 prefHeight="430.0"
                                 prefWidth="940.0">
 
@@ -111,6 +110,11 @@
                                 </columns>
 
                         </TableView>
+
+                        <HBox alignment="CENTER_LEFT" styleClass="table-add-row">
+                                <Button fx:id="filaAltaButton" text="+ Nueva Ruta"
+                                        onAction="#nuevaRuta" styleClass="table-add-button" />
+                        </HBox>
 
                         <Label text="Checkpoints de la ruta seleccionada"
                                 styleClass="card-title" />

@@ -9,10 +9,14 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
 
-<VBox spacing="16" styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17"
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+      styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.SalidasController"
       stylesheets="@styles.css">
+    <content>
+    <VBox spacing="16">
     <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
     <HBox spacing="12" alignment="CENTER_LEFT" styleClass="top-bar">
         <VBox spacing="4"><Label text="Salidas" styleClass="brand-title"/>
@@ -30,7 +34,7 @@
         <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Estado"/>
         <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
     </HBox>
-    <TableView fx:id="tablaSalidas" VBox.vgrow="ALWAYS">
+    <TableView fx:id="tablaSalidas" prefHeight="500">
         <columns>
             <TableColumn fx:id="colId" text="ID" prefWidth="70"/>
             <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
@@ -41,4 +45,10 @@
             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="125"/>
         </columns>
     </TableView>
-</VBox>
+    <HBox alignment="CENTER_LEFT" styleClass="table-add-row">
+        <Button fx:id="filaAltaButton" text="+ Nueva Salida"
+                onAction="#iniciarWizard" styleClass="table-add-button"/>
+    </HBox>
+    </VBox>
+    </content>
+</ScrollPane>
