@@ -148,6 +148,7 @@ public class EquipamientoController {
                 "Inactivo".equals(estadoFiltroCombo.getValue())
                         ? "Los elementos dados de baja aparecerán aquí." : "Agrega elementos para administrar el Inventario.",
                 "No hay elementos que coincidan", "Prueba con otro nombre, categoría o estado.",
+                "INVENTORY",
                 "+ Nuevo elemento", event -> nuevoEquipamiento());
         TableHeight.update(tablaEquipamiento, equipamientoFiltrado.size(), 300);
     }

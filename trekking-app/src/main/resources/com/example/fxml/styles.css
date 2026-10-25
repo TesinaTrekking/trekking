@@ -496,6 +496,10 @@
   -fx-text-fill: #8b9bb0;
 }
 
+.table-empty-icon .sidebar-icon {
+  -fx-fill: #8b9bb0;
+}
+
 .table-empty-title {
   -fx-font-size: 16px;
   -fx-font-weight: bold;

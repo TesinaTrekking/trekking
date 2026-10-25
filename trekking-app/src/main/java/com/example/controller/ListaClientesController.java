@@ -179,6 +179,7 @@ public class ListaClientesController implements Initializable {
         TableEmptyState.update(tablaClientes, hayClientes, filtrosActivos,
                 "Todavía no hay clientes", "Agrega un Cliente para empezar a planificar Salidas.",
                 "No hay clientes que coincidan", "Prueba con otro DNI, nombre o apellido.",
+                "GROUPOFF",
                 "+ Nuevo Cliente", event -> {
                     try {
                         irAgregarCliente(event);

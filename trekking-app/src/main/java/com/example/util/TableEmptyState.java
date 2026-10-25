@@ -15,8 +15,23 @@ public final class TableEmptyState {
 
     public static Node create(String title, String description, String actionText,
             EventHandler<ActionEvent> action) {
-        Label icon = new Label("▤");
-        icon.getStyleClass().add("table-empty-icon");
+        return create(null, title, description, actionText, action);
+    }
+
+    public static Node create(String iconFileName, String title, String description,
+            String actionText, EventHandler<ActionEvent> action) {
+        Node icon;
+        if (iconFileName == null || iconFileName.isBlank()) {
+            Label defaultIcon = new Label("▤");
+            defaultIcon.getStyleClass().add("table-empty-icon");
+            icon = defaultIcon;
+        } else {
+            var graphic = SidebarIcon.load(iconFileName + ".svg");
+            graphic.setScaleX(1.7);
+            graphic.setScaleY(1.7);
+            graphic.getStyleClass().add("table-empty-icon");
+            icon = graphic;
+        }
         Label heading = new Label(title);
         heading.getStyleClass().add("table-empty-title");
         heading.setAlignment(Pos.CENTER);
@@ -43,8 +58,16 @@ public final class TableEmptyState {
             String emptyTitle, String emptyDescription,
             String noResultsTitle, String noResultsDescription,
             String actionText, EventHandler<ActionEvent> action) {
+        update(table, hasRecords, filtersActive, emptyTitle, emptyDescription,
+                noResultsTitle, noResultsDescription, null, actionText, action);
+    }
+
+    public static void update(TableView<?> table, boolean hasRecords, boolean filtersActive,
+            String emptyTitle, String emptyDescription,
+            String noResultsTitle, String noResultsDescription,
+            String iconFileName, String actionText, EventHandler<ActionEvent> action) {
         boolean noMatches = hasRecords && filtersActive;
-        table.setPlaceholder(create(
+        table.setPlaceholder(create(iconFileName,
                 noMatches ? noResultsTitle : emptyTitle,
                 noMatches ? noResultsDescription : emptyDescription,
                 actionText,

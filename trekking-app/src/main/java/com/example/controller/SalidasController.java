@@ -196,6 +196,7 @@ public class SalidasController {
         TableEmptyState.update(tablaSalidas, haySalidas, filtrosActivos,
                 "Todavía no hay Salidas", "Planifica una Salida para comenzar a organizar una actividad.",
                 "No hay Salidas que coincidan", "Prueba con otra Ruta, Cliente o estado.",
+                "EVENTBUSY",
                 "+ Nueva Salida", event -> iniciarWizard());
         TableHeight.update(tablaSalidas, filas.size(), 500);
     }

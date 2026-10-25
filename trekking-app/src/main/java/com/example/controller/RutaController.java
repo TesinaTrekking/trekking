@@ -487,6 +487,7 @@ public class RutaController implements Initializable {
                                 mostrarInactivas ? "Las rutas dadas de baja aparecerán aquí."
                                                 : "Crea una Ruta para empezar a planificar Salidas.",
                                 "No hay rutas que coincidan", "Prueba con otra búsqueda o cambia los filtros.",
+                                "MAP",
                                 "+ Nueva Ruta", event -> {
                                         try {
                                                 nuevaRuta();
