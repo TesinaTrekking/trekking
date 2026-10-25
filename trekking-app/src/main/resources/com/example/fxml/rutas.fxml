@@ -48,13 +48,6 @@
                                         <Button text="+ Nueva Ruta"
                                                 onAction="#nuevaRuta"
                                                 styleClass="action-add" />
-                                        <Button text="Editar"
-                                                onAction="#editarRuta"
-                                                styleClass="action-edit" />
-                                        <Button fx:id="eliminarButton"
-                                                text="Dar de baja"
-                                                onAction="#eliminarRuta"
-                                                styleClass="action-delete" />
                                 </HBox>
                         </HBox>
 
@@ -113,6 +106,7 @@
                                         <TableColumn fx:id="colDificultadFisica"
                                                 prefWidth="130.0"
                                                 text="Dificultad física" />
+                                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="90.0" />
 
                                 </columns>
 

@@ -40,14 +40,6 @@
                         styleClass="action-add"
                         onAction="#nuevoEquipamiento"/>
 
-                <Button text="Editar"
-                        styleClass="action-edit"
-                        onAction="#editarEquipamiento"/>
-
-                <Button text="Eliminar"
-                        styleClass="action-delete"
-                        onAction="#eliminarEquipamiento"/>
-
                 <Button text="Dados de baja"
                         styleClass="secondary-button"
                         onAction="#mostrarEquipamientoBaja"/>
@@ -85,6 +77,7 @@
                 <TableColumn fx:id="colEstado"
                              text="Estado"
                              prefWidth="150.0"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="85.0"/>
             </columns>
 
         </TableView>

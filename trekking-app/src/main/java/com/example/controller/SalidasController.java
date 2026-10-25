@@ -46,6 +46,7 @@ public class SalidasController {
     @FXML private TableColumn<Salida, String> colEstado;
     @FXML private TableColumn<Salida, String> colParticipantes;
     @FXML private TableColumn<Salida, String> colEquipamiento;
+    @FXML private TableColumn<Salida, Salida> colAcciones;
     @FXML private Label kpiProximas, kpiRutas, kpiClientes, kpiInventario;
     @FXML private TextField buscarField;
     @FXML private ComboBox<String> estadoFiltro;
@@ -59,6 +60,26 @@ public class SalidasController {
         colEstado.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().estado()));
         colParticipantes.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenParticipantes(data.getValue())));
         colEquipamiento.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenEquipamiento(data.getValue())));
+        colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
+        colAcciones.setCellFactory(column -> new TableCell<>() {
+            @Override protected void updateItem(Salida salida, boolean empty) {
+                super.updateItem(salida, empty);
+                if (empty || salida == null) { setGraphic(null); return; }
+                javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
+                actions.getChildren().addAll(
+                        com.example.util.RowActionButton.create("Editar salida", com.example.util.RowActionButton.Icon.EDIT, e -> { tablaSalidas.getSelectionModel().select(salida); editarSalida(); }),
+                        com.example.util.RowActionButton.create("Generar ficha PDF", com.example.util.RowActionButton.Icon.PDF, e -> { tablaSalidas.getSelectionModel().select(salida); generarFichaPDF(); }));
+                if ("planificada".equals(salida.estado())) {
+                    javafx.scene.control.Button cancelar = com.example.util.RowActionButton.create("Cancelar salida", com.example.util.RowActionButton.Icon.CANCEL, e -> { tablaSalidas.getSelectionModel().select(salida); cancelarSalida(); });
+                    cancelar.getStyleClass().add("row-action-danger");
+                    actions.getChildren().addAll(
+                            com.example.util.RowActionButton.create("Marcar realizada", com.example.util.RowActionButton.Icon.CHECK, e -> { tablaSalidas.getSelectionModel().select(salida); marcarRealizada(); }), cancelar);
+                }
+                actions.setAlignment(javafx.geometry.Pos.CENTER);
+                setAlignment(javafx.geometry.Pos.CENTER);
+                setGraphic(actions);
+            }
+        });
         estadoFiltro.setItems(FXCollections.observableArrayList(
                 "Todos los estados", "Planificada", "Realizada", "Cancelada"));
         actualizarIndicadores(); actualizarTabla();

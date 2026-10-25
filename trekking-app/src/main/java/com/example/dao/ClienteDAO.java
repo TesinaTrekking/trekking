@@ -314,6 +314,16 @@ public class ClienteDAO {
         }
     }
 
+    public void reactivarCliente(int id) {
+        String sql = "UPDATE clientes SET activo = 1, fecha_modificacion = CURRENT_DATE WHERE id = ?";
+        try (Connection conexion = ConexionDB.conectar(); PreparedStatement statement = conexion.prepareStatement(sql)) {
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("No se pudo reactivar el Cliente.", e);
+        }
+    }
+
     // =========================================================
     // OBTENER FICHA MÉDICA
     // =========================================================

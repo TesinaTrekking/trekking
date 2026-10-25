@@ -25,12 +25,6 @@
             <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
                 <Button text="+ Nuevo Cliente" onAction="#irAgregarCliente"
                         styleClass="action-add"/>
-                <Button text="Editar" onAction="#editarCliente"
-                        styleClass="action-edit"/>
-                <Button text="Eliminar" onAction="#eliminarCliente"
-                        styleClass="action-delete"/>
-                <Button text="Abrir ficha" onAction="#abrirFichaMedica"
-                                styleClass="secondary-button"/>
             </HBox>
         </HBox>
         <HBox spacing="10.0" alignment="CENTER_LEFT">
@@ -50,6 +44,7 @@
                 <TableColumn fx:id="colTelefono" prefWidth="110.0" text="Telefono"/>
                 <TableColumn fx:id="colSexo" prefWidth="120.0" text="Sexo"/>
                 <TableColumn fx:id="colActivo" prefWidth="80.0" text="Activo"/>
+                <TableColumn fx:id="colAcciones" prefWidth="110.0" text="Acciones"/>
             </columns>
         </TableView>
     </children>

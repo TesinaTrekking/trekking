@@ -48,6 +48,7 @@ public class EquipamientoController {
 
     @FXML
     private TableColumn<Equipamiento, String> colEstado;
+    @FXML private TableColumn<Equipamiento, Equipamiento> colAcciones;
 
     @FXML
     public void initialize() {
@@ -72,8 +73,54 @@ public class EquipamientoController {
 
         colEstado.setCellValueFactory(
                 new PropertyValueFactory<>("estado"));
+        colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
+
+        tablaEquipamiento.setEditable(true);
+        configurarTextoInline(colNombre, "nombre");
+        colCategoria.setCellFactory(javafx.scene.control.cell.ComboBoxTableCell.forTableColumn(
+                javafx.collections.FXCollections.observableArrayList(Equipamiento.CATEGORIAS)));
+        colCategoria.setOnEditCommit(event -> guardarTextoInline(event.getRowValue(), "categoria", event.getNewValue()));
+        colCantidad.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn(new javafx.util.converter.IntegerStringConverter()));
+        colCantidad.setOnEditCommit(event -> {
+            Equipamiento item = event.getRowValue();
+            try {
+                if (event.getNewValue() == null || event.getNewValue() < 0) throw new IllegalArgumentException("El total debe ser un entero no negativo.");
+                EquipamientoDAO.actualizar(new Equipamiento(item.getId(), item.getNombre(), item.getCategoria(), event.getNewValue(), item.getEstado()));
+                cargarEquipamiento();
+            } catch (RuntimeException ex) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar el total", ex.getMessage()); cargarEquipamiento(); }
+        });
+
+        colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override protected void updateItem(Equipamiento item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
+                javafx.scene.control.Button baja = com.example.util.RowActionButton.create("Dar de baja", com.example.util.RowActionButton.Icon.DELETE, e -> confirmarBaja(item));
+                baja.getStyleClass().add("row-action-danger");
+                actions.getChildren().addAll(
+                        com.example.util.RowActionButton.create("Editar elemento", com.example.util.RowActionButton.Icon.EDIT, e -> abrirFormulario(item)), baja);
+                actions.setAlignment(javafx.geometry.Pos.CENTER);
+                setAlignment(javafx.geometry.Pos.CENTER);
+                setGraphic(actions);
+            }
+        });
 
         cargarEquipamiento();
+    }
+
+    private void configurarTextoInline(TableColumn<Equipamiento, String> columna, String campo) {
+        columna.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn());
+        columna.setOnEditCommit(event -> guardarTextoInline(event.getRowValue(), campo, event.getNewValue()));
+    }
+
+    private void guardarTextoInline(Equipamiento item, String campo, String valor) {
+            String nombre = campo.equals("nombre") ? valor.trim() : item.getNombre();
+            String categoria = campo.equals("categoria") ? valor : item.getCategoria();
+            if (nombre.isBlank() || !Equipamiento.categoriaValida(categoria)) {
+                mostrarAlerta(Alert.AlertType.ERROR, "Dato inválido", "El nombre y una categoría válida son obligatorios."); cargarEquipamiento(); return;
+            }
+            try { EquipamientoDAO.actualizar(new Equipamiento(item.getId(), nombre, categoria, item.getCantidad(), item.getEstado())); cargarEquipamiento(); }
+            catch (RuntimeException ex) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar el cambio", ex.getMessage()); cargarEquipamiento(); }
     }
 
     private void cargarEquipamiento() {
@@ -151,6 +198,18 @@ public class EquipamientoController {
                     Alert.AlertType.INFORMATION,
                     "Equipamiento",
                     "Elemento dado de baja correctamente.");
+        }
+    }
+
+    private void confirmarBaja(Equipamiento seleccionado) {
+        int reservada = EquipamientoDAO.obtenerCantidadReservada(seleccionado.getId());
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Dar de baja elemento de inventario");
+        confirmacion.setHeaderText(null);
+        confirmacion.setContentText("¿Dar de baja «" + seleccionado.getNombre() + "»? Se excluirá del uso activo."
+                + (reservada > 0 ? " Las " + reservada + " unidades reservadas por Salidas planificadas se conservan." : ""));
+        if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            EquipamientoDAO.eliminar(seleccionado.getId()); cargarEquipamiento();
         }
     }
 

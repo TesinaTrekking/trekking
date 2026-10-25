@@ -61,6 +61,8 @@ public class ListaClientesController implements Initializable {
     @FXML
     private TableColumn<Cliente, java.time.LocalDate> colFechaNacimiento;
 
+    @FXML private TableColumn<Cliente, Cliente> colAcciones;
+
     private final ClienteDAO clienteDAO = new ClienteDAO();
 
     private FilteredList<Cliente> clientesFiltrados;
@@ -94,6 +96,44 @@ public class ListaClientesController implements Initializable {
 
         colActivo.setCellValueFactory(
                 new PropertyValueFactory<>("activo"));
+        colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
+
+        tablaClientes.setEditable(true);
+        tablaClientes.setRowFactory(table -> new javafx.scene.control.TableRow<>() {
+            @Override protected void updateItem(Cliente cliente, boolean empty) {
+                super.updateItem(cliente, empty);
+                setEditable(!empty && cliente != null && cliente.isActivo());
+            }
+        });
+        configurarTextoInline(colNombre, "nombre"); configurarTextoInline(colApellido, "apellido");
+        configurarTextoInline(colEmail, "email"); configurarTextoInline(colTelefono, "telefono");
+        colSexo.setCellFactory(javafx.scene.control.cell.ComboBoxTableCell.forTableColumn(
+                javafx.collections.FXCollections.observableArrayList("Masculino", "Femenino", "No binario", "Otro", "Prefiero no decir")));
+        colSexo.setOnEditCommit(event -> guardarCampoInline(event.getRowValue(), "sexo", event.getNewValue()));
+        colFechaNacimiento.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn(new javafx.util.converter.LocalDateStringConverter()));
+        colFechaNacimiento.setOnEditCommit(event -> {
+            Cliente c = event.getRowValue();
+            if (event.getNewValue() == null) { mostrarAlerta(Alert.AlertType.ERROR, "Fecha inválida", "Indica una fecha válida."); cargarClientes(); return; }
+            guardarCampoInline(c, "fecha", event.getNewValue().toString());
+        });
+
+        colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override protected void updateItem(Cliente cliente, boolean empty) {
+                super.updateItem(cliente, empty);
+                if (empty || cliente == null) { setGraphic(null); return; }
+                javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
+                actions.getChildren().addAll(
+                        com.example.util.RowActionButton.create("Editar cliente", com.example.util.RowActionButton.Icon.EDIT, e -> abrirEdicion(cliente)),
+                        com.example.util.RowActionButton.create("Abrir ficha médica", com.example.util.RowActionButton.Icon.MEDICAL, e -> abrirFichaMedica(cliente)),
+                        com.example.util.RowActionButton.create(cliente.isActivo() ? "Dar de baja" : "Reactivar",
+                                cliente.isActivo() ? com.example.util.RowActionButton.Icon.DELETE : com.example.util.RowActionButton.Icon.RESTORE,
+                                e -> cambiarEstado(cliente)));
+                if (cliente.isActivo()) actions.getChildren().get(2).getStyleClass().add("row-action-danger");
+                actions.setAlignment(javafx.geometry.Pos.CENTER);
+                setAlignment(javafx.geometry.Pos.CENTER);
+                setGraphic(actions);
+            }
+        });
 
         buscarField.textProperty().addListener(
                 (observable, anterior, actual) -> aplicarFiltros());
@@ -101,6 +141,33 @@ public class ListaClientesController implements Initializable {
         mostrarInactivosCheckBox.selectedProperty().addListener(
                 (observable, anterior, actual) -> aplicarFiltros());
 
+        cargarClientes();
+    }
+
+    private void configurarTextoInline(TableColumn<Cliente, String> columna, String campo) {
+        columna.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn());
+        columna.setOnEditCommit(event -> guardarCampoInline(event.getRowValue(), campo, event.getNewValue()));
+    }
+
+    private void guardarCampoInline(Cliente c, String campo, String valor) {
+        if (!c.isActivo()) { mostrarAlerta(Alert.AlertType.WARNING, "Cliente inactivo", "Reactiva el Cliente antes de editar sus celdas."); cargarClientes(); return; }
+        String nombre = campo.equals("nombre") ? valor.trim() : c.getNombre();
+        String apellido = campo.equals("apellido") ? valor.trim() : c.getApellido();
+        String email = campo.equals("email") ? valor.trim() : c.getEmail();
+        String telefono = campo.equals("telefono") ? valor.trim() : c.getTelefono();
+        String sexo = campo.equals("sexo") ? valor : c.getSexo();
+        java.time.LocalDate fecha = c.getFechaNacimiento();
+        try { if (campo.equals("fecha")) fecha = java.time.LocalDate.parse(valor); }
+        catch (RuntimeException ex) { mostrarAlerta(Alert.AlertType.ERROR, "Fecha inválida", "Indica una fecha válida."); cargarClientes(); return; }
+        String error = ClienteValidator.validar(c.getDni(), nombre, apellido, fecha, email == null ? "" : email,
+                telefono == null ? "" : telefono, sexo, c.getContactoEmergenciaNombre(),
+                c.getContactoEmergenciaTelefono(), c.getContactoEmergenciaRelacion(), c.isAutorizacionMenores(),
+                c.getTutorNombre(), c.getTutorApellido(), c.getTutorDni(), c.getTutorTelefono());
+        if (error != null) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar el cambio", error); cargarClientes(); return; }
+        boolean ok = clienteDAO.actualizarCliente(c.getId(), c.getDni(), nombre, apellido, fecha, email, telefono, sexo,
+                c.getContactoEmergenciaNombre(), c.getContactoEmergenciaTelefono(), c.getContactoEmergenciaRelacion(), c.isActivo(),
+                c.isAutorizacionMenores(), c.getTutorNombre(), c.getTutorApellido(), c.getTutorDni(), c.getTutorTelefono(), null, null, false);
+        if (!ok) mostrarAlerta(Alert.AlertType.ERROR, "No se pudo guardar", "El Cliente conserva sus datos anteriores.");
         cargarClientes();
     }
 
@@ -199,6 +266,14 @@ public class ListaClientesController implements Initializable {
         }
     }
 
+    private void abrirEdicion(Cliente clienteSeleccionado) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fxml/editar-cliente.fxml"));
+            loader.setController(new EditarClienteController(clienteSeleccionado));
+            NavigationShell.setRoot(tablaClientes.getScene(), loader.load());
+        } catch (IOException e) { mostrarAlerta(Alert.AlertType.ERROR, "No se pudo abrir la edición", e.getMessage()); }
+    }
+
     @FXML
     private void abrirFichaMedica() {
 
@@ -245,6 +320,11 @@ public class ListaClientesController implements Initializable {
         }
     }
 
+    private void abrirFichaMedica(Cliente clienteSeleccionado) {
+        tablaClientes.getSelectionModel().select(clienteSeleccionado);
+        abrirFichaMedica();
+    }
+
     @FXML
     private void eliminarCliente() {
 
@@ -288,6 +368,19 @@ public class ListaClientesController implements Initializable {
                     "Baja realizada",
                     "El cliente ya no figura como activo.");
         }
+    }
+
+    private void cambiarEstado(Cliente cliente) {
+        String verbo = cliente.isActivo() ? "dar de baja" : "reactivar";
+        Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmar.setTitle("Confirmar " + verbo);
+        confirmar.setHeaderText(null);
+        confirmar.setContentText("¿Quieres " + verbo + " a " + cliente.getNombre() + " " + cliente.getApellido()
+                + (cliente.isActivo() ? "? Dejará de estar disponible para el uso activo." : "?"));
+        if (confirmar.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) != javafx.scene.control.ButtonType.OK) return;
+        if (cliente.isActivo()) clienteDAO.eliminarCliente(cliente.getId());
+        else clienteDAO.reactivarCliente(cliente.getId());
+        cargarClientes();
     }
 
     private void mostrarAlerta(

@@ -66,6 +66,7 @@
 
                     <TableColumn fx:id="colEstado"
                         text="Estado" />
+                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="60.0" />
 
                 </columns>
 

@@ -37,6 +37,7 @@ public class EquipamientoBajaController {
 
     @FXML
     private TableColumn<Equipamiento, String> colEstado;
+    @FXML private TableColumn<Equipamiento, Equipamiento> colAcciones;
 
     @FXML
     public void initialize() {
@@ -61,6 +62,20 @@ public class EquipamientoBajaController {
 
         colEstado.setCellValueFactory(
                 new PropertyValueFactory<>("estado"));
+        colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
+        colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override protected void updateItem(Equipamiento item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                javafx.scene.control.Button reactivar = com.example.util.RowActionButton.create("Reactivar elemento", com.example.util.RowActionButton.Icon.RESTORE, e -> {
+                Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION, "¿Reactivar «" + item.getNombre() + "»? Volverá al uso activo.", javafx.scene.control.ButtonType.CANCEL, javafx.scene.control.ButtonType.OK);
+                confirmacion.setTitle("Reactivar elemento"); confirmacion.setHeaderText(null);
+                if (confirmacion.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) { EquipamientoDAO.reactivar(item.getId()); cargarEquipamientoBaja(); }
+                });
+                setAlignment(javafx.geometry.Pos.CENTER);
+                setGraphic(reactivar);
+            }
+        });
 
         cargarEquipamientoBaja();
     }

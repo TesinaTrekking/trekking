@@ -18,10 +18,6 @@
         <VBox spacing="4"><Label text="Salidas" styleClass="brand-title"/>
             <Label text="Planificación y seguimiento de actividades" styleClass="brand-subtitle"/></VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnRealizada" text="Marcar realizada" onAction="#marcarRealizada" styleClass="action-edit"/>
-        <Button fx:id="btnCancelar" text="Cancelar Salida" onAction="#cancelarSalida" styleClass="action-delete"/>
-        <Button text="Editar Salida" onAction="#editarSalida" styleClass="action-edit"/>
-        <Button text="Generar ficha PDF" onAction="#generarFichaPDF" styleClass="action-edit"/>
     </HBox>
     <HBox spacing="12" alignment="CENTER_LEFT">
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Salidas próximas (7 días)" styleClass="form-label"/><Label fx:id="kpiProximas" text="0" styleClass="brand-title"/></VBox>
@@ -42,6 +38,7 @@
             <TableColumn fx:id="colParticipantes" text="Participantes" prefWidth="260"/>
             <TableColumn fx:id="colEquipamiento" text="Equipamiento asignado" prefWidth="260"/>
             <TableColumn fx:id="colEstado" text="Estado" prefWidth="160"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="125"/>
         </columns>
     </TableView>
 </VBox>

@@ -239,6 +239,48 @@
   -fx-text-fill: #d93025;
 }
 
+.button.row-action-button {
+  -fx-background-color: transparent;
+  -fx-padding: 3px;
+  -fx-min-width: 24px;
+  -fx-pref-width: 24px;
+  -fx-max-width: 24px;
+  -fx-min-height: 24px;
+  -fx-pref-height: 24px;
+  -fx-max-height: 24px;
+  -fx-background-radius: 5px;
+  -fx-cursor: hand;
+}
+
+.row-action-icon {
+  -fx-fill: #5f6368;
+  -fx-scale-x: 0.75;
+  -fx-scale-y: 0.75;
+}
+
+.row-action-pdf-label {
+  -fx-fill: #b42318;
+  -fx-font-size: 5.5px;
+  -fx-font-weight: bold;
+  -fx-translate-y: 4px;
+}
+
+.button.row-action-button:hover {
+  -fx-background-color: #e8edf3;
+}
+
+.button.row-action-button:hover .row-action-icon {
+  -fx-fill: #193153;
+}
+
+.button.row-action-button.row-action-danger .row-action-icon {
+  -fx-fill: #b42318;
+}
+
+.button.row-action-button.row-action-danger:hover {
+  -fx-background-color: #fce8e6;
+}
+
 .button,
 .text-field,
 .combo-box,

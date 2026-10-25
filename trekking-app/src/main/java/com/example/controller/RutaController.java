@@ -68,6 +68,7 @@ public class RutaController implements Initializable {
 
         @FXML
         private TableColumn<Ruta, String> colDificultadFisica;
+        @FXML private TableColumn<Ruta, Ruta> colAcciones;
 
         @FXML
         private TextField buscarField;
@@ -83,9 +84,6 @@ public class RutaController implements Initializable {
 
         @FXML
         private CheckBox mostrarInactivasCheckBox;
-
-        @FXML
-        private Button eliminarButton;
 
         @FXML
         private ListView<Checkpoint> checkpointsRutaListView;
@@ -118,6 +116,45 @@ public class RutaController implements Initializable {
 
                 colDificultadFisica.setCellValueFactory(
                                 new PropertyValueFactory<>("dificultadFisica"));
+                colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
+
+                tablaRutas.setEditable(true);
+                tablaRutas.setRowFactory(table -> new javafx.scene.control.TableRow<>() {
+                        @Override protected void updateItem(Ruta ruta, boolean empty) {
+                                super.updateItem(ruta, empty);
+                                setEditable(!empty && ruta != null && rutaDAO.estaActiva(ruta.getId()));
+                        }
+                });
+                configurarTextoInline(colNombre, "nombre");
+                configurarComboInline(colTipoTerreno, "terreno", List.of("Rocoso", "Boscoso", "Sendero", "Mixto"));
+                configurarComboInline(colDificultadTecnica, "tecnica", List.of("Baja", "Media", "Alta"));
+                configurarComboInline(colDificultadFisica, "fisica", List.of("Baja", "Media", "Alta"));
+                colAltitudMaxima.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn(new javafx.util.converter.DoubleStringConverter()));
+                colAltitudMaxima.setOnEditCommit(event -> {
+                        Ruta ruta = event.getRowValue();
+                        try {
+                                if (event.getNewValue() == null || event.getNewValue() < 0) throw new IllegalArgumentException("La altitud debe ser mayor o igual a cero.");
+                                ruta.setAltitudMaxima(event.getNewValue()); guardarRutaInline(ruta);
+                        } catch (RuntimeException ex) { mostrarAlerta("Dato inválido", ex.getMessage()); cargarRutas(); }
+                });
+
+                colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+                        @Override protected void updateItem(Ruta ruta, boolean empty) {
+                                super.updateItem(ruta, empty);
+                                if (empty || ruta == null) { setGraphic(null); return; }
+                                boolean activa = rutaDAO.estaActiva(ruta.getId());
+                                javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
+                                Button estado = com.example.util.RowActionButton.create(activa ? "Dar de baja" : "Reactivar",
+                                        activa ? com.example.util.RowActionButton.Icon.DELETE : com.example.util.RowActionButton.Icon.RESTORE,
+                                        e -> cambiarEstado(ruta));
+                                if (activa) estado.getStyleClass().add("row-action-danger");
+                                actions.getChildren().addAll(
+                                        com.example.util.RowActionButton.create("Editar ruta", com.example.util.RowActionButton.Icon.EDIT, e -> abrirEdicion(ruta)), estado);
+                                actions.setAlignment(javafx.geometry.Pos.CENTER);
+                                setAlignment(javafx.geometry.Pos.CENTER);
+                                setGraphic(actions);
+                        }
+                });
 
                 configurarCheckpoints();
                 configurarEquipamiento();
@@ -130,10 +167,45 @@ public class RutaController implements Initializable {
                 tablaRutas.getSelectionModel()
                                 .selectedItemProperty()
                                 .addListener((observable, anterior, actual) -> {
-                                        actualizarEstadoBotonEliminar();
                                         cargarCheckpointsDeRuta(actual);
                                         cargarEquipamientoDeRuta(actual);
                                 });
+        }
+
+        private void configurarTextoInline(TableColumn<Ruta, String> columna, String campo) {
+                columna.setCellFactory(javafx.scene.control.cell.TextFieldTableCell.forTableColumn());
+                columna.setOnEditCommit(event -> {
+                        Ruta ruta = event.getRowValue(); String valor = event.getNewValue() == null ? "" : event.getNewValue().trim();
+                        if (valor.isBlank()) { mostrarAlerta("Dato inválido", "El valor no puede estar vacío."); cargarRutas(); return; }
+                        switch (campo) {
+                                case "nombre" -> { if (!Ruta.nombreValido(valor)) { mostrarAlerta("Nombre inválido", "Usa palabras separadas por espacios."); cargarRutas(); return; } ruta.setNombre(Ruta.formatearNombre(valor)); }
+                                case "terreno" -> ruta.setTipoTerreno(valor);
+                                case "tecnica" -> ruta.setDificultadTecnica(valor);
+                                case "fisica" -> ruta.setDificultadFisica(valor);
+                                default -> { return; }
+                        }
+                        guardarRutaInline(ruta);
+                });
+        }
+
+        private void configurarComboInline(TableColumn<Ruta, String> columna, String campo, List<String> opciones) {
+                columna.setCellFactory(javafx.scene.control.cell.ComboBoxTableCell.forTableColumn(FXCollections.observableArrayList(opciones)));
+                columna.setOnEditCommit(event -> {
+                        Ruta ruta = event.getRowValue(); String valor = event.getNewValue();
+                        switch (campo) {
+                                case "terreno" -> ruta.setTipoTerreno(valor);
+                                case "tecnica" -> ruta.setDificultadTecnica(valor);
+                                case "fisica" -> ruta.setDificultadFisica(valor);
+                                default -> { return; }
+                        }
+                        guardarRutaInline(ruta);
+                });
+        }
+
+        private void guardarRutaInline(Ruta ruta) {
+                if (!rutaDAO.estaActiva(ruta.getId())) { mostrarAlerta("Ruta inactiva", "Reactiva la Ruta antes de editar sus celdas."); cargarRutas(); return; }
+                if (!rutaDAO.actualizar(ruta)) { mostrarAlerta("No se pudo guardar", "La Ruta conserva sus datos anteriores."); }
+                cargarRutas(); tablaRutas.getSelectionModel().select(ruta);
         }
 
         private void configurarCheckpoints() {
@@ -245,8 +317,6 @@ public class RutaController implements Initializable {
                 tablaRutas.setItems(rutasFiltradas);
 
                 aplicarFiltros();
-                actualizarEstadoBotonEliminar();
-
                 cargarCheckpointsDeRuta(
                                 tablaRutas.getSelectionModel().getSelectedItem());
                 cargarEquipamientoDeRuta(
@@ -297,6 +367,29 @@ public class RutaController implements Initializable {
 
 
                 NavigationShell.setRoot(stage.getScene(), root);
+        }
+
+        private void abrirEdicion(Ruta rutaSeleccionada) {
+                try {
+                        Stage stage = (Stage) tablaRutas.getScene().getWindow();
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fxml/ruta-form.fxml"));
+                        Parent root = loader.load();
+                        loader.<RutaFormController>getController().setRutaEnEdicion(rutaSeleccionada);
+                        NavigationShell.setRoot(stage.getScene(), root);
+                } catch (IOException ex) { mostrarAlerta("Error", "No se pudo abrir el formulario de Ruta."); }
+        }
+
+        private void cambiarEstado(Ruta ruta) {
+                boolean activa = rutaDAO.estaActiva(ruta.getId());
+                Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmacion.setTitle(activa ? "Dar de baja Ruta" : "Reactivar Ruta");
+                confirmacion.setHeaderText(null);
+                confirmacion.setContentText("¿" + (activa ? "Dar de baja" : "Reactivar") + " la Ruta «" + ruta.getNombre() + "»?"
+                                + (activa ? " Quedará excluida del uso activo." : ""));
+                if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+                boolean actualizado = activa ? rutaDAO.eliminar(ruta.getId()) : rutaDAO.reactivar(ruta.getId());
+                if (!actualizado) mostrarAlerta("Error", "No se pudo actualizar el estado de la Ruta.");
+                cargarRutas(); tablaRutas.getSelectionModel().select(ruta);
         }
 
         @FXML
@@ -445,15 +538,6 @@ public class RutaController implements Initializable {
                 alerta.setHeaderText(null);
                 alerta.setContentText(mensaje);
                 alerta.showAndWait();
-        }
-
-        private void actualizarEstadoBotonEliminar() {
-
-                Ruta rutaSeleccionada = tablaRutas.getSelectionModel().getSelectedItem();
-                boolean activa = rutaSeleccionada != null
-                                && rutaDAO.estaActiva(rutaSeleccionada.getId());
-                eliminarButton.setDisable(rutaSeleccionada == null);
-                eliminarButton.setText(activa ? "Dar de baja" : "Reactivar");
         }
 
         @FXML
