@@ -90,10 +90,15 @@
   -fx-background-color: transparent;
   -fx-background-radius: 7px;
   -fx-text-fill: #e3e9f2;
+  -fx-graphic-text-gap: 12px;
   -fx-font-family: "Segoe UI";
   -fx-font-size: 14px;
   -fx-padding: 12px 14px;
   -fx-cursor: hand;
+}
+
+.sidebar-button .sidebar-icon {
+  -fx-fill: #e3e9f2;
 }
 
 .sidebar-button:hover {
@@ -101,10 +106,18 @@
   -fx-text-fill: white;
 }
 
+.sidebar-button:hover .sidebar-icon {
+  -fx-fill: white;
+}
+
 .sidebar-button-active {
   -fx-background-color: #2c4770;
   -fx-text-fill: white;
   -fx-font-weight: bold;
+}
+
+.sidebar-button-active .sidebar-icon {
+  -fx-fill: white;
 }
 
 .sidebar-footer {

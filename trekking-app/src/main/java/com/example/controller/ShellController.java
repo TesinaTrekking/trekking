@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.util.NavigationShell;
+import com.example.util.SidebarIcon;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -48,6 +49,10 @@ public class ShellController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        btnSalidas.setGraphic(SidebarIcon.load("SALIDAS.svg"));
+        btnRutas.setGraphic(SidebarIcon.load("RUTAS.svg"));
+        btnInventario.setGraphic(SidebarIcon.load("INVENTARIO.svg"));
+        btnClientes.setGraphic(SidebarIcon.load("CLIENTES.svg"));
         refreshActiveStyles();
     }
 
