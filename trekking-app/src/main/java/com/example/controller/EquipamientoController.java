@@ -4,7 +4,8 @@ import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
-import com.example.util.TableCreateRow;
+import com.example.util.TableHeight;
+import com.example.util.ComboBoxDisplayLabel;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -15,6 +16,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.collections.transformation.FilteredList;
@@ -49,9 +51,11 @@ public class EquipamientoController {
     private TextField txtBuscar;
 
     @FXML
+    private ComboBox<String> estadoFiltroCombo;
+
+    @FXML
     private TableColumn<Equipamiento, String> colEstado;
     @FXML private TableColumn<Equipamiento, Equipamiento> colAcciones;
-    @FXML private javafx.scene.control.Button filaAltaButton;
 
     private ObservableList<Equipamiento> equipamientoOriginal;
     private FilteredList<Equipamiento> equipamientoFiltrado;
@@ -59,7 +63,7 @@ public class EquipamientoController {
     @FXML
     public void initialize() {
 
-        tablaEquipamiento.getStyleClass().add("table-with-create-row");
+        tablaEquipamiento.getStyleClass().add("listing-table");
         tablaEquipamiento.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         colId.setCellValueFactory(
@@ -104,16 +108,29 @@ public class EquipamientoController {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); return; }
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
-                javafx.scene.control.Button baja = com.example.util.RowActionButton.create("Dar de baja", com.example.util.RowActionButton.Icon.DELETE, e -> confirmarBaja(item));
-                baja.getStyleClass().add("row-action-danger");
-                actions.getChildren().addAll(
-                        com.example.util.RowActionButton.create("Editar elemento", com.example.util.RowActionButton.Icon.EDIT, e -> abrirFormulario(item)), baja);
+                if ("Inactivo".equals(estadoFiltroCombo.getValue())) {
+                    actions.getChildren().add(com.example.util.RowActionButton.create(
+                            "Reactivar elemento", com.example.util.RowActionButton.Icon.RESTORE,
+                            e -> confirmarReactivacion(item)));
+                } else {
+                    javafx.scene.control.Button baja = com.example.util.RowActionButton.create(
+                            "Dar de baja", com.example.util.RowActionButton.Icon.DELETE,
+                            e -> confirmarBaja(item));
+                    baja.getStyleClass().add("row-action-danger");
+                    actions.getChildren().addAll(
+                            com.example.util.RowActionButton.create("Editar elemento",
+                                    com.example.util.RowActionButton.Icon.EDIT, e -> abrirFormulario(item)), baja);
+                }
                 actions.setAlignment(javafx.geometry.Pos.CENTER);
                 setAlignment(javafx.geometry.Pos.CENTER);
                 setGraphic(actions);
             }
         });
 
+        estadoFiltroCombo.getItems().setAll("Activo", "Inactivo");
+        ComboBoxDisplayLabel.prefixValue(estadoFiltroCombo, "Estado");
+        estadoFiltroCombo.setValue("Activo");
+        estadoFiltroCombo.valueProperty().addListener((observable, anterior, actual) -> cargarEquipamiento());
         txtBuscar.textProperty().addListener((observable, anterior, actual) -> aplicarFiltro());
 
         cargarEquipamiento();
@@ -136,7 +153,9 @@ public class EquipamientoController {
 
     private void cargarEquipamiento() {
 
-        equipamientoOriginal = EquipamientoDAO.obtenerTodos();
+        equipamientoOriginal = "Inactivo".equals(estadoFiltroCombo.getValue())
+                ? EquipamientoDAO.obtenerDadosDeBaja()
+                : EquipamientoDAO.obtenerTodos();
         equipamientoFiltrado = new FilteredList<>(equipamientoOriginal, item -> true);
         tablaEquipamiento.setItems(equipamientoFiltrado);
         aplicarFiltro();
@@ -149,15 +168,18 @@ public class EquipamientoController {
                 || item.getNombre().toLowerCase().contains(consulta)
                 || item.getCategoria().toLowerCase().contains(consulta)
                 || item.getEstado().toLowerCase().contains(consulta));
+        tablaEquipamiento.setEditable("Activo".equals(estadoFiltroCombo.getValue()));
 
         boolean hayEquipamiento = equipamientoOriginal != null && !equipamientoOriginal.isEmpty();
         boolean filtroActivo = !consulta.isEmpty();
         TableEmptyState.update(tablaEquipamiento, hayEquipamiento, filtroActivo,
-                "Todavía no hay elementos", "Agrega elementos para administrar el Inventario.",
+                "Inactivo".equals(estadoFiltroCombo.getValue())
+                        ? "No hay elementos dados de baja" : "No hay elementos activos",
+                "Inactivo".equals(estadoFiltroCombo.getValue())
+                        ? "Los elementos dados de baja aparecerán aquí." : "Agrega elementos para administrar el Inventario.",
                 "No hay elementos que coincidan", "Prueba con otro nombre, categoría o estado.",
                 "+ Nuevo elemento", event -> nuevoEquipamiento());
-        TableCreateRow.update(tablaEquipamiento, filaAltaButton,
-                equipamientoFiltrado.size(), filtroActivo, 300);
+        TableHeight.update(tablaEquipamiento, equipamientoFiltrado.size(), 300);
     }
 
     @FXML
@@ -236,30 +258,17 @@ public class EquipamientoController {
         }
     }
 
-    @FXML
-    private void mostrarEquipamientoBaja() {
-
-        try {
-
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource(
-                            "/com/example/fxml/equipamiento-baja.fxml"));
-
-            Parent root = loader.load();
-
-            Stage stage = (Stage) tablaEquipamiento
-                    .getScene()
-                    .getWindow();
-
-            NavigationShell.setRoot(stage.getScene(), root);
-            stage.setTitle("Equipamiento dado de baja");
-
-        } catch (IOException e) {
-
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "No se pudo abrir la pantalla de equipos dados de baja.");
+    private void confirmarReactivacion(Equipamiento seleccionado) {
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION,
+                "¿Reactivar «" + seleccionado.getNombre() + "»? Volverá al uso activo.",
+                ButtonType.CANCEL, ButtonType.OK);
+        confirmacion.setTitle("Reactivar elemento");
+        confirmacion.setHeaderText(null);
+        if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            EquipamientoDAO.reactivar(seleccionado.getId());
+            cargarEquipamiento();
+            mostrarAlerta(Alert.AlertType.INFORMATION, "Inventario",
+                    "Elemento reactivado correctamente.");
         }
     }
 

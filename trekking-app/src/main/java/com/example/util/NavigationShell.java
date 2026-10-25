@@ -44,7 +44,6 @@ public final class NavigationShell {
             Map.entry("clientes", new Screen("Listado", "clients", "lista-clientes.fxml", List.of("Salidas", "Clientes", "Listado"))),
             Map.entry("inventario", new Screen("Listado", "inventory", "equipamiento.fxml", List.of("Salidas", "Inventario", "Listado"))),
             Map.entry("checkpoints", new Screen("Checkpoints", "routes", "checkpoints.fxml", List.of("Salidas", "Rutas", "Checkpoints"))),
-            Map.entry("inventario-baja", new Screen("Dados de baja", "inventory", "equipamiento-baja.fxml", List.of("Salidas", "Inventario", "Dados de baja"))),
             Map.entry("cliente-alta", new Screen("Alta de Cliente", "clients", "agregar-cliente.fxml", List.of("Salidas", "Clientes", "Listado", "Alta de Cliente"))),
             Map.entry("cliente-edicion", new Screen("Edición de Cliente", "clients", "editar-cliente.fxml", List.of("Salidas", "Clientes", "Listado", "Edición de Cliente"))),
             Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Listado", "Alta de Ruta"))),

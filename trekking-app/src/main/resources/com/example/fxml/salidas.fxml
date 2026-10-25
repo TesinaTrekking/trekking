@@ -29,9 +29,9 @@
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Clientes activos" styleClass="form-label"/><Label fx:id="kpiClientes" text="0" styleClass="brand-title"/></VBox>
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Inventario crítico" styleClass="form-label"/><Label fx:id="kpiInventario" text="0" styleClass="brand-title"/></VBox>
     </HBox>
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <TextField fx:id="buscarField" promptText="Buscar por Ruta o Cliente" HBox.hgrow="ALWAYS"/>
-        <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Estado"/>
+    <HBox styleClass="list-filter-bar">
+        <TextField fx:id="buscarField" promptText="Buscar por Ruta o Cliente" HBox.hgrow="ALWAYS" styleClass="list-search-field"/>
+        <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Estado" styleClass="list-filter-control"/>
         <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
     </HBox>
     <TableView fx:id="tablaSalidas" prefHeight="500">
@@ -45,10 +45,6 @@
             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="125"/>
         </columns>
     </TableView>
-    <HBox alignment="CENTER_LEFT" styleClass="table-add-row">
-        <Button fx:id="filaAltaButton" text="+ Nueva Salida"
-                onAction="#iniciarWizard" styleClass="table-add-button"/>
-    </HBox>
     </VBox>
     </content>
 </ScrollPane>

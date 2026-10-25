@@ -23,22 +23,22 @@
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
             <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
-                <Button text="+ Nuevo Checkpoint" onAction="#mostrarCrear"
-                        styleClass="action-add"/>
                 <Button fx:id="editarButton" text="Editar" onAction="#editarSeleccionado"
                         styleClass="action-edit"/>
                 <Button fx:id="eliminarButton" text="Eliminar" onAction="#eliminarSeleccionado"
                         styleClass="action-delete"/>
             </HBox>
         </HBox>
-        <HBox spacing="10.0" alignment="CENTER_LEFT">
-            <StackPane styleClass="search-container">
+        <HBox styleClass="list-filter-bar">
+            <StackPane styleClass="search-container" HBox.hgrow="ALWAYS">
                 <TextField fx:id="filterField" promptText="Filtrar por nombre, hora o descripción…"
-                           prefWidth="300.0" styleClass="search-field"/>
+                           prefWidth="300.0" styleClass="list-search-field"/>
                 <Button fx:id="clearButton" text="✕" onAction="#limpiarFiltro"
                         StackPane.alignment="CENTER_RIGHT"
                         styleClass="clear-search-button"/>
             </StackPane>
+            <Button text="+ Nuevo Checkpoint" onAction="#mostrarCrear"
+                    styleClass="action-add"/>
         </HBox>
         <TableView fx:id="tablaCheckpoints" prefHeight="400.0" prefWidth="600.0"
                    VBox.vgrow="ALWAYS">

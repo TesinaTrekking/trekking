@@ -10,7 +10,8 @@ import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
-import com.example.util.TableCreateRow;
+import com.example.util.TableHeight;
+import com.example.util.ComboBoxDisplayLabel;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -20,7 +21,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -37,7 +38,7 @@ public class ListaClientesController implements Initializable {
     private TextField buscarField;
 
     @FXML
-    private CheckBox mostrarInactivosCheckBox;
+    private ComboBox<String> estadoFiltroCombo;
 
     @FXML
     private TableColumn<Cliente, String> colNombre;
@@ -64,7 +65,6 @@ public class ListaClientesController implements Initializable {
     private TableColumn<Cliente, java.time.LocalDate> colFechaNacimiento;
 
     @FXML private TableColumn<Cliente, Cliente> colAcciones;
-    @FXML private javafx.scene.control.Button filaAltaButton;
 
     private final ClienteDAO clienteDAO = new ClienteDAO();
 
@@ -74,7 +74,7 @@ public class ListaClientesController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
 
-        tablaClientes.getStyleClass().add("table-with-create-row");
+        tablaClientes.getStyleClass().add("listing-table");
 
         tablaClientes.setColumnResizePolicy(
                 TableView.CONSTRAINED_RESIZE_POLICY);
@@ -144,7 +144,10 @@ public class ListaClientesController implements Initializable {
         buscarField.textProperty().addListener(
                 (observable, anterior, actual) -> aplicarFiltros());
 
-        mostrarInactivosCheckBox.selectedProperty().addListener(
+        estadoFiltroCombo.getItems().setAll("Activo", "Inactivo");
+        ComboBoxDisplayLabel.prefixValue(estadoFiltroCombo, "Estado");
+        estadoFiltroCombo.setValue("Activo");
+        estadoFiltroCombo.valueProperty().addListener(
                 (observable, anterior, actual) -> aplicarFiltros());
 
         cargarClientes();
@@ -198,8 +201,7 @@ public class ListaClientesController implements Initializable {
         String texto =
                 buscarField.getText().trim().toLowerCase();
 
-        boolean mostrarInactivos =
-                mostrarInactivosCheckBox.isSelected();
+        boolean filtrarActivos = "Activo".equals(estadoFiltroCombo.getValue());
 
         clientesFiltrados.setPredicate(cliente -> {
 
@@ -209,19 +211,14 @@ public class ListaClientesController implements Initializable {
                     || contiene(cliente.getNombre(), texto)
                     || contiene(cliente.getApellido(), texto);
 
-            return coincideTexto
-                    && (mostrarInactivos || cliente.isActivo());
+            return coincideTexto && cliente.isActivo() == filtrarActivos;
         });
         actualizarEstadoTabla();
     }
 
     private void actualizarEstadoTabla() {
         boolean filtrosActivos = !buscarField.getText().isBlank()
-                || (!mostrarInactivosCheckBox.isSelected() && clientesOriginales != null
-                        && !clientesOriginales.isEmpty()
-                        && clientesOriginales.stream().noneMatch(Cliente::isActivo));
-        boolean busquedaActiva = !buscarField.getText().isBlank()
-                || mostrarInactivosCheckBox.isSelected();
+                || "Inactivo".equals(estadoFiltroCombo.getValue());
         boolean hayClientes = clientesOriginales != null && !clientesOriginales.isEmpty();
         TableEmptyState.update(tablaClientes, hayClientes, filtrosActivos,
                 "Todavía no hay clientes", "Agrega un Cliente para empezar a planificar Salidas.",
@@ -233,9 +230,8 @@ public class ListaClientesController implements Initializable {
                         mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo abrir el alta de Cliente.");
                     }
                 });
-        TableCreateRow.update(tablaClientes, filaAltaButton,
-                tablaClientes.getItems() == null ? 0 : tablaClientes.getItems().size(),
-                busquedaActiva, 300);
+        TableHeight.update(tablaClientes,
+                tablaClientes.getItems() == null ? 0 : tablaClientes.getItems().size(), 300);
     }
 
     private boolean contiene(String valor, String texto) {

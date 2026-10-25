@@ -11,7 +11,8 @@ import com.example.model.RutaEquipamiento;
 import com.example.model.Equipamiento;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
-import com.example.util.TableCreateRow;
+import com.example.util.TableHeight;
+import com.example.util.ComboBoxDisplayLabel;
 
 import java.io.IOException;
 import java.net.URL;
@@ -28,7 +29,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
@@ -71,7 +71,6 @@ public class RutaController implements Initializable {
         @FXML
         private TableColumn<Ruta, String> colDificultadFisica;
         @FXML private TableColumn<Ruta, Ruta> colAcciones;
-        @FXML private Button filaAltaButton;
 
         @FXML
         private TextField buscarField;
@@ -86,7 +85,7 @@ public class RutaController implements Initializable {
         private ComboBox<String> filtroDificultadFisicaCombo;
 
         @FXML
-        private CheckBox mostrarInactivasCheckBox;
+        private ComboBox<String> filtroEstadoCombo;
 
         @FXML
         private ListView<Checkpoint> checkpointsRutaListView;
@@ -99,7 +98,7 @@ public class RutaController implements Initializable {
         @Override
         public void initialize(URL url, ResourceBundle rb) {
 
-                tablaRutas.getStyleClass().add("table-with-create-row");
+                tablaRutas.getStyleClass().add("listing-table");
                 tablaRutas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
                 colId.setCellValueFactory(
@@ -308,16 +307,11 @@ public class RutaController implements Initializable {
 
         private void cargarRutas() {
 
-                if (mostrarInactivasCheckBox.isSelected()) {
-
-                        rutas = FXCollections.observableArrayList(
-                                        rutaDAO.obtenerTodasIncluyendoInactivas());
-
-                } else {
-
-                        rutas = FXCollections.observableArrayList(
-                                        rutaDAO.obtenerTodas());
-                }
+                rutas = FXCollections.observableArrayList(switch (filtroEstadoCombo.getValue()) {
+                        case "Inactivo" -> rutaDAO.obtenerTodasInactivas();
+                        case "Activo" -> rutaDAO.obtenerTodas();
+                        default -> rutaDAO.obtenerTodasIncluyendoInactivas();
+                });
 
                 rutasFiltradas = new FilteredList<>(rutas);
 
@@ -454,28 +448,26 @@ public class RutaController implements Initializable {
 
         private void configurarFiltros() {
 
-                filtroTerrenoCombo.getItems().addAll(
-                                "Todos",
-                                "Rocoso",
-                                "Boscoso",
-                                "Sendero",
-                                "Mixto");
+                filtroTerrenoCombo.getItems().setAll(
+                                "Todos", "Rocoso", "Boscoso", "Sendero", "Mixto");
 
-                filtroDificultadTecnicaCombo.getItems().addAll(
-                                "Todas",
-                                "Baja",
-                                "Media",
-                                "Alta");
+                filtroDificultadTecnicaCombo.getItems().setAll(
+                                "Todas", "Baja", "Media", "Alta");
 
-                filtroDificultadFisicaCombo.getItems().addAll(
-                                "Todas",
-                                "Baja",
-                                "Media",
-                                "Alta");
+                filtroDificultadFisicaCombo.getItems().setAll(
+                                "Todas", "Baja", "Media", "Alta");
+
+                filtroEstadoCombo.getItems().setAll("Activo", "Inactivo");
+
+                ComboBoxDisplayLabel.prefixValue(filtroTerrenoCombo, "Terreno");
+                ComboBoxDisplayLabel.prefixValue(filtroDificultadTecnicaCombo, "Dificultad técnica");
+                ComboBoxDisplayLabel.prefixValue(filtroDificultadFisicaCombo, "Dificultad física");
+                ComboBoxDisplayLabel.prefixValue(filtroEstadoCombo, "Estado");
 
                 filtroTerrenoCombo.setValue("Todos");
                 filtroDificultadTecnicaCombo.setValue("Todas");
                 filtroDificultadFisicaCombo.setValue("Todas");
+                filtroEstadoCombo.setValue("Activo");
 
                 buscarField.textProperty().addListener(
                                 (observable, anterior, actual) -> aplicarFiltros());
@@ -489,7 +481,7 @@ public class RutaController implements Initializable {
                 filtroDificultadFisicaCombo.valueProperty().addListener(
                                 (observable, anterior, actual) -> aplicarFiltros());
 
-                mostrarInactivasCheckBox.selectedProperty().addListener(
+                filtroEstadoCombo.valueProperty().addListener(
                                 (observable, anterior, actual) -> cargarRutas());
         }
 
@@ -541,10 +533,13 @@ public class RutaController implements Initializable {
                                 || !"Todos".equals(filtroTerrenoCombo.getValue())
                                 || !"Todas".equals(filtroDificultadTecnicaCombo.getValue())
                                 || !"Todas".equals(filtroDificultadFisicaCombo.getValue())
-                                || mostrarInactivasCheckBox.isSelected();
+                                || "Inactivo".equals(filtroEstadoCombo.getValue());
                 boolean hayRutas = rutas != null && !rutas.isEmpty();
+                boolean mostrarInactivas = "Inactivo".equals(filtroEstadoCombo.getValue());
                 TableEmptyState.update(tablaRutas, hayRutas, filtrosActivos,
-                                "Todavía no hay rutas", "Crea una Ruta para empezar a planificar Salidas.",
+                                mostrarInactivas ? "No hay rutas inactivas" : "Todavía no hay rutas activas",
+                                mostrarInactivas ? "Las rutas dadas de baja aparecerán aquí."
+                                                : "Crea una Ruta para empezar a planificar Salidas.",
                                 "No hay rutas que coincidan", "Prueba con otra búsqueda o cambia los filtros.",
                                 "+ Nueva Ruta", event -> {
                                         try {
@@ -553,9 +548,8 @@ public class RutaController implements Initializable {
                                                 mostrarAlerta("Error", "No se pudo abrir el formulario de Ruta.");
                                         }
                                 });
-                TableCreateRow.update(tablaRutas, filaAltaButton,
-                                tablaRutas.getItems() == null ? 0 : tablaRutas.getItems().size(),
-                                filtrosActivos, 430);
+                TableHeight.update(tablaRutas,
+                                tablaRutas.getItems() == null ? 0 : tablaRutas.getItems().size(), 430);
         }
 
         private void mostrarAlerta(

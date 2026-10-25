@@ -199,7 +199,14 @@ public class RutaDAO {
     }
 
     public List<Ruta> obtenerTodas() {
+        return obtenerPorEstado(true);
+    }
 
+    public List<Ruta> obtenerTodasInactivas() {
+        return obtenerPorEstado(false);
+    }
+
+    private List<Ruta> obtenerPorEstado(boolean activa) {
         List<Ruta> rutas = new ArrayList<>();
 
         String sql = """
@@ -211,22 +218,24 @@ public class RutaDAO {
                     dificultad_tecnica,
                     dificultad_fisica
                 FROM rutas
-                WHERE activo = 1
+                WHERE activo = ?
                 """;
 
         try (
                 Connection conexion = ConexionDB.conectar();
-                Statement statement = conexion.createStatement();
-                ResultSet resultSet = statement.executeQuery(sql)) {
+                PreparedStatement statement = conexion.prepareStatement(sql)) {
 
-            while (resultSet.next()) {
-                rutas.add(mapRow(resultSet));
+            statement.setInt(1, activa ? 1 : 0);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    rutas.add(mapRow(resultSet));
+                }
             }
 
         } catch (SQLException e) {
 
             System.out.println(
-                    "Error al obtener las rutas: "
+                    "Error al obtener las rutas por estado: "
                             + e.getMessage());
         }
 

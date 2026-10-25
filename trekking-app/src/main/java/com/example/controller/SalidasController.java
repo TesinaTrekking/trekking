@@ -15,7 +15,8 @@ import com.example.model.Cliente;
 import com.example.model.AsignacionParticipante;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
-import com.example.util.TableCreateRow;
+import com.example.util.TableHeight;
+import com.example.util.ComboBoxDisplayLabel;
 import java.sql.SQLException;
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +43,6 @@ public class SalidasController {
     private final FichaOperativaPDFService fichaPDFService = new FichaOperativaPDFService();
     private final RutaDAO rutaDAO = new RutaDAO();
     @FXML private TableView<Salida> tablaSalidas;
-    @FXML private Button filaAltaButton;
     @FXML private TableColumn<Salida, Integer> colId;
     @FXML private TableColumn<Salida, LocalDate> colFecha;
     @FXML private TableColumn<Salida, String> colRuta;
@@ -58,7 +58,7 @@ public class SalidasController {
     private List<Salida> salidasOriginales = List.of();
 
     @FXML private void initialize() {
-        tablaSalidas.getStyleClass().add("table-with-create-row");
+        tablaSalidas.getStyleClass().add("listing-table");
         tablaSalidas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colId.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().id()));
         colFecha.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().fecha()));
@@ -87,8 +87,9 @@ public class SalidasController {
             }
         });
         estadoFiltro.setItems(FXCollections.observableArrayList(
-                "Todos los estados", "Planificada", "Realizada", "Cancelada"));
-        estadoFiltro.setValue("Todos los estados");
+                "Todos", "Planificada", "Realizada", "Cancelada"));
+        ComboBoxDisplayLabel.prefixValue(estadoFiltro, "Estado");
+        estadoFiltro.setValue("Todos");
         actualizarIndicadores(); actualizarTabla();
         tablaSalidas.getSelectionModel().selectedItemProperty().addListener((obs, anterior, seleccionada) -> actualizarAcciones(seleccionada));
         actualizarAcciones(null);
@@ -180,8 +181,8 @@ public class SalidasController {
         if (!(tablaSalidas.getItems() instanceof FilteredList<?> raw)) return;
         @SuppressWarnings("unchecked") FilteredList<Salida> filas = (FilteredList<Salida>) raw;
         String consulta = buscarField == null || buscarField.getText() == null ? "" : buscarField.getText().trim().toLowerCase(Locale.ROOT);
-        String estadoSeleccionado = estadoFiltro == null ? "Todos los estados" : estadoFiltro.getValue();
-        String estado = switch (estadoSeleccionado == null ? "Todos los estados" : estadoSeleccionado) {
+        String estadoSeleccionado = estadoFiltro == null ? "Todos" : estadoFiltro.getValue();
+        String estado = switch (estadoSeleccionado == null ? "Todos" : estadoSeleccionado) {
             case "Planificada" -> "planificada";
             case "Realizada" -> "realizada";
             case "Cancelada" -> "cancelada";
@@ -196,7 +197,7 @@ public class SalidasController {
                 "Todavía no hay Salidas", "Planifica una Salida para comenzar a organizar una actividad.",
                 "No hay Salidas que coincidan", "Prueba con otra Ruta, Cliente o estado.",
                 "+ Nueva Salida", event -> iniciarWizard());
-        TableCreateRow.update(tablaSalidas, filaAltaButton, filas.size(), filtrosActivos, 500);
+        TableHeight.update(tablaSalidas, filas.size(), 500);
     }
 
     private boolean contieneCliente(Salida salida, String consulta) {

@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -44,35 +43,39 @@
                                         <Label text="Administración de rutas" styleClass="brand-subtitle" />
                                 </VBox>
                                 <Region HBox.hgrow="ALWAYS" />
-                                <HBox spacing="8.0" alignment="CENTER_RIGHT" styleClass="toolbar-actions">
-                                        <Button text="+ Nueva Ruta"
-                                                onAction="#nuevaRuta"
-                                                styleClass="action-add" />
-                                </HBox>
                         </HBox>
 
-                        <HBox spacing="10.0"
-                                alignment="CENTER_LEFT">
+                        <HBox styleClass="list-filter-bar">
 
                                 <TextField fx:id="buscarField"
                                         promptText="Buscar por nombre"
-                                        prefWidth="200.0" 
-                                        styleClass="search-field"/>
+                                        prefWidth="200.0"
+                                        HBox.hgrow="ALWAYS"
+                                        styleClass="list-search-field"/>
 
                                 <ComboBox fx:id="filtroTerrenoCombo"
-                                        prefWidth="150.0"
-                                        promptText="Terreno" />
+                                        prefWidth="180.0"
+                                        promptText="Terreno"
+                                        styleClass="list-filter-control" />
 
                                 <ComboBox fx:id="filtroDificultadTecnicaCombo"
-                                        prefWidth="150.0"
-                                        promptText="Dificultad técnica" />
+                                        prefWidth="215.0"
+                                        promptText="Dificultad técnica"
+                                        styleClass="list-filter-control" />
 
                                 <ComboBox fx:id="filtroDificultadFisicaCombo"
-                                        prefWidth="150.0"
-                                        promptText="Dificultad física" />
+                                        prefWidth="205.0"
+                                        promptText="Dificultad física"
+                                        styleClass="list-filter-control" />
 
-                                <CheckBox fx:id="mostrarInactivasCheckBox"
-                                        text="Mostrar inactivas" />
+                                <ComboBox fx:id="filtroEstadoCombo"
+                                        prefWidth="150.0"
+                                        promptText="Estado"
+                                        styleClass="list-filter-control" />
+
+                                <Button text="+ Nueva Ruta"
+                                        onAction="#nuevaRuta"
+                                        styleClass="action-add" />
 
                         </HBox>
 
@@ -111,10 +114,6 @@
 
                         </TableView>
 
-                        <HBox alignment="CENTER_LEFT" styleClass="table-add-row">
-                                <Button fx:id="filaAltaButton" text="+ Nueva Ruta"
-                                        onAction="#nuevaRuta" styleClass="table-add-button" />
-                        </HBox>
 
                         <Label text="Checkpoints de la ruta seleccionada"
                                 styleClass="card-title" />
