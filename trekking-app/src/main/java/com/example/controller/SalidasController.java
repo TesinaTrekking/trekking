@@ -13,6 +13,7 @@ import com.example.dao.EquipamientoDAO;
 import com.example.dao.ClienteDAO;
 import com.example.model.Cliente;
 import com.example.model.AsignacionParticipante;
+import com.example.util.NavigationShell;
 import java.sql.SQLException;
 import java.io.File;
 import java.io.IOException;
@@ -342,13 +343,14 @@ public class SalidasController {
     }
 
     private final class WizardSalida {
+        private final Scene escenaAplicacion = tablaSalidas.getScene();
         private final RutaCheckpointDAO checkpointDAO = new RutaCheckpointDAO();
         private final List<AsignacionEquipamiento> asignaciones = new ArrayList<>();
         private final List<AsignacionParticipante> participantes = new ArrayList<>();
         private final ClienteDAO clienteDAO = new ClienteDAO();
-        private final Stage stage = new Stage();
         private final VBox content = new VBox(14);
         private final Label heading = new Label();
+        private final Label progress = new Label();
         private final DatePicker fecha = new DatePicker();
         private final ComboBox<Ruta> rutas = new ComboBox<>();
         private final ComboBox<String> modo = new ComboBox<>();
@@ -365,25 +367,17 @@ public class SalidasController {
         private final TextField buscarCliente = new TextField();
         private final ListView<AsignacionParticipante> listaParticipantes = new ListView<>();
         private List<Cliente> todosLosClientes = List.of();
-        private final TextField nuevoNombre = new TextField();
-        private final ComboBox<String> nuevaCategoria = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.CATEGORIAS));
-        private final ComboBox<String> nuevoEstado = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.ESTADOS));
-        private final TextField nuevoTotal = new TextField("0");
-        private final TextField nuevaCantidadAsignada = new TextField("1");
         private final Button anterior = new Button("Anterior"), siguiente = new Button("Siguiente"), cancelar = new Button("Cancelar");
         private int paso;
         private List<Ruta> rutasActivas;
 
         WizardSalida() {
-            stage.initOwner(tablaSalidas.getScene().getWindow()); stage.initModality(Modality.WINDOW_MODAL);
-            stage.setTitle("Nueva Salida");
             modo.setItems(FXCollections.observableArrayList("Elegir Ruta activa", "Crear Ruta nueva")); modo.setValue("Elegir Ruta activa");
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
             inventario.setConverter(new StringConverter<>() {
                 public String toString(Equipamiento item) { return item == null ? "" : item.getNombre() + " · disponible: " + item.getCantidadDisponible(); }
                 public Equipamiento fromString(String s) { return null; }
             });
-            nuevaCategoria.setValue("Campamento"); nuevoEstado.setValue("Disponible");
             listaAsignaciones.setCellFactory(view -> new ListCell<>() {
                 @Override protected void updateItem(AsignacionEquipamiento item, boolean empty) {
                     super.updateItem(item, empty);
@@ -405,7 +399,7 @@ public class SalidasController {
             buscarCliente.textProperty().addListener((o, a, b) -> actualizarClientesFiltrados());
             modo.valueProperty().addListener((o, a, b) -> render()); rutas.valueProperty().addListener((o,a,b) -> actualizarDetalle());
             anterior.setOnAction(e -> { if (paso > 0) { paso--; render(); } });
-            siguiente.setOnAction(e -> avanzar()); cancelar.setOnAction(e -> stage.close());
+            siguiente.setOnAction(e -> avanzar()); cancelar.setOnAction(e -> cancelarWizard());
             content.setStyle("-fx-padding: 22;");
         }
         private ComboBox<String> opciones(String... valores) { return new ComboBox<>(FXCollections.observableArrayList(valores)); }
@@ -414,12 +408,28 @@ public class SalidasController {
             inventario.setItems(FXCollections.observableArrayList(EquipamientoDAO.obtenerTodos()));
             todosLosClientes = clienteDAO.obtenerTodosLosClientes();
             render();
-            ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true);
-            stage.setScene(new Scene(scroll, 700, 680)); stage.showAndWait();
+            VBox encabezado = new VBox(6, new Label("Nueva Salida"), progress);
+            encabezado.getStyleClass().add("wizard-header");
+            ScrollPane scroll = new ScrollPane(content);
+            scroll.setFitToWidth(true);
+            scroll.setFitToHeight(true);
+            scroll.getStyleClass().add("wizard-scroll");
+            javafx.scene.layout.BorderPane root = new javafx.scene.layout.BorderPane();
+            root.setTop(encabezado);
+            root.setCenter(scroll);
+            root.setBottom(new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
+            root.getBottom().getStyleClass().add("wizard-actions");
+            NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
+            NavigationShell.setRoot(escenaAplicacion, root);
         }
         private void render() {
             String[] titulos = {"Paso 1 de 5 · Datos de la salida", "Paso 2 de 5 · Ruta", "Paso 3 de 5 · Equipamiento", "Paso 4 de 5 · Participantes", "Paso 5 de 5 · Revisión"};
-            heading.setText(titulos[paso]); content.getChildren().setAll(heading);
+            heading.setText(titulos[paso]);
+            progress.setText(java.util.stream.IntStream.range(0, titulos.length)
+                    .mapToObj(i -> (i < paso ? "✓ " : i == paso ? "● " : "○ ") + titulos[i].substring(titulos[i].indexOf('·') + 2))
+                    .collect(java.util.stream.Collectors.joining("     ")));
+            content.getChildren().clear();
+            content.getChildren().add(heading);
             if (paso == 0) { content.getChildren().addAll(new Label("Fecha de la salida *"), fecha); }
             if (paso == 1) {
                 content.getChildren().addAll(new Label("Selecciona una Ruta activa o crea una nueva"), modo);
@@ -439,10 +449,45 @@ public class SalidasController {
                 content.getChildren().add(revision);
             }
             anterior.setDisable(paso == 0); siguiente.setText(paso == 4 ? "Confirmar Salida" : "Siguiente");
-            content.getChildren().addAll(new javafx.scene.layout.Region(), new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
+        }
+        private boolean confirmarCambioDeSeccion() {
+            if (!hayCambios()) return true;
+            Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Hay datos ingresados en la Salida. ¿Quieres descartar el borrador?",
+                    ButtonType.CANCEL, ButtonType.OK);
+            confirmar.setTitle("Descartar Nueva Salida");
+            confirmar.setHeaderText("Cambiar de sección");
+            boolean descartar = confirmar.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+            if (descartar) NavigationShell.setNavigationGuard(escenaAplicacion, null);
+            return descartar;
+        }
+        private boolean hayCambios() {
+            return fecha.getValue() != null || rutas.getValue() != null || isCreandoRuta()
+                    || inventario.getValue() != null || !"1".equals(cantidadAsignada.getText().trim())
+                    || clientes.getValue() != null || !asignaciones.isEmpty()
+                    || !participantes.isEmpty() || !nombre.getText().isBlank()
+                    || !altitud.getText().isBlank() || terreno.getValue() != null
+                    || tecnica.getValue() != null || fisica.getValue() != null
+                    || !buscarCliente.getText().isBlank();
+        }
+        private void cancelarWizard() {
+            if (hayCambios() && !confirmarCambioDeSeccion()) return;
+            cerrarWizard();
+        }
+        private void cerrarWizard() {
+            NavigationShell.setNavigationGuard(escenaAplicacion, null);
+            try {
+                javafx.scene.Parent pagina = new javafx.fxml.FXMLLoader(
+                        getClass().getResource("/com/example/fxml/salidas.fxml")).load();
+                NavigationShell.setRoot(escenaAplicacion, pagina);
+            } catch (IOException ex) {
+                aviso(Alert.AlertType.ERROR, "No se pudo volver a Salidas", ex.getMessage());
+            }
         }
         private VBox campo(String titulo, TextField field) { return new VBox(4, new Label(titulo), field); }
         private void renderEquipamiento() {
+            listaAsignaciones.setPrefHeight(150);
+            listaAsignaciones.setMaxHeight(220);
             listaAsignaciones.setItems(FXCollections.observableArrayList(asignaciones));
             Button agregar = new Button("Agregar elemento"); agregar.setOnAction(e -> agregarExistente());
             Button quitar = new Button("Quitar seleccionado"); quitar.setOnAction(e -> {
@@ -451,12 +496,11 @@ public class SalidasController {
             });
             Button crear = new Button("Crear y agregar"); crear.setOnAction(e -> crearYAgregar());
             content.getChildren().addAll(new Label("Elementos activos · disponible = total menos reservas"),
-                    new javafx.scene.layout.HBox(8, inventario, cantidadAsignada, agregar), listaAsignaciones, quitar,
-                    new Label("Crear un Elemento de inventario para esta Salida"), campo("Nombre", nuevoNombre),
-                    new javafx.scene.layout.HBox(8, nuevaCategoria, nuevoEstado),
-                    new javafx.scene.layout.HBox(8, campo("Cantidad total", nuevoTotal), campo("Cantidad a asignar", nuevaCantidadAsignada)), crear);
+                    new javafx.scene.layout.HBox(8, inventario, cantidadAsignada, agregar), listaAsignaciones, quitar, crear);
         }
         private void renderParticipantes() {
+            listaParticipantes.setPrefHeight(150);
+            listaParticipantes.setMaxHeight(220);
             buscarCliente.setPromptText("Buscar por DNI, nombre o apellido");
             actualizarClientesFiltrados();
             listaParticipantes.setItems(FXCollections.observableArrayList(participantes));
@@ -491,7 +535,7 @@ public class SalidasController {
         }
         private void crearClienteParticipante() {
             Dialog<Cliente> dialog = new Dialog<>();
-            dialog.initOwner(stage); dialog.initModality(Modality.WINDOW_MODAL); dialog.setTitle("Nuevo Cliente para la Salida");
+            dialog.initOwner(escenaAplicacion.getWindow()); dialog.initModality(Modality.WINDOW_MODAL); dialog.setTitle("Nuevo Cliente para la Salida");
             ButtonType guardar = new ButtonType("Agregar a la Salida", ButtonBar.ButtonData.OK_DONE);
             dialog.getDialogPane().getButtonTypes().addAll(guardar, ButtonType.CANCEL);
             TextField dni = new TextField(), nombre = new TextField(), apellido = new TextField(), email = new TextField(), telefono = new TextField();
@@ -506,7 +550,7 @@ public class SalidasController {
             seleccionarFicha.setOnAction(e -> {
                 FileChooser selector = new FileChooser(); selector.setTitle("Seleccionar ficha médica");
                 selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos PDF", "*.pdf", "*.PDF"));
-                File archivo = selector.showOpenDialog(stage);
+                File archivo = selector.showOpenDialog(escenaAplicacion.getWindow());
                 if (archivo != null) { archivoFicha[0] = archivo; fichaMedica.setText(archivo.getName()); }
             });
             GridPane formulario = new GridPane(); formulario.setHgap(10); formulario.setVgap(7); formulario.setPadding(new javafx.geometry.Insets(12));
@@ -589,16 +633,35 @@ public class SalidasController {
             cantidadAsignada.setText("1"); renderEquipamiento();
         }
         private void crearYAgregar() {
-            String nombre = nuevoNombre.getText() == null ? "" : nuevoNombre.getText().trim();
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.initOwner(escenaAplicacion.getWindow());
+            dialog.initModality(Modality.WINDOW_MODAL);
+            dialog.setTitle("Nuevo Elemento de inventario");
+            ButtonType agregar = new ButtonType("Agregar a la Salida", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(agregar, ButtonType.CANCEL);
+            TextField nombreCampo = new TextField();
+            ComboBox<String> categoria = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.CATEGORIAS));
+            ComboBox<String> estado = new ComboBox<>(FXCollections.observableArrayList(Equipamiento.ESTADOS));
+            TextField totalCampo = new TextField("0"), cantidadCampo = new TextField("1");
+            categoria.setValue("Campamento"); estado.setValue("Disponible");
+            GridPane formulario = new GridPane(); formulario.setHgap(10); formulario.setVgap(8);
+            formulario.addRow(0, new Label("Nombre"), nombreCampo);
+            formulario.addRow(1, new Label("Categoría"), categoria);
+            formulario.addRow(2, new Label("Estado"), estado);
+            formulario.addRow(3, new Label("Cantidad total"), totalCampo);
+            formulario.addRow(4, new Label("Cantidad a asignar"), cantidadCampo);
+            dialog.getDialogPane().setContent(formulario);
+            if (dialog.showAndWait().orElse(ButtonType.CANCEL) != agregar) return;
+            String nombre = nombreCampo.getText() == null ? "" : nombreCampo.getText().trim();
             int total, cantidad;
-            try { total = Integer.parseInt(nuevoTotal.getText().trim()); cantidad = Integer.parseInt(nuevaCantidadAsignada.getText().trim()); }
+            try { total = Integer.parseInt(totalCampo.getText().trim()); cantidad = Integer.parseInt(cantidadCampo.getText().trim()); }
             catch (RuntimeException e) { total = -1; cantidad = 0; }
-            if (nombre.isBlank() || total < 0 || cantidad <= 0 || cantidad > total || nuevaCategoria.getValue() == null || nuevoEstado.getValue() == null) {
+            if (nombre.isBlank() || total < 0 || cantidad <= 0 || cantidad > total || categoria.getValue() == null || estado.getValue() == null) {
                 aviso(Alert.AlertType.WARNING, "Datos inválidos", "Completa el nombre, categoría y estado; el total debe ser no negativo y la asignación positiva, sin superar el total."); return;
             }
-            Equipamiento nuevo = new Equipamiento(0, nombre, nuevaCategoria.getValue(), total, nuevoEstado.getValue());
+            Equipamiento nuevo = new Equipamiento(0, nombre, categoria.getValue(), total, estado.getValue());
             asignaciones.add(new AsignacionEquipamiento(nuevo, cantidad, true));
-            nuevoNombre.clear(); nuevoTotal.setText("0"); nuevaCantidadAsignada.setText("1"); renderEquipamiento();
+            renderEquipamiento();
         }
         private void actualizarDetalle() {
             Ruta r = rutas.getValue();
@@ -668,7 +731,7 @@ public class SalidasController {
                 if (isCreandoRuta()) nueva = new Ruta(Ruta.normalizarNombre(nombre.getText()), Double.parseDouble(altitud.getText().trim()), terreno.getValue(), tecnica.getValue(), fisica.getValue());
                 else rutaId = rutas.getValue().getId();
                 salidaDAO.confirmar(fecha.getValue(), rutaId, nueva, List.copyOf(asignaciones), List.copyOf(participantes));
-                stage.close(); actualizarIndicadores(); actualizarTabla();
+                actualizarIndicadores(); actualizarTabla(); cerrarWizard();
             } catch (SQLException | RuntimeException ex) { aviso(Alert.AlertType.ERROR,"No se pudo confirmar la Salida",ex.getMessage()); }
         }
         private boolean isCreandoRuta() { return "Crear Ruta nueva".equals(modo.getValue()); }

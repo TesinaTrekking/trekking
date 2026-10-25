@@ -3,6 +3,7 @@ package com.example.util;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 import com.example.controller.ShellController;
 
@@ -23,6 +24,8 @@ public final class NavigationShell {
             NavigationShell.class.getName() + ".state";
     private static final String STYLESHEET =
             "/com/example/fxml/styles.css";
+    private static final String NAVIGATION_GUARD_KEY =
+            NavigationShell.class.getName() + ".navigationGuard";
 
     private static final List<NavigationItem> ITEMS = List.of(
             new NavigationItem("Salidas", "trips", "salidas.fxml"),
@@ -87,6 +90,10 @@ public final class NavigationShell {
             }
             controller = sc2;
         }
+        Object guard = scene.getProperties().get(NAVIGATION_GUARD_KEY);
+        if (guard instanceof BooleanSupplier canLeave && !canLeave.getAsBoolean()) {
+            return;
+        }
         try {
             Parent page = new FXMLLoader(
                     NavigationShell.class.getResource(
@@ -102,6 +109,12 @@ public final class NavigationShell {
                     "No se pudo abrir " + target.label() + ": " + e.getMessage());
             alert.showAndWait();
         }
+    }
+
+    /** Registers a page-specific check before replacing the central shell content. */
+    public static void setNavigationGuard(Scene scene, BooleanSupplier guard) {
+        if (guard == null) scene.getProperties().remove(NAVIGATION_GUARD_KEY);
+        else scene.getProperties().put(NAVIGATION_GUARD_KEY, guard);
     }
 
     private static void addStylesheet(Scene scene) {

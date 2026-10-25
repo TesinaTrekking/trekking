@@ -498,3 +498,28 @@
 .table-view .table-row-cell.salida-pendiente-vencida {
     -fx-background-color: #fff2e0;
 }
+.wizard-header {
+    -fx-padding: 22 26 14 26;
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #e3e8ef transparent;
+}
+.wizard-header > .label:first-child {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+.wizard-header .label {
+    -fx-text-fill: #26364a;
+}
+.wizard-scroll {
+    -fx-background: #f7f9fc;
+    -fx-background-color: transparent;
+}
+.wizard-scroll > .viewport {
+    -fx-background-color: #f7f9fc;
+}
+.wizard-actions {
+    -fx-padding: 14 26 18 26;
+    -fx-alignment: center-right;
+    -fx-background-color: white;
+    -fx-border-color: #e3e8ef transparent transparent transparent;
+}
