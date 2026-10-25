@@ -6,7 +6,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.SVGPath;
+import javafx.scene.transform.Scale;
+import javafx.scene.transform.Translate;
 
 /** Loads the path data from one of the sidebar's SVG icon resources. */
 public final class SidebarIcon {
@@ -17,7 +20,7 @@ public final class SidebarIcon {
 
     private SidebarIcon() { }
 
-    public static SVGPath load(String fileName) {
+    public static StackPane load(String fileName) {
         String resource = ICON_DIRECTORY + fileName;
         try (InputStream input = SidebarIcon.class.getResourceAsStream(resource)) {
             if (input == null) {
@@ -32,11 +35,18 @@ public final class SidebarIcon {
 
             SVGPath icon = new SVGPath();
             icon.setContent(matcher.group(1));
-            icon.setScaleX(ICON_SIZE / VIEWBOX_SIZE);
-            icon.setScaleY(ICON_SIZE / VIEWBOX_SIZE);
-            icon.setTranslateY(ICON_SIZE);
+            icon.getTransforms().addAll(
+                    new Scale(ICON_SIZE / VIEWBOX_SIZE, ICON_SIZE / VIEWBOX_SIZE, 0, 0),
+                    new Translate(0, ICON_SIZE));
             icon.getStyleClass().add("sidebar-icon");
-            return icon;
+            icon.setManaged(false);
+
+            StackPane graphic = new StackPane(icon);
+            graphic.setMinSize(ICON_SIZE, ICON_SIZE);
+            graphic.setPrefSize(ICON_SIZE, ICON_SIZE);
+            graphic.setMaxSize(ICON_SIZE, ICON_SIZE);
+            graphic.getStyleClass().add("sidebar-icon-container");
+            return graphic;
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo leer el icono del sidebar: " + resource, exception);
         }
