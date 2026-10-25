@@ -3,9 +3,12 @@ package com.example.util;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
+import javafx.scene.Node;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import java.net.URL;
+import java.util.Optional;
+import javafx.scene.control.ButtonType;
 
 /**
  * * Utilidades para mostrar alertas modales y aplicar el tema visual *
@@ -44,20 +47,27 @@ public final class AlertUtils {
         showAlert(Alert.AlertType.WARNING, owner, title, message);
     }
 
+    public static Optional<ButtonType> showAndWait(Alert alert, Node ownerNode) {
+        Window owner = ownerNode == null || ownerNode.getScene() == null
+                ? null
+                : ownerNode.getScene().getWindow();
+        return showAndWait(alert, owner);
+    }
+
+    public static Optional<ButtonType> showAndWait(Alert alert, Window owner) {
+        if (owner != null) {
+            alert.initOwner(owner);
+            alert.initModality(Modality.WINDOW_MODAL);
+        }
+        return alert.showAndWait();
+    }
+
     private static void showAlert(Alert.AlertType type, Window owner, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        configureModal(alert, owner);
         applyTheme(alert);
-        alert.showAndWait();
-    }
-
-    private static void configureModal(Alert alert, Window owner) {
-        if (owner != null) {
-            alert.initOwner(owner);
-        }
-        alert.initModality(Modality.WINDOW_MODAL);
+        showAndWait(alert, owner);
     }
 }

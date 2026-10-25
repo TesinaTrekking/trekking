@@ -9,6 +9,7 @@ import java.time.format.DateTimeParseException;
 import com.example.dao.ClienteDAO;
 import com.example.util.FormValidation;
 import com.example.util.NavigationShell;
+import com.example.util.AlertUtils;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -409,7 +410,7 @@ public class AgregarClienteController {
         alerta.setTitle(titulo);
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
-        alerta.showAndWait();
+        AlertUtils.showAndWait(alerta, dniField);
     }
 
     private String textoSeguro(String valor) {

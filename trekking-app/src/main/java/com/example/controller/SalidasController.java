@@ -17,6 +17,7 @@ import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
+import com.example.util.AlertUtils;
 import java.sql.SQLException;
 import java.io.File;
 import java.io.IOException;
@@ -141,7 +142,7 @@ public class SalidasController {
                 "¿Quieres " + accion + " la Salida " + salida.id() + "? Su reserva de stock se liberará y el estado no se podrá revertir desde el flujo normal.",
                 ButtonType.CANCEL, ButtonType.OK);
         confirmar.setTitle("Cerrar Salida"); confirmar.setHeaderText("Confirmar cierre");
-        if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+        if (AlertUtils.showAndWait(confirmar, tablaSalidas).orElse(ButtonType.CANCEL) != ButtonType.OK) return;
         try { salidaDAO.cambiarEstado(salida.id(), estado); actualizarIndicadores(); actualizarTabla(); }
         catch (SQLException e) { aviso(Alert.AlertType.ERROR, "No se pudo actualizar la Salida", e.getMessage()); }
     }
@@ -211,7 +212,7 @@ public class SalidasController {
     }
     private void aviso(Alert.AlertType tipo, String titulo, String mensaje) {
         Alert alert = new Alert(tipo); alert.setTitle(titulo); alert.setHeaderText(null);
-        alert.setContentText(mensaje == null ? "Ocurrió un error inesperado." : mensaje); alert.showAndWait();
+        alert.setContentText(mensaje == null ? "Ocurrió un error inesperado." : mensaje); AlertUtils.showAndWait(alert, tablaSalidas);
     }
 
     private final class EditorSalida {
@@ -284,7 +285,7 @@ public class SalidasController {
             refrescar.setOnAction(e -> {
                 Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Se reemplazarán los datos copiados de Ruta y todos sus Checkpoints. Se perderán las modificaciones locales de Checkpoints. Equipamiento y Participantes se conservarán.", ButtonType.CANCEL, ButtonType.OK);
                 confirm.setTitle("Actualizar desde ruta"); confirm.setHeaderText("¿Reemplazar la copia operativa?");
-                if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK && rutas.getValue() != null) {
+                if (AlertUtils.showAndWait(confirm, tablaSalidas).orElse(ButtonType.CANCEL) == ButtonType.OK && rutas.getValue() != null) {
                     cambiosRealizados = true;
                     actualizarDesdeRuta = true;
                     checkpointsGuardarEnRuta.clear();
@@ -490,7 +491,7 @@ public class SalidasController {
                     ButtonType.CANCEL, ButtonType.OK);
             confirmar.setTitle("Descartar cambios de Salida");
             confirmar.setHeaderText(contexto);
-            return confirmar.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+            return AlertUtils.showAndWait(confirmar, tablaSalidas).orElse(ButtonType.CANCEL) == ButtonType.OK;
         }
 
         private void cancelarEdicion() {
@@ -625,7 +626,7 @@ public class SalidasController {
                     ButtonType.CANCEL, ButtonType.OK);
             confirmar.setTitle("Descartar Nueva Salida");
             confirmar.setHeaderText("Cambiar de sección");
-            boolean descartar = confirmar.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+            boolean descartar = AlertUtils.showAndWait(confirmar, tablaSalidas).orElse(ButtonType.CANCEL) == ButtonType.OK;
             if (descartar) NavigationShell.setNavigationGuard(escenaAplicacion, null);
             return descartar;
         }
@@ -772,7 +773,7 @@ public class SalidasController {
                     Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
                     confirmar.setTitle("DNI ya registrado"); confirmar.setHeaderText("Usar el Cliente existente");
                     confirmar.setContentText("El DNI pertenece a " + existente.getNombre() + " " + existente.getApellido() + ". ¿Quieres asociar ese registro?");
-                    if (confirmar.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                    if (AlertUtils.showAndWait(confirmar, tablaSalidas).orElse(ButtonType.CANCEL) == ButtonType.OK) {
                         if (participantes.stream().noneMatch(p -> p.cliente().getId() == existente.getId())) participantes.add(new AsignacionParticipante(existente, false));
                         render();
                     }

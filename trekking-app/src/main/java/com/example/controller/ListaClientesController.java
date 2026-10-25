@@ -12,6 +12,7 @@ import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
+import com.example.util.AlertUtils;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -333,7 +334,7 @@ public class ListaClientesController implements Initializable {
                 + clienteSeleccionado.getApellido()
                 + "?");
 
-        if (confirmacion.showAndWait().orElse(null)
+        if (AlertUtils.showAndWait(confirmacion, tablaClientes).orElse(null)
                 == javafx.scene.control.ButtonType.OK) {
 
             clienteDAO.eliminarCliente(
@@ -355,7 +356,7 @@ public class ListaClientesController implements Initializable {
         confirmar.setHeaderText(null);
         confirmar.setContentText("¿Quieres " + verbo + " a " + cliente.getNombre() + " " + cliente.getApellido()
                 + (cliente.isActivo() ? "? Dejará de estar disponible para el uso activo." : "?"));
-        if (confirmar.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) != javafx.scene.control.ButtonType.OK) return;
+        if (AlertUtils.showAndWait(confirmar, tablaClientes).orElse(javafx.scene.control.ButtonType.CANCEL) != javafx.scene.control.ButtonType.OK) return;
         if (cliente.isActivo()) clienteDAO.eliminarCliente(cliente.getId());
         else clienteDAO.reactivarCliente(cliente.getId());
         cargarClientes();
@@ -372,6 +373,6 @@ public class ListaClientesController implements Initializable {
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
 
-        alerta.showAndWait();
+        AlertUtils.showAndWait(alerta, tablaClientes);
     }
 }

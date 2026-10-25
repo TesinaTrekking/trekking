@@ -1,5 +1,6 @@
 package com.example.util;
 
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -187,7 +188,7 @@ public final class NavigationShell {
             alert.setTitle("No se pudo abrir la pantalla");
             alert.setHeaderText(null);
             alert.setContentText("No se pudo abrir " + target.label() + ": " + e.getMessage());
-            alert.showAndWait();
+            AlertUtils.showAndWait(alert, scene.getWindow());
         }
     }
 

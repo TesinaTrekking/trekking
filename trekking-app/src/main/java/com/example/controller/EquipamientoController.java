@@ -6,6 +6,7 @@ import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
+import com.example.util.AlertUtils;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -197,7 +198,7 @@ public class EquipamientoController {
                 : "¿Está seguro de dar de baja el elemento seleccionado?");
 
         Optional<ButtonType> resultado =
-                confirmacion.showAndWait();
+                AlertUtils.showAndWait(confirmacion, tablaEquipamiento);
 
         if (resultado.isPresent()
                 && resultado.get() == ButtonType.OK) {
@@ -219,7 +220,7 @@ public class EquipamientoController {
         confirmacion.setHeaderText(null);
         confirmacion.setContentText("¿Dar de baja «" + seleccionado.getNombre() + "»? Se excluirá del uso activo."
                 + (reservada > 0 ? " Las " + reservada + " unidades reservadas por Salidas planificadas se conservan." : ""));
-        if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+        if (AlertUtils.showAndWait(confirmacion, tablaEquipamiento).orElse(ButtonType.CANCEL) == ButtonType.OK) {
             EquipamientoDAO.eliminar(seleccionado.getId()); cargarEquipamiento();
         }
     }
@@ -230,7 +231,7 @@ public class EquipamientoController {
                 ButtonType.CANCEL, ButtonType.OK);
         confirmacion.setTitle("Reactivar elemento");
         confirmacion.setHeaderText(null);
-        if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+        if (AlertUtils.showAndWait(confirmacion, tablaEquipamiento).orElse(ButtonType.CANCEL) == ButtonType.OK) {
             EquipamientoDAO.reactivar(seleccionado.getId());
             cargarEquipamiento();
             mostrarAlerta(Alert.AlertType.INFORMATION, "Inventario",
@@ -308,6 +309,6 @@ public class EquipamientoController {
         alerta.setTitle(titulo);
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
-        alerta.showAndWait();
+        AlertUtils.showAndWait(alerta, tablaEquipamiento);
     }
 }

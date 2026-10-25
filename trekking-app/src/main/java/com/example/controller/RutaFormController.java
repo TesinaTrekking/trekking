@@ -12,6 +12,7 @@ import com.example.model.EquipamientoRequerido;
 import com.example.model.RutaEquipamiento;
 import com.example.util.FormValidation;
 import com.example.util.NavigationShell;
+import com.example.util.AlertUtils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -1035,7 +1036,7 @@ public class RutaFormController {
                 alerta.setTitle(titulo);
                 alerta.setHeaderText(null);
                 alerta.setContentText(mensaje);
-                alerta.showAndWait();
+                AlertUtils.showAndWait(alerta, nombreField);
         }
 
         private void mostrarInformacion(
@@ -1047,6 +1048,6 @@ public class RutaFormController {
                 alerta.setTitle(titulo);
                 alerta.setHeaderText(null);
                 alerta.setContentText(mensaje);
-                alerta.showAndWait();
+                AlertUtils.showAndWait(alerta, nombreField);
         }
 }

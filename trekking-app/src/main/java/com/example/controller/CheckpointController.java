@@ -41,7 +41,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
@@ -366,8 +365,6 @@ public class CheckpointController implements Initializable {
         alert.setHeaderText("¿Eliminar Checkpoint?");
         alert.setContentText(
                 "¿Está seguro de que desea eliminar '" + item.getNombre() + "'? Esta acción no se puede deshacer.");
-        alert.initOwner(getWindow());
-        alert.initModality(Modality.WINDOW_MODAL);
         ButtonType confirmDelete = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancel = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         alert.getButtonTypes().setAll(confirmDelete, cancel);
@@ -380,7 +377,7 @@ public class CheckpointController implements Initializable {
         if (btnCancelar != null) {
             btnCancelar.getStyleClass().add("btn-secondary");
         }
-        Optional<ButtonType> result = alert.showAndWait();
+        Optional<ButtonType> result = AlertUtils.showAndWait(alert, getWindow());
         if (result.isPresent() && result.get() == confirmDelete) {
             try {
                 if (checkpointDAO.eliminar(item.getId())) {

@@ -4,6 +4,7 @@ import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
 import com.example.util.FormValidation;
 import com.example.util.NavigationShell;
+import com.example.util.AlertUtils;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -200,7 +201,7 @@ public class EquipamientoFormController {
         alerta.setTitle(titulo);
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
-        alerta.showAndWait();
+        AlertUtils.showAndWait(alerta, txtNombre);
     }
 
     private String validarCantidad() {

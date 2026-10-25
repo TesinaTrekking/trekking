@@ -473,7 +473,7 @@ public class CheckpointFormController implements Initializable {
         alerta.setContentText(esAlta
                 ? "El checkpoint se creó correctamente."
                 : "El checkpoint se actualizó correctamente.");
-        alerta.showAndWait();
+        AlertUtils.showAndWait(alerta, getWindow());
     }
 
     private static boolean isHoraValida(String hora) {

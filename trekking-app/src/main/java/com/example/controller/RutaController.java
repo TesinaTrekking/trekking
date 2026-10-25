@@ -13,6 +13,7 @@ import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
+import com.example.util.AlertUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -329,7 +330,7 @@ public class RutaController implements Initializable {
                 confirmacion.setHeaderText(null);
                 confirmacion.setContentText("¿" + (activa ? "Dar de baja" : "Reactivar") + " la Ruta «" + ruta.getNombre() + "»?"
                                 + (activa ? " Quedará excluida del uso activo." : ""));
-                if (confirmacion.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+                if (AlertUtils.showAndWait(confirmacion, tablaRutas).orElse(ButtonType.CANCEL) != ButtonType.OK) return;
                 boolean actualizado = activa ? rutaDAO.eliminar(ruta.getId()) : rutaDAO.reactivar(ruta.getId());
                 if (!actualizado) mostrarAlerta("Error", "No se pudo actualizar el estado de la Ruta.");
                 cargarRutas(); tablaRutas.getSelectionModel().select(ruta);
@@ -369,7 +370,7 @@ public class RutaController implements Initializable {
                                                 + rutaSeleccionada.getNombre()
                                                 + "\"?");
 
-                if (confirmacion.showAndWait().orElse(null) == ButtonType.OK) {
+                if (AlertUtils.showAndWait(confirmacion, tablaRutas).orElse(null) == ButtonType.OK) {
 
                         if (rutaDAO.eliminar(rutaSeleccionada.getId())) {
 
@@ -503,7 +504,7 @@ public class RutaController implements Initializable {
                 alerta.setTitle(titulo);
                 alerta.setHeaderText(null);
                 alerta.setContentText(mensaje);
-                alerta.showAndWait();
+                AlertUtils.showAndWait(alerta, tablaRutas);
         }
 
         @FXML
