@@ -4,6 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.example.model.Ruta;
 
 
 public class ConexionDB {
@@ -163,6 +168,7 @@ public class ConexionDB {
         try (
                 Connection conexion = conectar(); Statement statement = conexion.createStatement()) {
             statement.execute(sql);
+            migrarNombreClaveRuta(conexion);
             // Tabla de checkpoints
             statement.execute(sqlCheckpoints);
             statement.execute(sqlRutaCheckpoints);
@@ -189,9 +195,45 @@ public class ConexionDB {
             System.out.println("Esquema de trekking listo.");
 
         } catch (SQLException e) {
-            System.out.println(
-                    "Error al crear la tabla: "
-                    + e.getMessage());
+            throw new IllegalStateException("No se pudo inicializar la base de datos: " + e.getMessage(), e);
+        }
+    }
+
+    /** Actualiza bases existentes que todavía no tienen la clave normalizada de las Rutas. */
+    private static void migrarNombreClaveRuta(java.sql.Connection conexion) throws SQLException {
+        boolean existeNombreClave = false;
+        try (Statement statement = conexion.createStatement();
+             ResultSet columnas = statement.executeQuery("PRAGMA table_info(rutas)")) {
+            while (columnas.next()) {
+                if ("nombre_clave".equalsIgnoreCase(columnas.getString("name"))) {
+                    existeNombreClave = true;
+                    break;
+                }
+            }
+        }
+        if (!existeNombreClave) {
+            try (Statement statement = conexion.createStatement()) {
+                statement.execute("ALTER TABLE rutas ADD COLUMN nombre_clave TEXT");
+            }
+        }
+
+        List<Object[]> pendientes = new ArrayList<>();
+        try (Statement statement = conexion.createStatement();
+             ResultSet rutas = statement.executeQuery("SELECT id, nombre FROM rutas WHERE nombre_clave IS NULL OR nombre_clave = ''")) {
+            while (rutas.next()) {
+                pendientes.add(new Object[]{rutas.getInt("id"), Ruta.claveNombre(rutas.getString("nombre"))});
+            }
+        }
+        try (var actualizar = conexion.prepareStatement("UPDATE rutas SET nombre_clave = ? WHERE id = ?")) {
+            for (Object[] fila : pendientes) {
+                actualizar.setString(1, (String) fila[1]);
+                actualizar.setInt(2, (Integer) fila[0]);
+                actualizar.addBatch();
+            }
+            actualizar.executeBatch();
+        }
+        try (Statement statement = conexion.createStatement()) {
+            statement.executeUpdate("CREATE UNIQUE INDEX IF NOT EXISTS idx_rutas_nombre_clave ON rutas(nombre_clave)");
         }
     }
 
