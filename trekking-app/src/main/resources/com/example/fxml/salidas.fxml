@@ -29,12 +29,10 @@
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Clientes activos" styleClass="form-label"/><Label fx:id="kpiClientes" text="0" styleClass="brand-title"/></VBox>
         <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Inventario crítico" styleClass="form-label"/><Label fx:id="kpiInventario" text="0" styleClass="brand-title"/></VBox>
     </HBox>
-    <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
-    </HBox>
     <HBox spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="buscarField" promptText="Buscar por Ruta o Cliente" HBox.hgrow="ALWAYS"/>
-        <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Filtrar por estado"/>
+        <ComboBox fx:id="estadoFiltro" prefWidth="180" promptText="Estado"/>
+        <Button text="Nueva Salida" onAction="#iniciarWizard" styleClass="action-add"/>
     </HBox>
     <TableView fx:id="tablaSalidas" VBox.vgrow="ALWAYS">
         <columns>

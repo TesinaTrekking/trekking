@@ -59,8 +59,8 @@ public class SalidasController {
         colEstado.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().estado()));
         colParticipantes.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenParticipantes(data.getValue())));
         colEquipamiento.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenEquipamiento(data.getValue())));
-        estadoFiltro.setItems(FXCollections.observableArrayList("Todos", "planificada", "realizada", "cancelada"));
-        estadoFiltro.setValue("Todos");
+        estadoFiltro.setItems(FXCollections.observableArrayList(
+                "Todos los estados", "Planificada", "Realizada", "Cancelada"));
         actualizarIndicadores(); actualizarTabla();
         tablaSalidas.getSelectionModel().selectedItemProperty().addListener((obs, anterior, seleccionada) -> actualizarAcciones(seleccionada));
         actualizarAcciones(null);
@@ -151,10 +151,16 @@ public class SalidasController {
         if (!(tablaSalidas.getItems() instanceof FilteredList<?> raw)) return;
         @SuppressWarnings("unchecked") FilteredList<Salida> filas = (FilteredList<Salida>) raw;
         String consulta = buscarField == null || buscarField.getText() == null ? "" : buscarField.getText().trim().toLowerCase(Locale.ROOT);
-        String estado = estadoFiltro == null ? "Todos" : estadoFiltro.getValue();
+        String estadoSeleccionado = estadoFiltro == null ? "Todos los estados" : estadoFiltro.getValue();
+        String estado = switch (estadoSeleccionado == null ? "Todos los estados" : estadoSeleccionado) {
+            case "Planificada" -> "planificada";
+            case "Realizada" -> "realizada";
+            case "Cancelada" -> "cancelada";
+            default -> null;
+        };
         filas.setPredicate(s -> (consulta.isEmpty() || s.rutaNombre().toLowerCase(Locale.ROOT).contains(consulta)
                         || contieneCliente(s, consulta))
-                && (estado == null || "Todos".equals(estado) || s.estado().equals(estado)));
+                && (estado == null || s.estado().equals(estado)));
     }
 
     private boolean contieneCliente(Salida salida, String consulta) {
