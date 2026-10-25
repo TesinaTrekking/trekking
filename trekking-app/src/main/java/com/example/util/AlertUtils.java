@@ -4,7 +4,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.Window;
 import java.net.URL;
 import java.util.Optional;
@@ -58,6 +60,19 @@ public final class AlertUtils {
         if (owner != null) {
             alert.initOwner(owner);
             alert.initModality(Modality.WINDOW_MODAL);
+            Scene ownerScene = owner.getScene();
+            Node previousFocusOwner = ownerScene == null ? null : ownerScene.getFocusOwner();
+            alert.setOnShown(event -> {
+                alert.setX(owner.getX() + (owner.getWidth() - alert.getWidth()) / 2);
+                alert.setY(owner.getY() + (owner.getHeight() - alert.getHeight()) / 2);
+            });
+            alert.setOnHidden(event -> {
+                if (!owner.isShowing()) return;
+                if (owner instanceof Stage stage) stage.toFront();
+                if (previousFocusOwner != null && previousFocusOwner.getScene() == ownerScene) {
+                    previousFocusOwner.requestFocus();
+                }
+            });
         }
         return alert.showAndWait();
     }
