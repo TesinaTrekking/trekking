@@ -35,7 +35,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 public class SalidasController {
@@ -219,7 +218,7 @@ public class SalidasController {
 
     private final class EditorSalida {
         private final Salida original;
-        private final Stage stage = new Stage();
+        private final Scene escenaAplicacion = tablaSalidas.getScene();
         private final VBox content = new VBox(10);
         private final DatePicker fecha = new DatePicker();
         private final ComboBox<Ruta> rutas = new ComboBox<>();
@@ -238,12 +237,11 @@ public class SalidasController {
         private final ComboBox<Cliente> selectorCliente = new ComboBox<>();
         private final ListView<AsignacionParticipante> listaParticipantes = new ListView<>();
         private final java.util.Set<Integer> equiposActivos = new java.util.HashSet<>();
+        private boolean cambiosRealizados;
 
         EditorSalida(Salida original) { this.original = original; }
 
         void mostrar() {
-            stage.initOwner(tablaSalidas.getScene().getWindow()); stage.initModality(Modality.WINDOW_MODAL);
-            stage.setTitle("Editar Salida " + original.id());
             try {
                 checkpoints.addAll(salidaDAO.obtenerCheckpoints(original.id()));
                 equipamiento.addAll(salidaDAO.obtenerEquipamiento(original.id()));
@@ -254,12 +252,16 @@ public class SalidasController {
             }
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
             fecha.setValue(original.fecha());
+            fecha.valueProperty().addListener((o, anterior, nueva) -> {
+                if (!java.util.Objects.equals(anterior, nueva)) cambiosRealizados = true;
+            });
             rutas.getItems().stream().filter(r -> r.getId() == original.rutaId()).findFirst().ifPresent(rutas::setValue);
             rutas.valueProperty().addListener((o, a, b) -> {
                 if (b != null && b.getId() != original.rutaId() && !rutaDAO.estaActiva(b.getId())) {
                     rutas.setValue(a); aviso(Alert.AlertType.WARNING, "Ruta inactiva", "No se puede cambiar a una Ruta inactiva."); return;
                 }
                 if (b != null && a != null && b.getId() != a.getId()) {
+                    cambiosRealizados = true;
                     actualizarDesdeRuta = false;
                     checkpointsGuardarEnRuta.clear();
                     checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(b.getId())); actualizarPuntos();
@@ -269,31 +271,63 @@ public class SalidasController {
             detalleRuta.setWrapText(true); actualizarDetalle(); actualizarPuntos();
             configurarAsignaciones();
             Button agregar = new Button("Agregar Checkpoint"), editar = new Button("Editar seleccionado"), quitar = new Button("Quitar seleccionado");
-            Button refrescar = new Button("Actualizar desde ruta"), guardar = new Button("Guardar cambios"), cancelar = new Button("Cancelar");
+            Button refrescar = new Button("Actualizar desde ruta");
             agregar.setOnAction(e -> editarCheckpoint(null));
             editar.setOnAction(e -> { Checkpoint cp = puntos.getSelectionModel().getSelectedItem(); if (cp != null) editarCheckpoint(cp); });
-            quitar.setOnAction(e -> { Checkpoint cp = puntos.getSelectionModel().getSelectedItem(); if (cp != null) { checkpoints.remove(cp); checkpointsGuardarEnRuta.remove(cp); actualizarPuntos(); } });
+            quitar.setOnAction(e -> {
+                Checkpoint cp = puntos.getSelectionModel().getSelectedItem();
+                if (cp != null) {
+                    cambiosRealizados = true;
+                    checkpoints.remove(cp);
+                    checkpointsGuardarEnRuta.remove(cp);
+                    actualizarPuntos();
+                }
+            });
             refrescar.setOnAction(e -> {
                 Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Se reemplazarán los datos copiados de Ruta y todos sus Checkpoints. Se perderán las modificaciones locales de Checkpoints. Equipamiento y Participantes se conservarán.", ButtonType.CANCEL, ButtonType.OK);
                 confirm.setTitle("Actualizar desde ruta"); confirm.setHeaderText("¿Reemplazar la copia operativa?");
                 if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK && rutas.getValue() != null) {
+                    cambiosRealizados = true;
                     actualizarDesdeRuta = true;
                     checkpointsGuardarEnRuta.clear();
                     checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(rutas.getValue().getId())); actualizarPuntos();
                 }
             });
-            guardar.setOnAction(e -> guardar()); cancelar.setOnAction(e -> stage.close());
             content.setStyle("-fx-padding: 20;");
+            puntos.setPrefHeight(150);
+            puntos.setMaxHeight(220);
+            listaEquipo.setPrefHeight(130);
+            listaEquipo.setMaxHeight(200);
+            listaParticipantes.setPrefHeight(130);
+            listaParticipantes.setMaxHeight(200);
             content.getChildren().addAll(new Label("Fecha de la Salida"), fecha, new Label("Ruta"), rutas, detalleRuta,
                     new Label("Checkpoints operativos (se admite una lista vacía o de cualquier tamaño)"), puntos,
                     new javafx.scene.layout.HBox(8, agregar, editar, quitar), refrescar,
                     new Label("Equipamiento"), new javafx.scene.layout.HBox(8, selectorEquipo, cantidadEquipo, boton("Agregar", this::agregarEquipo)), listaEquipo,
-                    boton("Quitar equipamiento seleccionado", () -> { var a=listaEquipo.getSelectionModel().getSelectedItem(); if(a!=null){equipamiento.remove(a);refrescarEquipamiento.add(a.equipamiento().getId());if(!equiposActivos.contains(a.equipamiento().getId()))selectorEquipo.getItems().removeIf(i->i.getId()==a.equipamiento().getId());renderAsignaciones();} }),
+                    boton("Quitar equipamiento seleccionado", this::quitarEquipoSeleccionado),
                     new Label("Participantes"), new javafx.scene.layout.HBox(8, selectorCliente, boton("Agregar", this::agregarParticipante)), listaParticipantes,
-                    boton("Quitar participante seleccionado", () -> { var a=listaParticipantes.getSelectionModel().getSelectedItem(); if(a!=null){participantes.remove(a);refrescarParticipantes.add(a.cliente().getId());if(!a.cliente().isActivo())selectorCliente.getItems().removeIf(i->i.getId()==a.cliente().getId());renderAsignaciones();} }),
-                    new javafx.scene.layout.HBox(8, cancelar, guardar));
-            ScrollPane scroll = new ScrollPane(content); scroll.setFitToWidth(true);
-            stage.setScene(new Scene(scroll, 650, 650)); stage.showAndWait();
+                    boton("Quitar participante seleccionado", this::quitarParticipanteSeleccionado));
+            Label titulo = new Label("Editar Salida " + original.id());
+            titulo.getStyleClass().add("dashboard-title");
+            VBox encabezado = new VBox(titulo);
+            encabezado.getStyleClass().add("wizard-header");
+            ScrollPane scroll = new ScrollPane(content);
+            scroll.setFitToWidth(true);
+            scroll.setFitToHeight(true);
+            scroll.getStyleClass().add("wizard-scroll");
+            Button cancelar = new Button("Cancelar");
+            cancelar.setOnAction(e -> cancelarEdicion());
+            Button guardar = new Button("Guardar cambios");
+            guardar.getStyleClass().add("action-add");
+            guardar.setOnAction(e -> guardar());
+            javafx.scene.layout.HBox acciones = new javafx.scene.layout.HBox(10, cancelar, guardar);
+            acciones.getStyleClass().add("wizard-actions");
+            javafx.scene.layout.BorderPane root = new javafx.scene.layout.BorderPane();
+            root.setTop(encabezado);
+            root.setCenter(scroll);
+            root.setBottom(acciones);
+            NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
+            NavigationShell.setRoot(escenaAplicacion, root, "salida-edicion");
         }
 
         private void configurarAsignaciones() {
@@ -316,8 +350,64 @@ public class SalidasController {
 
         private void renderAsignaciones(){listaEquipo.setItems(FXCollections.observableArrayList(equipamiento));listaParticipantes.setItems(FXCollections.observableArrayList(participantes));}
         private Button boton(String texto,Runnable accion){Button b=new Button(texto);b.setOnAction(e->accion.run());return b;}
-        private void agregarEquipo(){try{Equipamiento item=selectorEquipo.getValue();int cantidad=Integer.parseInt(cantidadEquipo.getText().trim());if(item==null||cantidad<=0)throw new IllegalArgumentException();int i=-1;for(int n=0;n<equipamiento.size();n++)if(equipamiento.get(n).equipamiento().getId()==item.getId())i=n;if(i>=0){var a=equipamiento.get(i);equipamiento.set(i,new AsignacionEquipamiento(a.equipamiento(),a.cantidad()+cantidad,false));}else equipamiento.add(new AsignacionEquipamiento(item,cantidad,false));renderAsignaciones();}catch(RuntimeException e){aviso(Alert.AlertType.WARNING,"Cantidad inválida","Selecciona un elemento y una cantidad positiva.");}}
-        private void agregarParticipante(){Cliente c=selectorCliente.getValue();if(c==null)return;if(participantes.stream().anyMatch(a->a.cliente().getId()==c.getId())){aviso(Alert.AlertType.INFORMATION,"Cliente ya asociado","Ese Cliente ya está asociado a esta Salida.");return;}participantes.add(new AsignacionParticipante(c,false));renderAsignaciones();}
+        private void agregarEquipo() {
+            try {
+                Equipamiento item = selectorEquipo.getValue();
+                int cantidad = Integer.parseInt(cantidadEquipo.getText().trim());
+                if (item == null || cantidad <= 0) throw new IllegalArgumentException();
+                int indice = -1;
+                for (int i = 0; i < equipamiento.size(); i++) {
+                    if (equipamiento.get(i).equipamiento().getId() == item.getId()) indice = i;
+                }
+                if (indice >= 0) {
+                    var asignacion = equipamiento.get(indice);
+                    equipamiento.set(indice, new AsignacionEquipamiento(
+                            asignacion.equipamiento(), asignacion.cantidad() + cantidad, false));
+                } else {
+                    equipamiento.add(new AsignacionEquipamiento(item, cantidad, false));
+                }
+                cambiosRealizados = true;
+                renderAsignaciones();
+            } catch (RuntimeException e) {
+                aviso(Alert.AlertType.WARNING, "Cantidad inválida", "Selecciona un elemento y una cantidad positiva.");
+            }
+        }
+
+        private void quitarEquipoSeleccionado() {
+            AsignacionEquipamiento asignacion = listaEquipo.getSelectionModel().getSelectedItem();
+            if (asignacion == null) return;
+            cambiosRealizados = true;
+            equipamiento.remove(asignacion);
+            refrescarEquipamiento.add(asignacion.equipamiento().getId());
+            if (!equiposActivos.contains(asignacion.equipamiento().getId())) {
+                selectorEquipo.getItems().removeIf(item -> item.getId() == asignacion.equipamiento().getId());
+            }
+            renderAsignaciones();
+        }
+
+        private void agregarParticipante() {
+            Cliente cliente = selectorCliente.getValue();
+            if (cliente == null) return;
+            if (participantes.stream().anyMatch(a -> a.cliente().getId() == cliente.getId())) {
+                aviso(Alert.AlertType.INFORMATION, "Cliente ya asociado", "Ese Cliente ya está asociado a esta Salida.");
+                return;
+            }
+            participantes.add(new AsignacionParticipante(cliente, false));
+            cambiosRealizados = true;
+            renderAsignaciones();
+        }
+
+        private void quitarParticipanteSeleccionado() {
+            AsignacionParticipante asignacion = listaParticipantes.getSelectionModel().getSelectedItem();
+            if (asignacion == null) return;
+            cambiosRealizados = true;
+            participantes.remove(asignacion);
+            refrescarParticipantes.add(asignacion.cliente().getId());
+            if (!asignacion.cliente().isActivo()) {
+                selectorCliente.getItems().removeIf(cliente -> cliente.getId() == asignacion.cliente().getId());
+            }
+            renderAsignaciones();
+        }
 
         private void actualizarPuntos() {
             puntos.setItems(FXCollections.observableArrayList(checkpoints));
@@ -346,7 +436,7 @@ public class SalidasController {
             guardarRuta.setVisible(existente == null && activa && permiteGuardar);
             guardarRuta.setManaged(existente == null && activa && permiteGuardar);
             if (!activa) guardarRuta.setTooltip(new javafx.scene.control.Tooltip("La Ruta está inactiva."));
-            Dialog<ButtonType> dialog = new Dialog<>(); dialog.initOwner(stage); dialog.setTitle(existente == null ? "Agregar Checkpoint" : "Editar Checkpoint");
+            Dialog<ButtonType> dialog = new Dialog<>(); dialog.initOwner(escenaAplicacion.getWindow()); dialog.setTitle(existente == null ? "Agregar Checkpoint" : "Editar Checkpoint");
             dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
             GridPane grid = new GridPane(); grid.setHgap(8); grid.setVgap(8);
             String[] labels = {"Nombre *", "Hora (HH:mm) *", "Latitud *", "Longitud *", "Altitud (m) *", "Descripción"};
@@ -372,6 +462,7 @@ public class SalidasController {
                     if (indexRuta >= 0) checkpointsGuardarEnRuta.set(indexRuta, cp);
                 }
                 if (guardarRuta.isSelected()) checkpointsGuardarEnRuta.add(cp);
+                cambiosRealizados = true;
                 actualizarPuntos();
             } catch (RuntimeException ex) { aviso(Alert.AlertType.WARNING, "Checkpoint inválido", ex.getMessage() == null ? "Completa correctamente todos los campos." : ex.getMessage()); }
         }
@@ -380,8 +471,44 @@ public class SalidasController {
             try {
                 List<Checkpoint> copia = List.copyOf(checkpoints);
                 salidaDAO.actualizar(original.id(), fecha.getValue(), rutas.getValue().getId(), copia, List.copyOf(checkpointsGuardarEnRuta), actualizarDesdeRuta, List.copyOf(equipamiento), List.copyOf(participantes), java.util.Set.copyOf(refrescarEquipamiento), java.util.Set.copyOf(refrescarParticipantes));
-                stage.close(); actualizarTabla(); actualizarIndicadores();
+                NavigationShell.setNavigationGuard(escenaAplicacion, null);
+                volverAlListado();
             } catch (SQLException | RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudo actualizar la Salida", e.getMessage()); }
+        }
+
+        private boolean confirmarCambioDeSeccion() {
+            if (!cambiosRealizados) {
+                NavigationShell.setNavigationGuard(escenaAplicacion, null);
+                return true;
+            }
+            boolean descartar = confirmarDescarte("Cambiar de sección");
+            if (descartar) NavigationShell.setNavigationGuard(escenaAplicacion, null);
+            return descartar;
+        }
+
+        private boolean confirmarDescarte(String contexto) {
+            Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Hay cambios sin guardar en la Salida. ¿Quieres descartarlos?",
+                    ButtonType.CANCEL, ButtonType.OK);
+            confirmar.setTitle("Descartar cambios de Salida");
+            confirmar.setHeaderText(contexto);
+            return confirmar.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
+        }
+
+        private void cancelarEdicion() {
+            if (cambiosRealizados && !confirmarDescarte("Cancelar edición")) return;
+            NavigationShell.setNavigationGuard(escenaAplicacion, null);
+            volverAlListado();
+        }
+
+        private void volverAlListado() {
+            try {
+                javafx.scene.Parent pagina = new javafx.fxml.FXMLLoader(
+                        getClass().getResource("/com/example/fxml/salidas.fxml")).load();
+                NavigationShell.setRoot(escenaAplicacion, pagina);
+            } catch (IOException ex) {
+                aviso(Alert.AlertType.ERROR, "No se pudo volver a Salidas", ex.getMessage());
+            }
         }
     }
 
@@ -463,7 +590,7 @@ public class SalidasController {
             root.setBottom(new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
             root.getBottom().getStyleClass().add("wizard-actions");
             NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
-            NavigationShell.setRoot(escenaAplicacion, root);
+            NavigationShell.setRoot(escenaAplicacion, root, "salida-alta");
         }
         private void render() {
             String[] titulos = {"Paso 1 de 5 · Datos de la salida", "Paso 2 de 5 · Ruta", "Paso 3 de 5 · Equipamiento", "Paso 4 de 5 · Participantes", "Paso 5 de 5 · Revisión"};
