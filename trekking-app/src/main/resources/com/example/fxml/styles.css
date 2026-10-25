@@ -309,13 +309,6 @@
   -fx-scale-y: 0.75;
 }
 
-.row-action-pdf-label {
-  -fx-fill: #b42318;
-  -fx-font-size: 5.5px;
-  -fx-font-weight: bold;
-  -fx-translate-y: 4px;
-}
-
 .button.row-action-button:hover {
   -fx-background-color: #e8edf3;
 }
@@ -330,6 +323,14 @@
 
 .button.row-action-button.row-action-danger:hover {
   -fx-background-color: #fce8e6;
+}
+
+.table-cell.row-actions-cell {
+  -fx-alignment: CENTER;
+}
+
+.row-actions {
+  -fx-alignment: CENTER;
 }
 
 .button,

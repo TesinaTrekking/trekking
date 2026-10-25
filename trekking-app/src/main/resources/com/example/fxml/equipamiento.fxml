@@ -78,7 +78,7 @@
                 <TableColumn fx:id="colEstado"
                              text="Estado"
                              prefWidth="150.0"/>
-                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="85.0"/>
+                <TableColumn fx:id="colAcciones" text="" prefWidth="70.0"/>
             </columns>
 
         </TableView>

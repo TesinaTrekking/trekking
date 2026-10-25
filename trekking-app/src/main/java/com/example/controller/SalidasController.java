@@ -73,16 +73,14 @@ public class SalidasController {
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                 actions.getChildren().addAll(
                         com.example.util.RowActionButton.create("Editar salida", com.example.util.RowActionButton.Icon.EDIT, e -> { tablaSalidas.getSelectionModel().select(salida); editarSalida(); }),
-                        com.example.util.RowActionButton.create("Generar ficha PDF", com.example.util.RowActionButton.Icon.PDF, e -> { tablaSalidas.getSelectionModel().select(salida); generarFichaPDF(); }));
+                        com.example.util.RowActionButton.create("Descargar ficha operativa PDF", com.example.util.RowActionButton.Icon.DOWNLOAD, e -> { tablaSalidas.getSelectionModel().select(salida); generarFichaPDF(); }));
                 if ("planificada".equals(salida.estado())) {
                     javafx.scene.control.Button cancelar = com.example.util.RowActionButton.create("Cancelar salida", com.example.util.RowActionButton.Icon.CANCEL, e -> { tablaSalidas.getSelectionModel().select(salida); cancelarSalida(); });
                     cancelar.getStyleClass().add("row-action-danger");
                     actions.getChildren().addAll(
                             com.example.util.RowActionButton.create("Marcar realizada", com.example.util.RowActionButton.Icon.CHECK, e -> { tablaSalidas.getSelectionModel().select(salida); marcarRealizada(); }), cancelar);
                 }
-                actions.setAlignment(javafx.geometry.Pos.CENTER);
-                setAlignment(javafx.geometry.Pos.CENTER);
-                setGraphic(actions);
+                com.example.util.RowActionCell.showCentered(this, actions);
             }
         });
         estadoFiltro.setItems(FXCollections.observableArrayList(

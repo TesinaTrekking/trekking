@@ -116,9 +116,7 @@ public class ListaClientesController implements Initializable {
                                 cliente.isActivo() ? com.example.util.RowActionButton.Icon.DELETE : com.example.util.RowActionButton.Icon.RESTORE,
                                 e -> cambiarEstado(cliente)));
                 if (cliente.isActivo()) actions.getChildren().get(2).getStyleClass().add("row-action-danger");
-                actions.setAlignment(javafx.geometry.Pos.CENTER);
-                setAlignment(javafx.geometry.Pos.CENTER);
-                setGraphic(actions);
+                com.example.util.RowActionCell.showCentered(this, actions);
             }
         });
 

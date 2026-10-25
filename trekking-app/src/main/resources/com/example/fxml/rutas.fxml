@@ -108,7 +108,7 @@
                                         <TableColumn fx:id="colDificultadFisica"
                                                 prefWidth="130.0"
                                                 text="Dificultad física" />
-                                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="90.0" />
+                                        <TableColumn fx:id="colAcciones" text="" prefWidth="70.0" />
 
                                 </columns>
 

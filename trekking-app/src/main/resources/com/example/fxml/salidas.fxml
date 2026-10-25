@@ -42,7 +42,7 @@
             <TableColumn fx:id="colParticipantes" text="Participantes" prefWidth="260"/>
             <TableColumn fx:id="colEquipamiento" text="Equipamiento asignado" prefWidth="260"/>
             <TableColumn fx:id="colEstado" text="Estado" prefWidth="160"/>
-            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="125"/>
+            <TableColumn fx:id="colAcciones" text="" prefWidth="125"/>
         </columns>
     </TableView>
     </VBox>

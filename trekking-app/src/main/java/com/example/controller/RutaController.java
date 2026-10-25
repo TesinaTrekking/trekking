@@ -135,9 +135,7 @@ public class RutaController implements Initializable {
                                 if (activa) estado.getStyleClass().add("row-action-danger");
                                 actions.getChildren().addAll(
                                         com.example.util.RowActionButton.create("Editar ruta", com.example.util.RowActionButton.Icon.EDIT, e -> abrirEdicion(ruta)), estado);
-                                actions.setAlignment(javafx.geometry.Pos.CENTER);
-                                setAlignment(javafx.geometry.Pos.CENTER);
-                                setGraphic(actions);
+                                com.example.util.RowActionCell.showCentered(this, actions);
                         }
                 });
 

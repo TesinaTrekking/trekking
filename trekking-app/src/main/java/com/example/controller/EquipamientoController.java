@@ -106,9 +106,7 @@ public class EquipamientoController {
                             com.example.util.RowActionButton.create("Editar elemento",
                                     com.example.util.RowActionButton.Icon.EDIT, e -> abrirFormulario(item)), baja);
                 }
-                actions.setAlignment(javafx.geometry.Pos.CENTER);
-                setAlignment(javafx.geometry.Pos.CENTER);
-                setGraphic(actions);
+                com.example.util.RowActionCell.showCentered(this, actions);
             }
         });
 
