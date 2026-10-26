@@ -11,16 +11,16 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ScrollPane?>
 
-<ScrollPane id="cliente-edicion" fitToWidth="true" hbarPolicy="NEVER" xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1" stylesheets="@styles.css">
+<ScrollPane id="cliente-edicion" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1" stylesheets="@styles.css" styleClass="pantalla-scroll">
     <content>
-        <VBox alignment="TOP_CENTER" spacing="20.0">
+        <VBox alignment="TOP_CENTER" spacing="20.0" styleClass="form-page form-card">
             <Label text="Editar cliente"
                 styleClass="dialog-header-title" />
             <Label
                 text="Los campos marcados con * son obligatorios. El email y el contacto de emergencia son opcionales."
                 styleClass="dialog-header-subtitle" />
-            <GridPane alignment="CENTER" hgap="10" vgap="15">
+            <GridPane alignment="CENTER" hgap="10" vgap="15" styleClass="form-grid">
                 <children>
                     <Label text="DNI *:" styleClass="form-label" GridPane.columnIndex="0"
                         GridPane.rowIndex="0" />
@@ -36,7 +36,7 @@
                     <Label text="Apellido *:" styleClass="form-label" GridPane.columnIndex="0"
                         GridPane.rowIndex="3" />
                     <TextField fx:id="apellidoField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                    <Label text="Fecha nacimiento *:" styleClass="form-label"
+                    <Label text="Fecha de nacimiento *:" styleClass="form-label"
                         GridPane.columnIndex="0" GridPane.rowIndex="4" />
                     <DatePicker fx:id="fechaNacimientoPicker" GridPane.columnIndex="1"
                         GridPane.rowIndex="4" />
@@ -49,14 +49,14 @@
                         wrapText="true"
                         GridPane.columnIndex="1"
                         GridPane.rowIndex="6" />
-                    <Label text="Telefono *:" styleClass="form-label" GridPane.columnIndex="0"
+                    <Label text="Teléfono *:" styleClass="form-label" GridPane.columnIndex="0"
                         GridPane.rowIndex="7" />
                     <TextField fx:id="telefonoField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                     <Label text="Sexo *:" styleClass="form-label" GridPane.columnIndex="0"
                         GridPane.rowIndex="8" />
                     <ComboBox fx:id="sexoComboBox" prefWidth="200.0" GridPane.columnIndex="1"
                         GridPane.rowIndex="8" />
-                    <Label text="Contacto emergencia (opcional):" styleClass="form-label"
+                    <Label text="Contacto de emergencia (opcional):" styleClass="form-label"
                         GridPane.columnIndex="0" GridPane.rowIndex="9" />
                     <TextField fx:id="contactoNombreField" GridPane.columnIndex="1"
                         GridPane.rowIndex="9" />
@@ -64,7 +64,7 @@
                         GridPane.columnIndex="0" GridPane.rowIndex="10" />
                     <TextField fx:id="contactoTelefonoField" GridPane.columnIndex="1"
                         GridPane.rowIndex="10" />
-                    <Label text="Relacion (opcional):" styleClass="form-label"
+                    <Label text="Relación (opcional):" styleClass="form-label"
                         GridPane.columnIndex="0" GridPane.rowIndex="11" />
                     <TextField fx:id="contactoRelacionField" GridPane.columnIndex="1"
                         GridPane.rowIndex="11" />
@@ -77,7 +77,7 @@
                     <Label text="Activo:" styleClass="form-label" GridPane.columnIndex="0"
                         GridPane.rowIndex="13" />
                     <CheckBox fx:id="activoCheckBox" GridPane.columnIndex="1" GridPane.rowIndex="13" />
-                    <Label text="Ficha medica (PDF, maximo 2 MB):" styleClass="form-label"
+                    <Label text="Ficha médica (PDF, máximo 2 MB):" styleClass="form-label"
                         GridPane.columnIndex="0" GridPane.rowIndex="14" />
                     <HBox spacing="8.0" alignment="CENTER_LEFT" GridPane.columnIndex="1"
                         GridPane.rowIndex="14">
@@ -86,9 +86,9 @@
                         <Button fx:id="quitarFichaButton" text="Quitar ficha"
                             onAction="#borrarFichaMedica"
                             styleClass="action-delete" />
-                        <Label fx:id="fichaMedicaLabel" text="Sin ficha medica" />
+                        <Label fx:id="fichaMedicaLabel" text="Sin ficha médica" />
                     </HBox>
-                    <Label text="Autorizacion de menores:" styleClass="form-label"
+                    <Label text="Autorización de menores:" styleClass="form-label"
                         GridPane.columnIndex="0" GridPane.rowIndex="15" />
                     <CheckBox fx:id="autorizacionMenoresCheckBox"
                         text="Autorizo el registro del menor"
@@ -105,15 +105,15 @@
                     <Label fx:id="tutorDniLabel" text="DNI del tutor:" styleClass="form-label"
                         GridPane.columnIndex="0" GridPane.rowIndex="18" />
                     <TextField fx:id="tutorDniField" GridPane.columnIndex="1" GridPane.rowIndex="18" />
-                    <Label fx:id="tutorTelefonoLabel" text="Telefono del tutor:"
+                    <Label fx:id="tutorTelefonoLabel" text="Teléfono del tutor:"
                         styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="19" />
                     <TextField fx:id="tutorTelefonoField" GridPane.columnIndex="1"
                         GridPane.rowIndex="19" />
                 </children>
             </GridPane>
             <HBox spacing="8.0" alignment="CENTER" styleClass="crud-actions">
-                <Button text="Guardar cambios" onAction="#guardarCambios"
-                    styleClass="action-edit" />
+                <Button text="Guardar" onAction="#guardarCambios"
+                    styleClass="primary-button" />
                 <Button text="Cancelar" onAction="#cancelarEdicion"
                     styleClass="secondary-button" />
             </HBox>

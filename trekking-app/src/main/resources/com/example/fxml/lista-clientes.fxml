@@ -35,7 +35,7 @@
             </StackPane>
             <ComboBox fx:id="estadoFiltroCombo" prefWidth="170.0"
                       promptText="Estado" styleClass="list-filter-control"/>
-            <Button text="+ Nuevo Cliente" onAction="#irAgregarCliente"
+            <Button text="+ Nuevo cliente" onAction="#irAgregarCliente"
                     styleClass="action-add"/>
         </HBox>
         <TableView fx:id="tablaClientes" prefHeight="300.0" prefWidth="600.0">
@@ -45,7 +45,7 @@
                 <TableColumn fx:id="colApellido" prefWidth="150.0" text="Apellido"/>
                 <TableColumn fx:id="colFechaNacimiento" prefWidth="120.0" text="Nacimiento"/>
                 <TableColumn fx:id="colEmail" prefWidth="200.0" text="Email"/>
-                <TableColumn fx:id="colTelefono" prefWidth="110.0" text="Telefono"/>
+                <TableColumn fx:id="colTelefono" prefWidth="110.0" text="Teléfono"/>
                 <TableColumn fx:id="colSexo" prefWidth="120.0" text="Sexo"/>
                 <TableColumn fx:id="colActivo" prefWidth="80.0" text="Activo"/>
                 <TableColumn fx:id="colAcciones" prefWidth="95.0" text=""/>
