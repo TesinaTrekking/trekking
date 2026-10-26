@@ -5,6 +5,7 @@ import com.example.model.Checkpoint;
 import com.example.model.Ruta;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
+import com.example.util.RowActionButton;
 import com.example.util.ToastNotifications;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -20,7 +21,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -75,8 +75,12 @@ public class ItinerarioRutaController {
             private final Label detalle = new Label();
             private final VBox datos = new VBox(4, nombre, detalle);
             private final Region separador = new Region();
-            private final Button editar = new Button("✎");
-            private final Button quitar = new Button("×");
+            private final Button editar = RowActionButton.create(
+                    "Editar Checkpoint", RowActionButton.Icon.EDIT,
+                    event -> ItinerarioRutaController.this.editar(getItem()));
+            private final Button quitar = RowActionButton.create(
+                    "Quitar Checkpoint", RowActionButton.Icon.DELETE,
+                    event -> ItinerarioRutaController.this.quitar(getItem()));
             private final HBox fila = new HBox(14, hora, datos, separador, editar, quitar);
 
             {
@@ -85,17 +89,10 @@ public class ItinerarioRutaController {
                 detalle.getStyleClass().add("itinerary-checkpoint-detail");
                 nombre.setWrapText(true);
                 detalle.setWrapText(true);
-                editar.getStyleClass().add("itinerary-icon-button");
-                quitar.getStyleClass().addAll("itinerary-icon-button", "itinerary-remove-button");
-                editar.setTooltip(new Tooltip("Editar Checkpoint"));
-                editar.setAccessibleText("Editar Checkpoint");
-                quitar.setTooltip(new Tooltip("Quitar Checkpoint"));
-                quitar.setAccessibleText("Quitar Checkpoint");
+                quitar.getStyleClass().add("row-action-danger");
                 fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
                 HBox.setHgrow(datos, Priority.NEVER);
                 HBox.setHgrow(separador, Priority.ALWAYS);
-                editar.setOnAction(event -> editar(getItem()));
-                quitar.setOnAction(event -> quitar(getItem()));
             }
 
             @Override

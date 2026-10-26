@@ -1145,11 +1145,11 @@
 }
 
 .itinerary-time {
-    -fx-background-color: #111827;
-    -fx-background-radius: 8px;
-    -fx-padding: 7px 8px;
-    -fx-text-fill: white;
-    -fx-font-size: 12px;
+    -fx-min-width: 48px;
+    -fx-padding: 0;
+    -fx-text-fill: -color-text;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
 }
 
 .itinerary-checkpoint-name {
@@ -1161,31 +1161,6 @@
 .itinerary-checkpoint-detail {
     -fx-text-fill: -color-text-muted;
     -fx-font-size: 12px;
-}
-
-.button.itinerary-icon-button {
-    -fx-min-width: 30px;
-    -fx-min-height: 30px;
-    -fx-padding: 4px 7px;
-    -fx-background-color: transparent;
-    -fx-text-fill: -color-text-muted;
-    -fx-font-size: 16px;
-    -fx-cursor: hand;
-}
-
-.button.itinerary-icon-button:hover {
-    -fx-background-color: #edf1f5;
-    -fx-background-radius: 6px;
-    -fx-text-fill: -color-text;
-}
-
-.button.itinerary-remove-button {
-    -fx-text-fill: -color-danger;
-}
-
-.button.itinerary-remove-button:hover {
-    -fx-background-color: #fcecea;
-    -fx-text-fill: -color-danger;
 }
 
 .itinerary-footer {

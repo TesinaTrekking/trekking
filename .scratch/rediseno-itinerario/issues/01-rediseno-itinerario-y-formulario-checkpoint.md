@@ -12,3 +12,4 @@ Especificación: [spec.md](../../../docs/specs/rediseno-itinerario/spec.md)
 - El ADR del orden explícito continúa vigente; la interfaz conserva el orden persistido en empates y no ofrece controles para alterarlo.
 - Implementación aplicada. `mvn compile` y `mvn test` concluyeron correctamente; Maven reportó que no hay pruebas que ejecutar. Los FXML pasaron validación XML y `git diff --check` fue correcto.
 - Pendiente revisión manual visual de JavaFX.
+- Ajuste visual solicitado: horas sin cápsula y acciones por fila con los iconos SVG existentes del proyecto.
