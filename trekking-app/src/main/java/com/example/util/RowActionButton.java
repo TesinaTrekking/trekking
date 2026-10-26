@@ -1,32 +1,53 @@
 package com.example.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import javafx.scene.shape.SVGPath;
+import javafx.scene.transform.Affine;
 
-/** Compact, consistent vector icon button for table row toolbars. */
+/** Compact row-action buttons backed by the shared Material SVG resources. */
 public final class RowActionButton {
-    public enum Icon {
-        EDIT("M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"),
-        DOWNLOAD("M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"),
-        MEDICAL("M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H5V5h14v14zm-7-2a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm-1-8h2v2h2v2h-2v2h-2v-2H9v-2h2V9z"),
-        DELETE("M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"),
-        RESTORE("M12 5V1L7 6l5 5V7a5 5 0 1 1-4.9 6H5.08A7 7 0 1 0 12 5z"),
-        MAP("M20.5 3l-5.5 2-6-2-5.5 2v16l5.5-2 6 2 5.5-2V3zM9 5l6 2v13l-6-2V5z"),
-        CHECK("M9 16.17 4.83 12 3.41 13.41 9 19l12-12-1.41-1.41z"),
-        CANCEL("M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z");
+    private static final String ICON_DIRECTORY = "/com/example/icons/";
+    private static final Pattern PATH_DATA = Pattern.compile("<path\\b[^>]*\\bd=\"([^\"]+)\"");
+    private static final double ICON_SIZE = 24.0;
+    private static final double VIEWBOX_SIZE = 960.0;
 
-        private final String path;
-        Icon(String path) { this.path = path; }
+    public enum Icon {
+        EDIT("EDIT.svg"),
+        DOWNLOAD("DOWNLOAD.svg"),
+        MEDICAL("CLINICAL-NOTES.svg"),
+        DELETE("DELETE.svg"),
+        RESTORE("RESTORE.svg"),
+        MAP("MAP.svg"),
+        CHECK("CHECK-CIRCLE.svg"),
+        CANCEL("CANCEL.svg");
+
+        private final String fileName;
+        private String path;
+
+        Icon(String fileName) { this.fileName = fileName; }
+
+        private String path() {
+            if (path == null) path = loadPath(fileName);
+            return path;
+        }
     }
 
     private RowActionButton() { }
 
     public static Button create(String label, Icon icon, EventHandler<ActionEvent> action) {
         SVGPath graphic = new SVGPath();
-        graphic.setContent(icon.path);
+        graphic.setContent(icon.path());
+        double scale = ICON_SIZE / VIEWBOX_SIZE;
+        graphic.getTransforms().add(new Affine(scale, 0, 0, 0, scale, ICON_SIZE));
         graphic.getStyleClass().add("row-action-icon");
         Button button = new Button();
         button.getStyleClass().add("row-action-button");
@@ -35,5 +56,22 @@ public final class RowActionButton {
         button.setAccessibleText(label);
         button.setOnAction(action);
         return button;
+    }
+
+    private static String loadPath(String fileName) {
+        String resource = ICON_DIRECTORY + fileName;
+        try (InputStream input = RowActionButton.class.getResourceAsStream(resource)) {
+            if (input == null) {
+                throw new IllegalStateException("No se encontró el icono de acción: " + resource);
+            }
+            String svg = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            Matcher matcher = PATH_DATA.matcher(svg);
+            if (!matcher.find()) {
+                throw new IllegalStateException("El icono de acción no contiene un trazado: " + resource);
+            }
+            return matcher.group(1);
+        } catch (IOException exception) {
+            throw new IllegalStateException("No se pudo leer el icono de acción: " + resource, exception);
+        }
     }
 }
