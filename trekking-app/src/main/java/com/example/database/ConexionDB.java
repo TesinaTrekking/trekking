@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +15,24 @@ import com.example.model.Ruta;
 
 public class ConexionDB {
 
-    private static final String URL = "jdbc:sqlite:trekking.db";
+    private static final String URL = "jdbc:sqlite:" + rutaArchivoBase();
+
+    private static String rutaArchivoBase() {
+        String configurada = System.getProperty("trekking.db");
+        if (configurada != null && !configurada.isBlank()) return configurada;
+
+        for (Path directorio = Path.of("").toAbsolutePath().normalize(); directorio != null; directorio = directorio.getParent()) {
+            if (Files.isRegularFile(directorio.resolve("trekking-app/pom.xml"))) {
+                return directorio.resolve("trekking.db").toString();
+            }
+        }
+        return "trekking.db";
+    }
+
+    /** Initializes the database without starting the JavaFX application. */
+    public static void main(String[] args) {
+        crearTabla();
+    }
 
     public static Connection conectar() throws SQLException {
         Connection conexion = DriverManager.getConnection(URL);
