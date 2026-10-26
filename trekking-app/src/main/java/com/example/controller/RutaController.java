@@ -2,13 +2,8 @@ package com.example.controller;
 
 import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.RutaDAO;
-import com.example.dao.RutaEquipamientoDAO;
-import com.example.dao.EquipamientoDAO;
 import com.example.model.Checkpoint;
-import com.example.model.EquipamientoRequerido;
 import com.example.model.Ruta;
-import com.example.model.RutaEquipamiento;
-import com.example.model.Equipamiento;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
@@ -45,12 +40,9 @@ public class RutaController implements Initializable {
 
         private final RutaDAO rutaDAO = new RutaDAO();
         private final RutaCheckpointDAO rutaCheckpointDAO = new RutaCheckpointDAO();
-        private final RutaEquipamientoDAO rutaEquipamientoDAO = new RutaEquipamientoDAO();
 
         private ObservableList<Ruta> rutas;
         private FilteredList<Ruta> rutasFiltradas;
-        private final ObservableList<EquipamientoRequerido> equipamientosRutaSeleccionada = FXCollections
-                        .observableArrayList();
 
         @FXML
         private TableView<Ruta> tablaRutas;
@@ -91,9 +83,6 @@ public class RutaController implements Initializable {
 
         @FXML
         private ListView<Checkpoint> checkpointsRutaListView;
-        @FXML
-        private ListView<EquipamientoRequerido> equipamientosListView;
-
         @FXML
         private Label estadoItinerarioLabel;
 
@@ -144,7 +133,6 @@ public class RutaController implements Initializable {
                 });
 
                 configurarCheckpoints();
-                configurarEquipamiento();
                 configurarFiltros();
                 cargarRutas();
 
@@ -155,7 +143,6 @@ public class RutaController implements Initializable {
                                 .selectedItemProperty()
                                 .addListener((observable, anterior, actual) -> {
                                         cargarCheckpointsDeRuta(actual);
-                                        cargarEquipamientoDeRuta(actual);
                                 });
                 actualizarEstadoTabla();
         }
@@ -200,57 +187,6 @@ public class RutaController implements Initializable {
                                 : checkpoints.size() + " Checkpoints · Completa");
         }
 
-        private void configurarEquipamiento() {
-
-                equipamientosListView.setItems(
-                                equipamientosRutaSeleccionada);
-
-                equipamientosListView.setCellFactory(listView -> new ListCell<>() {
-
-                        @Override
-                        protected void updateItem(
-                                        EquipamientoRequerido requerido,
-                                        boolean empty) {
-
-                                super.updateItem(requerido, empty);
-
-                                if (empty || requerido == null) {
-                                        setText(null);
-                                } else {
-                                        setText(
-                                                        requerido.getEquipamiento().getNombre()
-                                                                        + " — "
-                                                                        + requerido.getCantidadRequerida());
-                                }
-                        }
-                });
-        }
-
-        private void cargarEquipamientoDeRuta(Ruta ruta) {
-
-                equipamientosRutaSeleccionada.clear();
-
-                if (ruta == null) {
-                        return;
-                }
-
-                List<RutaEquipamiento> relaciones = rutaEquipamientoDAO.obtenerPorRuta(ruta.getId());
-
-                for (RutaEquipamiento relacion : relaciones) {
-
-                        Equipamiento equipamiento = EquipamientoDAO.obtenerPorId(
-                                        relacion.getEquipamientoId());
-
-                        if (equipamiento != null) {
-
-                                equipamientosRutaSeleccionada.add(
-                                                new EquipamientoRequerido(
-                                                                equipamiento,
-                                                                relacion.getCantidadRequerida()));
-                        }
-                }
-        }
-
         private void cargarRutas() {
 
                 rutas = FXCollections.observableArrayList(switch (filtroEstadoCombo.getValue()) {
@@ -265,8 +201,6 @@ public class RutaController implements Initializable {
 
                 aplicarFiltros();
                 cargarCheckpointsDeRuta(
-                                tablaRutas.getSelectionModel().getSelectedItem());
-                cargarEquipamientoDeRuta(
                                 tablaRutas.getSelectionModel().getSelectedItem());
         }
 

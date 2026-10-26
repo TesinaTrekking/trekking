@@ -128,16 +128,6 @@
                                 prefHeight="120.0"
                                 prefWidth="700.0"
                                 VBox.vgrow="NEVER" />
-                        
-                        
-                        <Label text="Equipamiento minimo requerido"
-                                styleClass="card-title" />
-
-                        <ListView fx:id="equipamientosListView"
-                                prefHeight="120.0"
-                                prefWidth="700.0"
-                                VBox.vgrow="NEVER" />
-
                 </VBox>
         </content>
 

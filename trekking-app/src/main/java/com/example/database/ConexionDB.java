@@ -69,16 +69,6 @@ public class ConexionDB {
                     activo INTEGER NOT NULL DEFAULT 1
                 )
                 """;
-        String sqlRutasEquipamiento = """
-                CREATE TABLE IF NOT EXISTS rutas_equipamiento (
-                    rutas_equipamiento_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ruta_id INTEGER NOT NULL,
-                    equipamiento_id INTEGER NOT NULL,
-                    cantidad_requerida INTEGER NOT NULL,
-                    FOREIGN KEY (ruta_id) REFERENCES rutas(id),
-                    FOREIGN KEY (equipamiento_id) REFERENCES equipamiento(id)
-                )
-                """;
         String sqlClientes = """  
             CREATE TABLE IF NOT EXISTS clientes ( id INTEGER PRIMARY KEY AUTOINCREMENT, dni TEXT UNIQUE, nombre TEXT NOT NULL, apellido TEXT NOT NULL, fecha_nacimiento TEXT, email TEXT, telefono TEXT, sexo_id INTEGER, sexo TEXT NOT NULL, contacto_emergencia_nombre TEXT, contacto_emergencia_telefono TEXT, contacto_emergencia_relacion TEXT, autorizacion_menores INTEGER NOT NULL DEFAULT 0, tutor_nombre TEXT, tutor_apellido TEXT, tutor_dni TEXT, tutor_telefono TEXT, activo INTEGER NOT NULL DEFAULT 1, ficha_medica BLOB, nombre_ficha_medica TEXT, fecha_alta TEXT NOT NULL DEFAULT CURRENT_DATE, fecha_modificacion TEXT NOT NULL DEFAULT CURRENT_DATE )
                 """;
@@ -173,7 +163,6 @@ public class ConexionDB {
             statement.execute(sqlCheckpoints);
             statement.execute(sqlRutaCheckpoints);
             statement.execute(sqlEquipamiento);
-            statement.execute(sqlRutasEquipamiento);
             statement.execute(sqlClientes);
             statement.execute(sqlSexos);
             statement.execute(sqlContactosEmergencia); // Valores iniciales de la tabla sexos 
