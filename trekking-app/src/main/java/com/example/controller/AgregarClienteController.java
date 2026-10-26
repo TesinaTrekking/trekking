@@ -86,6 +86,9 @@ public class AgregarClienteController {
     private Label tutorTelefonoLabel;
 
     @FXML
+    private javafx.scene.control.Button guardarButton;
+
+    @FXML
     private Label fichaMedicaLabel;
 
     private File fichaMedicaSeleccionada;
@@ -93,6 +96,7 @@ public class AgregarClienteController {
 
     @FXML
     private void initialize() {
+        guardarButton.setText("Crear cliente");
         FechaFormato.configurar(fechaNacimientoPicker);
         sexoComboBox.getItems().addAll(
                 "Masculino",

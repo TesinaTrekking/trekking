@@ -47,13 +47,13 @@ public final class NavigationShell {
             Map.entry("salida-alta", new Screen("Alta de Salida", "trips", "salidas.fxml", List.of("Salidas", "Alta de Salida"))),
             Map.entry("salida-edicion", new Screen("Edición de Salida", "trips", "salidas.fxml", List.of("Salidas", "Edición de Salida"))),
             Map.entry("checkpoints", new Screen("Checkpoints", "routes", "checkpoints.fxml", List.of("Salidas", "Rutas", "Checkpoints"))),
-            Map.entry("cliente-alta", new Screen("Alta de Cliente", "clients", "agregar-cliente.fxml", List.of("Salidas", "Clientes", "Alta de Cliente"))),
-            Map.entry("cliente-edicion", new Screen("Edición de Cliente", "clients", "editar-cliente.fxml", List.of("Salidas", "Clientes", "Edición de Cliente"))),
-            Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Alta de Ruta"))),
-            Map.entry("ruta-edicion", new Screen("Edición de Ruta", "routes", "ruta-form.fxml", List.of("Salidas", "Rutas", "Edición de Ruta"))),
+            Map.entry("cliente-alta", new Screen("Alta de Cliente", "clients", "agregar-cliente.fxml", List.of("Clientes", "Nuevo cliente"))),
+            Map.entry("cliente-edicion", new Screen("Edición de Cliente", "clients", "editar-cliente.fxml", List.of("Clientes", "Editar cliente"))),
+            Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Rutas", "Nueva ruta"))),
+            Map.entry("ruta-edicion", new Screen("Edición de Ruta", "routes", "ruta-form.fxml", List.of("Rutas", "Editar ruta"))),
             Map.entry("itinerario-ruta", new Screen("Itinerario", "routes", "itinerario-ruta.fxml", List.of("Salidas", "Rutas", "Itinerario"))),
-            Map.entry("inventario-alta", new Screen("Alta de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Alta de Elemento"))),
-            Map.entry("inventario-edicion", new Screen("Edición de Elemento", "inventory", "equipamiento-form.fxml", List.of("Salidas", "Inventario", "Edición de Elemento"))));
+            Map.entry("inventario-alta", new Screen("Alta de Elemento", "inventory", "equipamiento-form.fxml", List.of("Inventario", "Nuevo elemento"))),
+            Map.entry("inventario-edicion", new Screen("Edición de Elemento", "inventory", "equipamiento-form.fxml", List.of("Inventario", "Editar elemento"))));
 
     private NavigationShell() {
     }
@@ -140,7 +140,10 @@ public final class NavigationShell {
         if (guard instanceof BooleanSupplier canLeave && !canLeave.getAsBoolean()) return;
         String crumb = current.crumbs().get(crumbIndex);
         String targetId;
-        if (crumbIndex == 0) targetId = "salidas";
+        if (crumb.equals("Clientes")) targetId = "clientes";
+        else if (crumb.equals("Rutas")) targetId = "rutas";
+        else if (crumb.equals("Inventario")) targetId = "inventario";
+        else if (crumbIndex == 0) targetId = "salidas";
         else if (crumbIndex == 1) targetId = current.section().equals("routes") ? "rutas"
                 : current.section().equals("clients") ? "clientes" : "inventario";
         else targetId = crumb.equals("Listado") ? (current.section().equals("routes") ? "rutas"

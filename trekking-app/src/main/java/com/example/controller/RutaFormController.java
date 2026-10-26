@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.RutaDAO;
 import com.example.model.Ruta;
 import com.example.util.FormValidation;
+import com.example.util.ResponsiveFormLayout;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
 import com.example.util.ToastNotifications;
@@ -14,6 +15,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
+import javafx.scene.layout.GridPane;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.stage.Stage;
@@ -31,6 +34,12 @@ public class RutaFormController {
 
         @FXML
         private Label tituloForm;
+
+        @FXML
+        private Button guardarButton;
+
+        @FXML
+        private GridPane formGrid;
 
         @FXML
         private TextField nombreField;
@@ -52,6 +61,7 @@ public class RutaFormController {
                 javafx.application.Platform.runLater(nombreField::requestFocus);
 
                 configurarCampos();
+                ResponsiveFormLayout.adapt(formGrid);
 
                 tipoTerrenoCombo.getItems().addAll(
                                 "Rocoso",
@@ -78,9 +88,11 @@ public class RutaFormController {
                 this.rutaEnEdicion = ruta;
                 if (ruta != null) {
                         tituloForm.setText("Editar ruta");
+                        guardarButton.setText("Guardar cambios");
                         cargarRuta(ruta);
                 } else {
                         tituloForm.setText("Nueva ruta");
+                        guardarButton.setText("Crear ruta");
                 }
         }
 

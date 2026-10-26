@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
 import com.example.util.FormValidation;
+import com.example.util.ResponsiveFormLayout;
 import com.example.util.ToastNotifications;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
@@ -12,6 +13,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 public class EquipamientoFormController {
@@ -31,11 +33,18 @@ public class EquipamientoFormController {
     @FXML
     private Label tituloLabel;
 
+    @FXML
+    private javafx.scene.control.Button guardarButton;
+
+    @FXML
+    private GridPane formGrid;
+
     private Equipamiento equipamientoEditando;
 
     @FXML
     public void initialize() {
         javafx.application.Platform.runLater(txtNombre::requestFocus);
+        ResponsiveFormLayout.adapt(formGrid);
 
         cmbCategoria.getItems().addAll(
                 "Campamento",
@@ -136,8 +145,10 @@ public class EquipamientoFormController {
 
         if (equipamiento == null) {
             tituloLabel.setText("Nuevo elemento");
+            guardarButton.setText("Crear elemento");
         } else {
             tituloLabel.setText("Editar elemento");
+            guardarButton.setText("Guardar cambios");
         }
 
         if (equipamiento == null) {

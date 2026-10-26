@@ -92,6 +92,9 @@ public class EditarClienteController {
     private Label tutorTelefonoLabel;
 
     @FXML
+    private Button guardarButton;
+
+    @FXML
     private Label fichaMedicaLabel;
 
     @FXML
@@ -108,6 +111,7 @@ public class EditarClienteController {
 
     @FXML
     private void initialize() {
+        guardarButton.setText("Guardar cambios");
         FechaFormato.configurar(fechaNacimientoPicker);
         sexoComboBox.getItems().addAll(
                 "Masculino",

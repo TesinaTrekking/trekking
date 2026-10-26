@@ -112,7 +112,7 @@
                 </children>
             </GridPane>
             <HBox spacing="8.0" alignment="CENTER" styleClass="crud-actions">
-                <Button text="Guardar" onAction="#guardarCambios"
+                <Button fx:id="guardarButton" text="Guardar cambios" onAction="#guardarCambios"
                     styleClass="primary-button" />
                 <Button text="Cancelar" onAction="#cancelarEdicion"
                     styleClass="secondary-button" />

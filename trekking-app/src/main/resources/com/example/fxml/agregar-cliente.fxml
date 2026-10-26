@@ -152,7 +152,7 @@
                GridPane.columnIndex="1" GridPane.rowIndex="19" />
 </GridPane>
             <HBox spacing="8.0" alignment="CENTER" styleClass="crud-actions">
-                <Button text="Guardar" onAction="#guardarCliente"
+                <Button fx:id="guardarButton" text="Crear cliente" onAction="#guardarCliente"
                     styleClass="primary-button" />
                 <Button text="Cancelar" onAction="#irListaClientes"
                     styleClass="secondary-button" />

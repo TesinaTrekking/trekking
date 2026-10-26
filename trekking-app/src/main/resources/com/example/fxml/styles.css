@@ -20,6 +20,64 @@
   -fx-padding: 24px;
   -fx-alignment: top-center;
   -fx-spacing: 16px;
+  -fx-background-color: -color-background;
+}
+
+.form-content {
+  -fx-max-width: 760px;
+  -fx-pref-width: 760px;
+  -fx-spacing: 18px;
+}
+
+.form-page > .form-card {
+  -fx-max-width: 760px;
+  -fx-pref-width: 760px;
+}
+
+.form-section-title {
+  -fx-font-size: 16px;
+  -fx-font-weight: bold;
+  -fx-text-fill: -color-text;
+}
+
+.form-section {
+  -fx-spacing: 12px;
+  -fx-padding: 0 0 16px 0;
+  -fx-border-color: transparent transparent -color-border transparent;
+  -fx-border-width: 0 0 1px 0;
+}
+
+.form-card .dialog-header-title {
+  -fx-font-size: 24px;
+}
+
+.form-card .form-label {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+}
+
+.form-card .text-field,
+.form-card .combo-box,
+.form-card .date-picker {
+  -fx-pref-height: 40px;
+  -fx-min-width: 0;
+}
+
+.form-card .crud-actions {
+  -fx-alignment: center-right;
+  -fx-padding: 16px 0 0 0;
+  -fx-border-color: -color-border transparent transparent transparent;
+  -fx-border-width: 1px 0 0 0;
+}
+
+.form-field {
+  -fx-spacing: 6px;
+  -fx-min-width: 0;
+}
+
+.form-grid > .column-constraints > .column-constraint {
+  -fx-hgrow: ALWAYS;
+  -fx-fill-width: true;
 }
 
 .form-card {
