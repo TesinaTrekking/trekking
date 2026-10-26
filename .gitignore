@@ -7,8 +7,4 @@ target/
 fichas_medicas/
 
 .agents/
-.scratch/
-AGENTS.md
-GLOSSARY.md
-docs/
 skills-lock.json

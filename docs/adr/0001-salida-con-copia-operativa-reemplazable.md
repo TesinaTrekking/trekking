@@ -1,0 +1,3 @@
+# La salida conserva una copia operativa reemplazable
+
+Al confirmar una salida se guardan sus datos operativos como copias independientes de las rutas, checkpoints, clientes e inventario de origen. Editar una salida reemplaza la copia vigente y no mantiene versiones anteriores: esto permite preservar lo planificado frente a cambios de catálogo sin introducir un historial de revisiones. La plantilla de ruta admite cero o al menos dos checkpoints, mientras que la copia de una salida puede contener cualquier cantidad; sus checkpoints sí deben respetar la altitud máxima copiada. “Realizada” y “cancelada” son estados finales del flujo normal; para corregir un error se edita el registro sin revertir su estado, y la eliminación física queda como excepción administrativa.
