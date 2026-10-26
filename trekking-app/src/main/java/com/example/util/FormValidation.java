@@ -5,7 +5,9 @@ import java.util.function.Supplier;
 import javafx.beans.value.ObservableValue;
 import javafx.css.PseudoClass;
 import javafx.scene.control.Control;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
 
 public final class FormValidation {
 
@@ -25,11 +27,13 @@ public final class FormValidation {
         control.getProperties().put(STATE_KEY, state);
 
         value.addListener((observable, previous, current) -> {
+            state.markInteracted();
             state.update();
         });
 
         control.focusedProperty().addListener((observable, wasFocused, focused) -> {
-            if (!focused) {
+            if (!focused && wasFocused) {
+                state.markInteracted();
                 state.update();
             }
         });
@@ -40,6 +44,7 @@ public final class FormValidation {
         if (!(value instanceof ValidationState state)) {
             return true;
         }
+        state.markInteracted();
         return state.update();
     }
 
@@ -82,6 +87,8 @@ public final class FormValidation {
         private final Control control;
         private final Supplier<String> errorMessage;
         private final Tooltip originalTooltip;
+        private final Label inlineError;
+        private boolean interacted;
 
         private ValidationState(
                 Control control,
@@ -89,10 +96,21 @@ public final class FormValidation {
             this.control = control;
             this.errorMessage = errorMessage;
             this.originalTooltip = control.getTooltip();
+            this.inlineError = crearErrorInline(control);
+        }
+
+        private void markInteracted() {
+            interacted = true;
         }
 
         private boolean update() {
             String message = errorMessage.get();
+            if (inlineError != null) {
+                boolean show = interacted && message != null && !message.isBlank();
+                inlineError.setText(show ? message : "");
+                inlineError.setVisible(show);
+                inlineError.setManaged(show);
+            }
             if (message == null || message.isBlank()) {
                 control.pseudoClassStateChanged(INVALID, false);
                 control.setTooltip(originalTooltip);
@@ -101,6 +119,20 @@ public final class FormValidation {
             control.pseudoClassStateChanged(INVALID, true);
             control.setTooltip(new Tooltip(message));
             return false;
+        }
+
+        private static Label crearErrorInline(Control control) {
+            if (!(control.getParent() instanceof VBox parent)) {
+                return null;
+            }
+            Label label = new Label();
+            label.getStyleClass().add("field-error-message");
+            label.setWrapText(true);
+            label.setVisible(false);
+            label.setManaged(false);
+            int index = parent.getChildren().indexOf(control);
+            parent.getChildren().add(Math.min(index + 1, parent.getChildren().size()), label);
+            return label;
         }
     }
 }

@@ -18,7 +18,7 @@
 
 .form-page {
   -fx-padding: 24px;
-  -fx-alignment: top-center;
+  -fx-alignment: top-left;
   -fx-spacing: 16px;
   -fx-background-color: -color-background;
 }
@@ -26,10 +26,20 @@
 .form-content {
   -fx-max-width: 760px;
   -fx-pref-width: 760px;
+  -fx-min-width: 0;
   -fx-spacing: 18px;
 }
 
+.form-content > .dialog-header-title {
+  -fx-font-size: 24px;
+}
+
 .form-page > .form-card {
+  -fx-max-width: 760px;
+  -fx-pref-width: 760px;
+}
+
+.form-page > .form-content {
   -fx-max-width: 760px;
   -fx-pref-width: 760px;
 }
@@ -68,6 +78,18 @@
   -fx-padding: 16px 0 0 0;
   -fx-border-color: -color-border transparent transparent transparent;
   -fx-border-width: 1px 0 0 0;
+}
+
+.form-card .button,
+.form-card .button:focused {
+  -fx-effect: none;
+  -fx-background-insets: 0;
+}
+
+.form-card .button:focused {
+  -fx-border-color: -color-secondary;
+  -fx-border-width: 1px;
+  -fx-border-radius: 6px;
 }
 
 .form-field {
@@ -876,6 +898,11 @@
 .field-error {
   -fx-border-color: -color-danger;
   -fx-border-width: 2px;
+}
+
+.field-error-message {
+  -fx-font-size: 12px;
+  -fx-text-fill: -color-danger;
 }
 
 .pantalla-scroll {

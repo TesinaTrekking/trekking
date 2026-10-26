@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 
 import com.example.dao.ClienteDAO;
 import com.example.util.FormValidation;
+import com.example.util.ResponsiveFormLayout;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
 import com.example.util.FechaFormato;
@@ -21,6 +22,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
@@ -88,6 +91,13 @@ public class AgregarClienteController {
     @FXML
     private javafx.scene.control.Button guardarButton;
 
+    @FXML private GridPane datosPersonalesGrid;
+    @FXML private GridPane contactoGrid;
+    @FXML private VBox tutorNombreGroup;
+    @FXML private VBox tutorApellidoGroup;
+    @FXML private VBox tutorDniGroup;
+    @FXML private VBox tutorTelefonoGroup;
+
     @FXML
     private Label fichaMedicaLabel;
 
@@ -97,6 +107,8 @@ public class AgregarClienteController {
     @FXML
     private void initialize() {
         guardarButton.setText("Crear cliente");
+        ResponsiveFormLayout.adapt(datosPersonalesGrid);
+        ResponsiveFormLayout.adapt(contactoGrid);
         FechaFormato.configurar(fechaNacimientoPicker);
         sexoComboBox.getItems().addAll(
                 "Masculino",
@@ -228,6 +240,11 @@ public class AgregarClienteController {
 
     private void actualizarCamposTutor() {
         boolean mostrar = autorizacionMenoresCheckBox.isSelected();
+        VBox[] groups = {tutorNombreGroup, tutorApellidoGroup, tutorDniGroup, tutorTelefonoGroup};
+        for (VBox group : groups) {
+            group.setVisible(mostrar);
+            group.setManaged(mostrar);
+        }
         Label[] labels = {
             tutorNombreLabel,
             tutorApellidoLabel,
