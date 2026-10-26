@@ -30,7 +30,7 @@ public class ShellController implements Initializable {
     private StackPane contentContainer;
 
     @FXML
-    private Label appHeaderBrand;
+    private Label sidebarBrand;
 
     @FXML
     private HBox breadcrumbBar;
@@ -61,7 +61,8 @@ public class ShellController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        appHeaderBrand.setGraphic(SidebarIcon.load("LANDSCAPE.svg"));
+        sidebarBrand.setGraphic(SidebarIcon.load("MOUNTAIN-SNOW.svg"));
+        sidebarBrand.setAccessibleText("TrekRisk");
         btnSalidas.setGraphic(SidebarIcon.load("SALIDAS.svg"));
         btnRutas.setGraphic(SidebarIcon.load("RUTAS.svg"));
         btnInventario.setGraphic(SidebarIcon.load("INVENTARIO.svg"));
@@ -85,6 +86,7 @@ public class ShellController implements Initializable {
         appSidebar.setMaxWidth(width);
         appSidebar.getStyleClass().remove("app-sidebar-collapsed");
         if (sidebarCollapsed) appSidebar.getStyleClass().add("app-sidebar-collapsed");
+        sidebarBrand.setText(sidebarCollapsed ? "" : "TrekRisk");
 
         setNavigationButtonState(btnSalidas, "Salidas");
         setNavigationButtonState(btnRutas, "Rutas");

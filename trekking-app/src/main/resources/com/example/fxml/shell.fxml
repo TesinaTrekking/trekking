@@ -11,14 +11,9 @@
   xmlns:fx="http://javafx.com/fxml/1"
   fx:controller="com.example.controller.ShellController"
   stylesheets="@styles.css">
-  <top>
-    <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="12.0">
-      <Label fx:id="appHeaderBrand" text="TrekRisk" styleClass="app-header-brand" />
-      <Label text="Gestión operativa de salidas de montaña" styleClass="app-header-caption" />
-    </HBox>
-  </top>
   <left>
     <VBox fx:id="appSidebar" styleClass="app-sidebar" minWidth="230.0" prefWidth="230.0" maxWidth="230.0">
+      <Label fx:id="sidebarBrand" text="TrekRisk" styleClass="sidebar-brand" />
       <VBox fx:id="navigationBox" styleClass="sidebar-navigation" VBox.vgrow="ALWAYS">
         <Button fx:id="btnSalidas" text="Salidas" onAction="#onSalidas"
           maxWidth="Infinity" styleClass="sidebar-button" />

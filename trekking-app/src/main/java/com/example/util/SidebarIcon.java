@@ -14,8 +14,8 @@ import javafx.scene.transform.Affine;
 public final class SidebarIcon {
     private static final String ICON_DIRECTORY = "/com/example/icons/";
     private static final Pattern PATH_DATA = Pattern.compile("<path\\b[^>]*\\bd=\"([^\"]+)\"");
+    private static final Pattern VIEWBOX = Pattern.compile("viewBox=\"([^\"]+)\"");
     private static final double ICON_SIZE = 20.0;
-    private static final double VIEWBOX_SIZE = 960.0;
 
     private SidebarIcon() { }
 
@@ -27,19 +27,31 @@ public final class SidebarIcon {
             }
 
             String svg = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            Matcher matcher = PATH_DATA.matcher(svg);
-            if (!matcher.find()) {
+            Matcher viewBoxMatcher = VIEWBOX.matcher(svg);
+            Matcher pathMatcher = PATH_DATA.matcher(svg);
+            if (!viewBoxMatcher.find() || !pathMatcher.find()) {
                 throw new IllegalStateException("El icono del sidebar no contiene un trazado: " + resource);
             }
 
-            SVGPath icon = new SVGPath();
-            icon.setContent(matcher.group(1));
-            double scale = ICON_SIZE / VIEWBOX_SIZE;
-            icon.getTransforms().add(new Affine(scale, 0, 0, 0, scale, ICON_SIZE));
-            icon.getStyleClass().add("sidebar-icon");
-            icon.setManaged(false);
-
-            StackPane graphic = new StackPane(icon);
+            String[] bounds = viewBoxMatcher.group(1).trim().split("\\s+");
+            if (bounds.length != 4) {
+                throw new IllegalStateException("El icono del sidebar tiene un viewBox inválido: " + resource);
+            }
+            double minX = Double.parseDouble(bounds[0]);
+            double minY = Double.parseDouble(bounds[1]);
+            double viewWidth = Double.parseDouble(bounds[2]);
+            double viewHeight = Double.parseDouble(bounds[3]);
+            double scale = ICON_SIZE / Math.max(viewWidth, viewHeight);
+            StackPane graphic = new StackPane();
+            do {
+                SVGPath icon = new SVGPath();
+                icon.setContent(pathMatcher.group(1));
+                icon.getTransforms().add(new Affine(scale, 0, -minX * scale,
+                        0, scale, -minY * scale));
+                icon.getStyleClass().add("sidebar-icon");
+                icon.setManaged(false);
+                graphic.getChildren().add(icon);
+            } while (pathMatcher.find());
             graphic.setMinSize(ICON_SIZE, ICON_SIZE);
             graphic.setPrefSize(ICON_SIZE, ICON_SIZE);
             graphic.setMaxSize(ICON_SIZE, ICON_SIZE);
