@@ -1,6 +1,6 @@
 # Rediseño de gestión del Itinerario y formulario de Checkpoint
 
-Status: ready-for-human
+Status: closed
 
 Implementar la presentación de la gestión del Itinerario y el formulario de alta/edición de Checkpoint de acuerdo con la especificación funcional. Mantener la edición pendiente y el guardado conjunto existentes; mostrar los Checkpoints por hora, conservar el orden actual en empates y quitar los controles de reordenamiento manual. El formulario debe reemplazar el contenido central dentro de la shell y seguir el patrón visual de los formularios rediseñados.
 
@@ -14,3 +14,4 @@ Especificación: [spec.md](../../../docs/specs/rediseno-itinerario/spec.md)
 - Pendiente revisión manual visual de JavaFX.
 - Ajuste visual solicitado: horas sin cápsula y acciones por fila con los iconos SVG existentes del proyecto.
 - Ajuste visual adicional: alta con `ADD.svg`, hora alineada con el nombre y acciones por fila con visibilidad hover como en las tablas.
+- Revisión visual aprobada por el usuario el 2026-10-26; issue cerrado.
