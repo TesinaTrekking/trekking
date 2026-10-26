@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -27,6 +28,9 @@ public class ShellController implements Initializable {
 
     @FXML
     private StackPane contentContainer;
+
+    @FXML
+    private Label appHeaderBrand;
 
     @FXML
     private HBox breadcrumbBar;
@@ -57,6 +61,7 @@ public class ShellController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        appHeaderBrand.setGraphic(SidebarIcon.load("LANDSCAPE.svg"));
         btnSalidas.setGraphic(SidebarIcon.load("SALIDAS.svg"));
         btnRutas.setGraphic(SidebarIcon.load("RUTAS.svg"));
         btnInventario.setGraphic(SidebarIcon.load("INVENTARIO.svg"));

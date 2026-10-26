@@ -12,8 +12,8 @@
   fx:controller="com.example.controller.ShellController"
   stylesheets="@styles.css">
   <top>
-    <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="8.0">
-      <Label text="Trekrisk" styleClass="app-header-brand" />
+    <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="12.0">
+      <Label fx:id="appHeaderBrand" text="TrekRisk" styleClass="app-header-brand" />
       <Label text="Gestión operativa de salidas de montaña" styleClass="app-header-caption" />
     </HBox>
   </top>

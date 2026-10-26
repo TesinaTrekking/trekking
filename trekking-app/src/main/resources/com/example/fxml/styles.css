@@ -40,23 +40,26 @@
 }
 
 .app-header {
-  -fx-background-color: white;
-  -fx-border-color: transparent transparent #e1e5eb transparent;
-  -fx-border-width: 0 0 1 0;
-  -fx-padding: 14px 24px;
+  -fx-background-color: #172b4d;
+  -fx-padding: 8px 24px;
 }
 
 .app-header-brand {
   -fx-font-family: "Segoe UI";
-  -fx-font-size: 20px;
+  -fx-font-size: 18px;
   -fx-font-weight: bold;
-  -fx-text-fill: #172b4d;
+  -fx-text-fill: white;
+  -fx-graphic-text-gap: 8px;
+}
+
+.app-header-brand .sidebar-icon {
+  -fx-fill: white;
 }
 
 .app-header-caption {
   -fx-font-family: "Segoe UI";
   -fx-font-size: 13px;
-  -fx-text-fill: #68778d;
+  -fx-text-fill: #c4cfdf;
 }
 
 .app-sidebar {
