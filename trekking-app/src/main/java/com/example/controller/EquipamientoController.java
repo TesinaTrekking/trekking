@@ -64,6 +64,7 @@ public class EquipamientoController {
 
     @FXML
     public void initialize() {
+        javafx.application.Platform.runLater(txtBuscar::requestFocus);
 
         SearchFieldIcon.install(txtBuscar);
 

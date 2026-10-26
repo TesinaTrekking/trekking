@@ -3,12 +3,12 @@ package com.example.controller;
 import com.example.dao.EquipamientoDAO;
 import com.example.model.Equipamiento;
 import com.example.util.FormValidation;
+import com.example.util.ToastNotifications;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -29,15 +29,13 @@ public class EquipamientoFormController {
     private ComboBox<String> cmbEstado;
 
     @FXML
-    private Button guardarButton;
-
-    @FXML
     private Label tituloLabel;
 
     private Equipamiento equipamientoEditando;
 
     @FXML
     public void initialize() {
+        javafx.application.Platform.runLater(txtNombre::requestFocus);
 
         cmbCategoria.getItems().addAll(
                 "Campamento",
@@ -67,13 +65,13 @@ public class EquipamientoFormController {
                         : null);
         FormValidation.watch(cmbCategoria, cmbCategoria.valueProperty(),
                 () -> cmbCategoria.getValue() == null
-                        ? "Selecciona una categoria."
+                        ? "Seleccione una categoría."
                         : null);
         FormValidation.watch(txtCantidad, txtCantidad.textProperty(),
                 this::validarCantidad);
         FormValidation.watch(cmbEstado, cmbEstado.valueProperty(),
                 () -> cmbEstado.getValue() == null
-                        ? "Selecciona un estado."
+                        ? "Seleccione un estado."
                         : null);
     }
 
@@ -125,7 +123,11 @@ public class EquipamientoFormController {
             return;
         }
 
+        var ventana = txtNombre.getScene().getWindow();
         volverListado();
+        ToastNotifications.show(ventana,
+                equipamientoEditando == null ? "Elemento agregado al Inventario" : "Elemento actualizado",
+                ToastNotifications.Kind.SUCCESS);
     }
 
     public void cargarEquipamiento(Equipamiento equipamiento) {
@@ -133,15 +135,9 @@ public class EquipamientoFormController {
         equipamientoEditando = equipamiento;
 
         if (equipamiento == null) {
-            tituloLabel.setText("Nuevo equipamiento");
+            tituloLabel.setText("Nuevo elemento");
         } else {
-            tituloLabel.setText("Editar equipamiento");
-        }
-
-        guardarButton.getStyleClass().removeAll(
-                "action-add");
-        if (!guardarButton.getStyleClass().contains("action-edit")) {
-            guardarButton.getStyleClass().add("action-edit");
+            tituloLabel.setText("Editar elemento");
         }
 
         if (equipamiento == null) {

@@ -82,6 +82,7 @@ public class RutaController implements Initializable {
 
         @Override
         public void initialize(URL url, ResourceBundle rb) {
+                javafx.application.Platform.runLater(buscarField::requestFocus);
 
                 SearchFieldIcon.install(buscarField);
 

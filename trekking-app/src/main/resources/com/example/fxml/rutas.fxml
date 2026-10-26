@@ -74,7 +74,7 @@
                                         promptText="Estado"
                                         styleClass="list-filter-control" />
 
-                                <Button text="+ Nueva Ruta"
+                                        <Button text="+ Nueva ruta"
                                         onAction="#nuevaRuta"
                                         styleClass="action-add" />
 

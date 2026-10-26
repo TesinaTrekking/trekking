@@ -23,17 +23,17 @@
        <content>
 
               <VBox alignment="TOP_CENTER"
-                     spacing="20.0">
+                     spacing="20.0" styleClass="form-page form-card">
 
                      <Label fx:id="tituloForm"
-                            text="Agregar Nueva Ruta"
-                            styleClass="dialog-header-title" />
+                            text="Nueva ruta"
+                     styleClass="dialog-header-title" />
 
-                     <GridPane alignment="CENTER"
+                     <GridPane alignment="CENTER" styleClass="form-grid"
                             hgap="10"
                             vgap="15">
 
-                            <Label text="Nombre:"
+                            <Label text="Nombre *:"
                                    styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="0" />
@@ -50,7 +50,7 @@
                                    GridPane.rowIndex="1" />
 
 
-                            <Label text="Altitud máxima:"
+                            <Label text="Altitud máxima (m) *:"
                                    styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="2" />
@@ -67,7 +67,7 @@
                                    GridPane.rowIndex="3" />
 
 
-                            <Label text="Tipo de terreno:"
+                            <Label text="Tipo de terreno *:"
                                    styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="4" />
@@ -84,7 +84,7 @@
                                    GridPane.rowIndex="5" />
 
 
-                            <Label text="Dificultad técnica:"
+                            <Label text="Dificultad técnica *:"
                                    styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="6" />
@@ -101,7 +101,7 @@
                                    GridPane.rowIndex="7" />
 
 
-                            <Label text="Dificultad física:"
+                            <Label text="Dificultad física *:"
                                    styleClass="form-label"
                                    GridPane.columnIndex="0"
                                    GridPane.rowIndex="8" />
@@ -124,9 +124,9 @@
                             spacing="8.0"
                             styleClass="crud-actions">
 
-                            <Button fx:id="guardarRutaButton" text="Guardar"
+                            <Button text="Guardar"
                                    onAction="#guardarRuta"
-                                   styleClass="action-edit" />
+                                   styleClass="primary-button" />
 
                             <Button text="Cancelar"
                                    onAction="#volverListado"
