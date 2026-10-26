@@ -33,6 +33,8 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.Node;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
@@ -51,7 +53,8 @@ public class SalidasController {
     @FXML private TableColumn<Salida, String> colParticipantes;
     @FXML private TableColumn<Salida, String> colEquipamiento;
     @FXML private TableColumn<Salida, Salida> colAcciones;
-    @FXML private Label kpiProximas, kpiRutas, kpiClientes, kpiInventario;
+    private Label kpiProximas, kpiRutas, kpiClientes, kpiInventario;
+    @FXML private Button tarjetaProximas, tarjetaRutas, tarjetaClientes, tarjetaInventario;
     @FXML private TextField buscarField;
     @FXML private ComboBox<String> estadoFiltro;
     @FXML private Button btnRealizada, btnCancelar;
@@ -59,6 +62,7 @@ public class SalidasController {
     private List<Salida> salidasOriginales = List.of();
 
     @FXML private void initialize() {
+        configurarTarjetasIndicadores();
         SearchFieldIcon.install(buscarField);
         tablaSalidas.getStyleClass().add("listing-table");
         tablaSalidas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -102,6 +106,58 @@ public class SalidasController {
                     getStyleClass().add("salida-pendiente-vencida");
             }
         });
+    }
+
+    private void configurarTarjetasIndicadores() {
+        kpiProximas = new Label("0");
+        kpiRutas = new Label("0");
+        kpiClientes = new Label("0");
+        kpiInventario = new Label("0");
+        configurarTarjeta(tarjetaProximas, "SALIDAS.svg", "Salidas próximas", kpiProximas,
+                "Planificadas; hoy y próximos 7 días (inclusive)");
+        configurarTarjeta(tarjetaRutas, "RUTAS.svg", "Rutas activas", kpiRutas,
+                "En estado activo");
+        configurarTarjeta(tarjetaClientes, "CLIENTES.svg", "Clientes activos", kpiClientes,
+                "En estado activo");
+        configurarTarjeta(tarjetaInventario, null, "Inventario crítico", kpiInventario,
+                "Disponible ≤ 2 o en reparación, fuera de servicio o extraviado");
+    }
+
+    private void configurarTarjeta(Button tarjeta, String archivoIcono, String titulo,
+            Label valor, String descripcion) {
+        Node icono;
+        if (archivoIcono == null) {
+            Label alerta = new Label("⚠");
+            alerta.getStyleClass().add("kpi-action-alert-icon");
+            icono = alerta;
+        } else {
+            icono = com.example.util.SidebarIcon.load(archivoIcono);
+        }
+        icono.getStyleClass().add("kpi-action-icon");
+        icono.setMouseTransparent(true);
+        Label encabezado = new Label(titulo);
+        encabezado.getStyleClass().add("kpi-action-title");
+        HBox filaEncabezado = new HBox(8, icono, encabezado);
+        filaEncabezado.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        valor.getStyleClass().setAll("kpi-action-value");
+        Label detalle = new Label(descripcion);
+        detalle.getStyleClass().add("kpi-action-description");
+        detalle.setWrapText(true);
+        VBox contenido = new VBox(7, filaEncabezado, valor, detalle);
+        contenido.setFillWidth(true);
+        tarjeta.setGraphic(contenido);
+        tarjeta.setMaxWidth(Double.MAX_VALUE);
+        tarjeta.setPrefHeight(154);
+    }
+
+    @FXML private void irASalidas() { navegarAIndicador("trips"); }
+    @FXML private void irARutas() { navegarAIndicador("routes"); }
+    @FXML private void irAClientes() { navegarAIndicador("clients"); }
+    @FXML private void irAInventario() { navegarAIndicador("inventory"); }
+
+    private void navegarAIndicador(String seccion) {
+        Scene escena = tarjetaProximas.getScene();
+        if (escena != null) NavigationShell.navigate(escena, seccion);
     }
 
     @FXML private void iniciarWizard() { new WizardSalida().mostrar(); }
@@ -211,6 +267,14 @@ public class SalidasController {
             var indicadores = salidaDAO.obtenerIndicadores();
             kpiProximas.setText(String.valueOf(indicadores.get("proximas"))); kpiRutas.setText(String.valueOf(indicadores.get("rutas")));
             kpiClientes.setText(String.valueOf(indicadores.get("clientes"))); kpiInventario.setText(String.valueOf(indicadores.get("criticos")));
+            tarjetaProximas.setAccessibleText("Salidas próximas: " + kpiProximas.getText()
+                    + ". Planificadas; hoy y próximos 7 días inclusive. Activar para abrir Salidas.");
+            tarjetaRutas.setAccessibleText("Rutas activas: " + kpiRutas.getText()
+                    + ". En estado activo. Activar para abrir Rutas.");
+            tarjetaClientes.setAccessibleText("Clientes activos: " + kpiClientes.getText()
+                    + ". En estado activo. Activar para abrir Clientes.");
+            tarjetaInventario.setAccessibleText("Inventario crítico: " + kpiInventario.getText()
+                    + ". Disponible ≤ 2 o en reparación, fuera de servicio o extraviado. Activar para abrir Inventario.");
         } catch (RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudieron cargar los indicadores", e.getMessage()); }
     }
     private void aviso(Alert.AlertType tipo, String titulo, String mensaje) {

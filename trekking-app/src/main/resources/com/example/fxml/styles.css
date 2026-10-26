@@ -585,6 +585,59 @@
   -fx-padding: 16px;
 }
 
+.kpi-action-card {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #d8e0ea;
+  -fx-border-width: 1px;
+  -fx-border-radius: 8px;
+  -fx-background-radius: 8px;
+  -fx-padding: 14px;
+  -fx-alignment: center-left;
+  -fx-content-display: graphic-only;
+  -fx-cursor: hand;
+}
+
+.kpi-action-card:hover {
+  -fx-background-color: #fbfcfe;
+  -fx-border-color: #9fb2cc;
+}
+
+.kpi-action-card:focused {
+  -fx-border-color: #1a73e8;
+  -fx-border-width: 2px;
+  -fx-background-insets: 0;
+}
+
+.kpi-action-title {
+  -fx-font-family: "Segoe UI";
+  -fx-font-size: 13px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #52647d;
+}
+
+.kpi-action-value {
+  -fx-font-family: "Segoe UI";
+  -fx-font-size: 28px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #172b4d;
+}
+
+.kpi-action-description {
+  -fx-font-family: "Segoe UI";
+  -fx-font-size: 11px;
+  -fx-text-fill: #68778d;
+}
+
+.kpi-action-icon .sidebar-icon {
+  -fx-fill: #3f628e;
+}
+
+.kpi-action-alert-icon {
+  -fx-font-family: "Segoe UI Symbol";
+  -fx-font-size: 19px;
+  -fx-text-fill: #b06000;
+}
+
 .dialog-header-title {
   -fx-font-family: "Segoe UI";
   -fx-font-size: 18px;

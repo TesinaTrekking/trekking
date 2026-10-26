@@ -25,10 +25,10 @@
         <Region HBox.hgrow="ALWAYS"/>
     </HBox>
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Salidas próximas (7 días)" styleClass="form-label"/><Label fx:id="kpiProximas" text="0" styleClass="brand-title"/></VBox>
-        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Rutas activas" styleClass="form-label"/><Label fx:id="kpiRutas" text="0" styleClass="brand-title"/></VBox>
-        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Clientes activos" styleClass="form-label"/><Label fx:id="kpiClientes" text="0" styleClass="brand-title"/></VBox>
-        <VBox spacing="4" styleClass="dialog-form-card" HBox.hgrow="ALWAYS"><Label text="Inventario crítico" styleClass="form-label"/><Label fx:id="kpiInventario" text="0" styleClass="brand-title"/></VBox>
+        <Button fx:id="tarjetaProximas" onAction="#irASalidas" styleClass="kpi-action-card" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="tarjetaRutas" onAction="#irARutas" styleClass="kpi-action-card" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="tarjetaClientes" onAction="#irAClientes" styleClass="kpi-action-card" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="tarjetaInventario" onAction="#irAInventario" styleClass="kpi-action-card" HBox.hgrow="ALWAYS"/>
     </HBox>
     <HBox styleClass="list-filter-bar">
         <StackPane styleClass="search-container" HBox.hgrow="ALWAYS">
