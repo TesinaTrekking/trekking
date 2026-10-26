@@ -1,8 +1,7 @@
 package com.example.controller;
 
-import com.example.dao.RutaCheckpointDAO;
 import com.example.dao.RutaDAO;
-import com.example.model.Checkpoint;
+import com.example.dao.RutaCheckpointDAO;
 import com.example.model.Ruta;
 import com.example.util.NavigationShell;
 import com.example.util.TableEmptyState;
@@ -27,13 +26,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 public class RutaController implements Initializable {
@@ -64,6 +61,7 @@ public class RutaController implements Initializable {
 
         @FXML
         private TableColumn<Ruta, String> colDificultadFisica;
+        @FXML private TableColumn<Ruta, String> colEstadoItinerario;
         @FXML private TableColumn<Ruta, Ruta> colAcciones;
 
         @FXML
@@ -81,10 +79,6 @@ public class RutaController implements Initializable {
         @FXML
         private ComboBox<String> filtroEstadoCombo;
 
-        @FXML
-        private ListView<Checkpoint> checkpointsRutaListView;
-        @FXML
-        private Label estadoItinerarioLabel;
 
         @Override
         public void initialize(URL url, ResourceBundle rb) {
@@ -114,6 +108,10 @@ public class RutaController implements Initializable {
 
                 colDificultadFisica.setCellValueFactory(
                                 new PropertyValueFactory<>("dificultadFisica"));
+                colEstadoItinerario.setCellValueFactory(data -> {
+                        int cantidad = rutaCheckpointDAO.obtenerPorRuta(data.getValue().getId()).size();
+                        return new javafx.beans.property.SimpleStringProperty(cantidad == 0 ? "Borrador · 0" : cantidad + " Checkpoints · Completa");
+                });
                 colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
 
                 colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
@@ -127,64 +125,19 @@ public class RutaController implements Initializable {
                                         e -> cambiarEstado(ruta));
                                 if (activa) estado.getStyleClass().add("row-action-danger");
                                 actions.getChildren().addAll(
+                                        com.example.util.RowActionButton.create("Ver checkpoints", com.example.util.RowActionButton.Icon.MAP, e -> abrirItinerario(ruta)),
                                         com.example.util.RowActionButton.create("Editar ruta", com.example.util.RowActionButton.Icon.EDIT, e -> abrirEdicion(ruta)), estado);
                                 com.example.util.RowActionCell.showCentered(this, actions);
                         }
                 });
 
-                configurarCheckpoints();
                 configurarFiltros();
                 cargarRutas();
 
                 tablaRutas.getSortOrder().add(colNombre);
                 tablaRutas.sort();
 
-                tablaRutas.getSelectionModel()
-                                .selectedItemProperty()
-                                .addListener((observable, anterior, actual) -> {
-                                        cargarCheckpointsDeRuta(actual);
-                                });
                 actualizarEstadoTabla();
-        }
-
-        private void configurarCheckpoints() {
-
-                checkpointsRutaListView.setCellFactory(listView -> new javafx.scene.control.ListCell<Checkpoint>() {
-
-                        @Override
-                        protected void updateItem(
-                                        Checkpoint checkpoint,
-                                        boolean empty) {
-
-                                super.updateItem(checkpoint, empty);
-
-                                if (empty || checkpoint == null) {
-                                        setText(null);
-                                } else {
-                                        setText(
-                                                        checkpoint.getNombre()
-                                                                        + " - "
-                                                                        + checkpoint.getHora());
-                                }
-                        }
-                });
-        }
-
-        private void cargarCheckpointsDeRuta(Ruta ruta) {
-
-                if (ruta == null) {
-                        checkpointsRutaListView.getItems().clear();
-                        estadoItinerarioLabel.setText("Selecciona una Ruta para ver su estado.");
-                        return;
-                }
-
-                List<Checkpoint> checkpoints = rutaCheckpointDAO.obtenerPorRuta(ruta.getId());
-
-                checkpointsRutaListView.setItems(
-                                FXCollections.observableArrayList(checkpoints));
-                estadoItinerarioLabel.setText(checkpoints.isEmpty()
-                                ? "Borrador · sin Checkpoints"
-                                : checkpoints.size() + " Checkpoints · Completa");
         }
 
         private void cargarRutas() {
@@ -200,8 +153,15 @@ public class RutaController implements Initializable {
                 tablaRutas.setItems(rutasFiltradas);
 
                 aplicarFiltros();
-                cargarCheckpointsDeRuta(
-                                tablaRutas.getSelectionModel().getSelectedItem());
+        }
+
+        private void abrirItinerario(Ruta ruta) {
+                try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fxml/itinerario-ruta.fxml"));
+                        Parent root = loader.load();
+                        loader.<ItinerarioRutaController>getController().cargar(ruta);
+                        NavigationShell.setRoot(tablaRutas.getScene(), root, "itinerario-ruta");
+                } catch (IOException ex) { mostrarAlerta("Error", "No se pudo abrir el Itinerario de la Ruta."); }
         }
 
         @FXML

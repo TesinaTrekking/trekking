@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
@@ -120,57 +119,7 @@
 
                      </GridPane>
 
-                     <Label text="Checkpoints de la ruta"
-                            styleClass="card-title" />
-                     <Label text="Agregue los checkpoints y ajuste el orden de visita."
-                            styleClass="field-help"
-                            wrapText="true" />
-
-                     <HBox alignment="CENTER"
-                            spacing="10.0">
-
-                            <ComboBox fx:id="checkpointCombo"
-                                   prefWidth="350.0"
-                                   promptText="Seleccione un checkpoint" />
-
-                            <Button fx:id="agregarCheckpointButton"
-                                   text="Agregar"
-                                   onAction="#agregarCheckpoint"
-                                   styleClass="action-add" />
-
-                            <Button text="Nuevo Checkpoint"
-                                   onAction="#nuevoCheckpoint"
-                                   styleClass="action-edit" />
-
-                     </HBox>
-
-
-                     <ListView fx:id="checkpointsListView"
-                            prefWidth="500.0"
-                            prefHeight="250.0" />
-
-
-                     <HBox alignment="CENTER"
-                            spacing="10.0">
-
-                            <Button fx:id="quitarCheckpointButton"
-                                   text="Quitar"
-                                   onAction="#quitarCheckpoint"
-                                   styleClass="action-delete" />
-
-                            <Button text="Editar"
-                                   onAction="#editarCheckpoint"
-                                   styleClass="action-edit" />
-
-                            <Button fx:id="subirCheckpointButton"
-                                   text="Subir"
-                                   onAction="#subirCheckpoint" />
-
-                            <Button fx:id="bajarCheckpointButton"
-                                   text="Bajar"
-                                   onAction="#bajarCheckpoint" />
-
-                     </HBox>
+                     <Label text="El Itinerario se administra después de guardar la Ruta." styleClass="field-help" wrapText="true" />
                      <HBox alignment="CENTER"
                             spacing="8.0"
                             styleClass="crud-actions">

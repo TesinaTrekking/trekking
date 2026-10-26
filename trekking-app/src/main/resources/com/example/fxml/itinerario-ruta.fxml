@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane id="itinerario-ruta" fitToWidth="true" hbarPolicy="NEVER" styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.ItinerarioRutaController" stylesheets="@styles.css">
+  <content><VBox spacing="14" prefWidth="950" styleClass="screen-content">
+    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+    <HBox spacing="12" alignment="CENTER_LEFT"><Button text="‹ Rutas" onAction="#volver"/><VBox spacing="3"><Label fx:id="titulo" styleClass="brand-title"/><Label fx:id="resumen" styleClass="brand-subtitle"/></VBox><Region HBox.hgrow="ALWAYS"/><Button text="Guardar Itinerario" onAction="#guardar" styleClass="action-add"/></HBox>
+    <Label fx:id="estado" styleClass="field-help" wrapText="true"/>
+    <ListView fx:id="lista" prefHeight="430" VBox.vgrow="ALWAYS"/>
+    <HBox spacing="8"><Button text="Agregar Checkpoint" onAction="#agregar" styleClass="action-add"/><Button text="Editar" onAction="#editar"/><Button text="Quitar" onAction="#quitar"/><Region HBox.hgrow="ALWAYS"/><Button text="↑ Subir" onAction="#subir"/><Button text="↓ Bajar" onAction="#bajar"/></HBox>
+  </VBox></content>
+</ScrollPane>
