@@ -10,6 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.transform.Affine;
 
@@ -17,7 +18,7 @@ import javafx.scene.transform.Affine;
 public final class RowActionButton {
     private static final String ICON_DIRECTORY = "/com/example/icons/";
     private static final Pattern PATH_DATA = Pattern.compile("<path\\b[^>]*\\bd=\"([^\"]+)\"");
-    private static final double ICON_SIZE = 24.0;
+    private static final double ICON_SIZE = 18.0;
     private static final double VIEWBOX_SIZE = 960.0;
 
     public enum Icon {
@@ -49,9 +50,15 @@ public final class RowActionButton {
         double scale = ICON_SIZE / VIEWBOX_SIZE;
         graphic.getTransforms().add(new Affine(scale, 0, 0, 0, scale, ICON_SIZE));
         graphic.getStyleClass().add("row-action-icon");
+        graphic.setManaged(false);
+        StackPane iconContainer = new StackPane(graphic);
+        iconContainer.setMinSize(ICON_SIZE, ICON_SIZE);
+        iconContainer.setPrefSize(ICON_SIZE, ICON_SIZE);
+        iconContainer.setMaxSize(ICON_SIZE, ICON_SIZE);
+        iconContainer.getStyleClass().add("row-action-icon-container");
         Button button = new Button();
         button.getStyleClass().add("row-action-button");
-        button.setGraphic(graphic);
+        button.setGraphic(iconContainer);
         button.setTooltip(new Tooltip(label));
         button.setAccessibleText(label);
         button.setOnAction(action);
