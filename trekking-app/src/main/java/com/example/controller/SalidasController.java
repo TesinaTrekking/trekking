@@ -523,9 +523,12 @@ public class SalidasController {
         private final VBox content = new VBox(14);
         private final Label heading = new Label();
         private final Label progress = new Label();
+        private final javafx.scene.layout.HBox stepper = new javafx.scene.layout.HBox(0);
         private final DatePicker fecha = new DatePicker();
         private final ComboBox<Ruta> rutas = new ComboBox<>();
-        private final ComboBox<String> modo = new ComboBox<>();
+        private final javafx.scene.control.ToggleGroup modoRuta = new javafx.scene.control.ToggleGroup();
+        private final RadioButton usarRuta = new RadioButton("Utilizar una Ruta existente");
+        private final RadioButton crearRuta = new RadioButton("Crear una Ruta nueva");
         private final TextField nombre = new TextField();
         private final TextField altitud = new TextField();
         private final ComboBox<String> terreno = opciones("Rocoso", "Boscoso", "Sendero", "Mixto");
@@ -544,7 +547,7 @@ public class SalidasController {
         private List<Ruta> rutasActivas;
 
         WizardSalida() {
-            modo.setItems(FXCollections.observableArrayList("Elegir Ruta activa", "Crear Ruta nueva")); modo.setValue("Elegir Ruta activa");
+            usarRuta.setToggleGroup(modoRuta); crearRuta.setToggleGroup(modoRuta); usarRuta.setSelected(true);
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
             inventario.setConverter(new StringConverter<>() {
                 public String toString(Equipamiento item) { return item == null ? "" : item.getNombre() + " · disponible: " + item.getCantidadDisponible(); }
@@ -553,8 +556,22 @@ public class SalidasController {
             listaAsignaciones.setCellFactory(view -> new ListCell<>() {
                 @Override protected void updateItem(AsignacionEquipamiento item, boolean empty) {
                     super.updateItem(item, empty);
-                    setText(empty || item == null ? null : item.equipamiento().getNombre() + " · " + item.cantidad()
-                            + (item.nuevo() ? " · nuevo" : ""));
+                    if (empty || item == null) { setGraphic(null); setText(null); return; }
+                    Label nombreElemento = new Label(item.equipamiento().getNombre());
+                    nombreElemento.getStyleClass().add("wizard-equipment-name");
+                    javafx.scene.layout.Region espacio = new javafx.scene.layout.Region();
+                    Label disponible = new Label(item.nuevo() ? "Nuevo" : String.valueOf(item.equipamiento().getCantidadDisponible()));
+                    disponible.getStyleClass().add("wizard-row-meta");
+                    disponible.setPrefWidth(120);
+                    Label cantidad = new Label(String.valueOf(item.cantidad()));
+                    cantidad.getStyleClass().add("wizard-row-quantity");
+                    cantidad.setPrefWidth(70);
+                    cantidad.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+                    javafx.scene.layout.HBox fila = new javafx.scene.layout.HBox(8, nombreElemento, espacio, disponible, cantidad);
+                    fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                    javafx.scene.layout.HBox.setHgrow(nombreElemento, javafx.scene.layout.Priority.ALWAYS);
+                    setText(null);
+                    setGraphic(fila);
                 }
             });
             clientes.setConverter(new StringConverter<>() {
@@ -569,10 +586,11 @@ public class SalidasController {
                 }
             });
             buscarCliente.textProperty().addListener((o, a, b) -> actualizarClientesFiltrados());
-            modo.valueProperty().addListener((o, a, b) -> render()); rutas.valueProperty().addListener((o,a,b) -> actualizarDetalle());
+            modoRuta.selectedToggleProperty().addListener((o, a, b) -> render());
+            rutas.valueProperty().addListener((o,a,b) -> actualizarDetalle());
             anterior.setOnAction(e -> { if (paso > 0) { paso--; render(); } });
             siguiente.setOnAction(e -> avanzar()); cancelar.setOnAction(e -> cancelarWizard());
-            content.setStyle("-fx-padding: 22;");
+            content.getStyleClass().add("wizard-content");
         }
         private ComboBox<String> opciones(String... valores) { return new ComboBox<>(FXCollections.observableArrayList(valores)); }
         void mostrar() {
@@ -580,7 +598,10 @@ public class SalidasController {
             inventario.setItems(FXCollections.observableArrayList(EquipamientoDAO.obtenerTodos()));
             todosLosClientes = clienteDAO.obtenerTodosLosClientes();
             render();
-            VBox encabezado = new VBox(6, new Label("Nueva Salida"), progress);
+            javafx.scene.layout.HBox pasoEncabezado = new javafx.scene.layout.HBox(12, progress);
+            pasoEncabezado.getStyleClass().add("wizard-step-caption");
+            stepper.getStyleClass().add("wizard-stepper");
+            VBox encabezado = new VBox(14, new Label("Nueva Salida"), stepper, pasoEncabezado);
             encabezado.getStyleClass().add("wizard-header");
             ScrollPane scroll = new ScrollPane(content);
             scroll.setFitToWidth(true);
@@ -589,38 +610,96 @@ public class SalidasController {
             javafx.scene.layout.BorderPane root = new javafx.scene.layout.BorderPane();
             root.setTop(encabezado);
             root.setCenter(scroll);
-            root.setBottom(new javafx.scene.layout.HBox(10, cancelar, anterior, siguiente));
+            javafx.scene.layout.Region espacio = new javafx.scene.layout.Region();
+            javafx.scene.layout.HBox accionesIzquierda = new javafx.scene.layout.HBox(cancelar);
+            javafx.scene.layout.HBox accionesDerecha = new javafx.scene.layout.HBox(10, anterior, siguiente);
+            javafx.scene.layout.HBox barra = new javafx.scene.layout.HBox(10, accionesIzquierda, espacio, accionesDerecha);
+            javafx.scene.layout.HBox.setHgrow(espacio, javafx.scene.layout.Priority.ALWAYS);
+            root.setBottom(barra);
             root.getBottom().getStyleClass().add("wizard-actions");
             NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
             NavigationShell.setRoot(escenaAplicacion, root, "salida-alta");
+            javafx.application.Platform.runLater(this::aplicarIconoCalendario);
+        }
+        private void aplicarIconoCalendario() {
+            fecha.applyCss();
+            javafx.scene.Node botonCalendario = fecha.lookup(".arrow-button");
+            if (botonCalendario instanceof javafx.scene.layout.StackPane contenedor) {
+                javafx.scene.layout.StackPane icono = com.example.util.SidebarIcon.load("SALIDAS.svg");
+                icono.getStyleClass().add("wizard-calendar-icon");
+                icono.setMouseTransparent(true);
+                contenedor.getChildren().setAll(icono);
+            }
         }
         private void render() {
-            String[] titulos = {"Paso 1 de 5 · Datos de la salida", "Paso 2 de 5 · Ruta", "Paso 3 de 5 · Equipamiento", "Paso 4 de 5 · Participantes", "Paso 5 de 5 · Revisión"};
+            String[] titulos = {"Datos", "Ruta", "Equipamiento", "Participantes", "Revisión"};
+            String[] descripciones = {"Definí cuándo se realizará la actividad.", "Elegí una Ruta existente o configurá una nueva.",
+                    "Asigná los elementos que se llevarán.", "Seleccioná los Clientes que participarán.", "Verificá la información antes de confirmar."};
             heading.setText(titulos[paso]);
-            progress.setText(java.util.stream.IntStream.range(0, titulos.length)
-                    .mapToObj(i -> (i < paso ? "✓ " : i == paso ? "● " : "○ ") + titulos[i].substring(titulos[i].indexOf('·') + 2))
-                    .collect(java.util.stream.Collectors.joining("     ")));
+            progress.setText("Paso " + (paso + 1) + " de " + titulos.length);
+            stepper.getChildren().clear();
+            for (int i = 0; i < titulos.length; i++) {
+                VBox item = new VBox(5);
+                item.setAlignment(javafx.geometry.Pos.CENTER);
+                item.getStyleClass().add("wizard-step");
+                Label circulo = new Label(i < paso ? "✓" : String.valueOf(i + 1));
+                circulo.getStyleClass().add("wizard-step-marker");
+                Label nombrePaso = new Label(titulos[i]);
+                nombrePaso.getStyleClass().add("wizard-step-name");
+                if (i < paso) item.getStyleClass().add("wizard-step-complete");
+                else if (i == paso) item.getStyleClass().add("wizard-step-current");
+                item.getChildren().addAll(circulo, nombrePaso);
+                stepper.getChildren().add(item);
+                if (i < titulos.length - 1) {
+                    javafx.scene.layout.Region conector = new javafx.scene.layout.Region();
+                    conector.getStyleClass().add(i < paso ? "wizard-step-connector-complete" : "wizard-step-connector");
+                    conector.setMinHeight(2);
+                    conector.setPrefHeight(2);
+                    conector.setMaxHeight(2);
+                    conector.setMaxWidth(Double.MAX_VALUE);
+                    javafx.scene.layout.HBox.setHgrow(conector, javafx.scene.layout.Priority.ALWAYS);
+                    stepper.getChildren().add(conector);
+                }
+            }
             content.getChildren().clear();
-            content.getChildren().add(heading);
-            if (paso == 0) { content.getChildren().addAll(new Label("Fecha de la salida *"), fecha); }
+            Label descripcion = new Label(descripciones[paso]);
+            descripcion.getStyleClass().add("wizard-description");
+            content.getChildren().addAll(heading, descripcion);
+            if (paso == 0) {
+                VBox tarjeta = tarjetaPaso("Datos de la salida", "Definí cuándo se realizará la actividad.");
+                tarjeta.getChildren().add(campo("Fecha de la salida *", fecha));
+                fecha.setPromptText("Seleccionar fecha");
+                content.getChildren().add(tarjeta);
+            }
             if (paso == 1) {
-                content.getChildren().addAll(new Label("Selecciona una Ruta activa o crea una nueva"), modo);
+                VBox tarjeta = tarjetaPaso("Seleccionar Ruta", "Elegí una Ruta existente o creá una nueva.");
+                tarjeta.getChildren().addAll(usarRuta, crearRuta);
                 if (isCreandoRuta()) {
-                    content.getChildren().addAll(campo("Nombre *", nombre), campo("Altitud máxima (m) *", altitud),
+                    tarjeta.getChildren().addAll(campo("Nombre *", nombre), campo("Altitud máxima (m) *", altitud),
                             new Label("Tipo de terreno"), terreno, new Label("Dificultad técnica"), tecnica,
                             new Label("Dificultad física"), fisica,
                             new Label("La Ruta nueva se guardará solo al confirmar la Salida. Se crea como borrador, sin Checkpoints."));
-                } else { content.getChildren().addAll(new Label("Ruta activa"), rutas, detalle); actualizarDetalle(); }
+                } else {
+                    tarjeta.getChildren().addAll(new Label("Ruta activa"), rutas, detalle);
+                    rutas.setMaxWidth(Double.MAX_VALUE);
+                    actualizarDetalle();
+                }
+                content.getChildren().add(tarjeta);
             }
             if (paso == 2) renderEquipamiento();
             if (paso == 3) renderParticipantes();
             if (paso == 4) {
-                Label revision = new Label(resumen());
-                revision.setWrapText(true);
-                revision.setMaxWidth(Double.MAX_VALUE);
-                content.getChildren().add(revision);
+                content.getChildren().addAll(
+                        tarjetaRevision("Datos generales", "Fecha: " + fecha.getValue() + "\nEstado inicial: Planificada", 0),
+                        tarjetaRevision("Ruta", resumenRuta(), 1),
+                        tarjetaRevision("Equipamiento", resumenEquipamientoWizard(), 2),
+                        tarjetaRevision("Participantes", resumenParticipantesWizard(), 3),
+                        new Label("La confirmación guardará la Salida y sus asociaciones en una única operación."));
             }
             anterior.setDisable(paso == 0); siguiente.setText(paso == 4 ? "Confirmar Salida" : "Siguiente");
+            if (!siguiente.getStyleClass().contains("action-add")) siguiente.getStyleClass().add("action-add");
+            if (!cancelar.getStyleClass().contains("secondary-button")) cancelar.getStyleClass().add("secondary-button");
+            if (!anterior.getStyleClass().contains("secondary-button")) anterior.getStyleClass().add("secondary-button");
         }
         private boolean confirmarCambioDeSeccion() {
             if (!hayCambios()) return true;
@@ -656,19 +735,74 @@ public class SalidasController {
                 aviso(Alert.AlertType.ERROR, "No se pudo volver a Salidas", ex.getMessage());
             }
         }
-        private VBox campo(String titulo, TextField field) { return new VBox(4, new Label(titulo), field); }
+        private VBox campo(String titulo, javafx.scene.control.Control field) { return new VBox(4, new Label(titulo), field); }
+        private VBox tarjetaPaso(String titulo, String subtitulo) {
+            VBox tarjeta = new VBox(10, new Label(titulo), new Label(subtitulo));
+            tarjeta.getStyleClass().add("wizard-card");
+            tarjeta.getChildren().get(0).getStyleClass().add("wizard-card-title");
+            tarjeta.getChildren().get(1).getStyleClass().add("wizard-card-subtitle");
+            return tarjeta;
+        }
+        private VBox tarjetaRevision(String titulo, String detalleRevision, int pasoDestino) {
+            Label texto = new Label(detalleRevision);
+            texto.setWrapText(true);
+            texto.getStyleClass().add("wizard-review-detail");
+            Button editar = new Button("Editar");
+            editar.getStyleClass().add("wizard-edit-button");
+            editar.setOnAction(e -> { paso = pasoDestino; render(); });
+            javafx.scene.layout.HBox encabezado = new javafx.scene.layout.HBox(8, new Label(titulo), new javafx.scene.layout.Region(), editar);
+            javafx.scene.layout.HBox.setHgrow(encabezado.getChildren().get(1), javafx.scene.layout.Priority.ALWAYS);
+            encabezado.getChildren().get(0).getStyleClass().add("wizard-card-title");
+            VBox tarjeta = new VBox(8, encabezado, texto);
+            tarjeta.getStyleClass().add("wizard-card");
+            return tarjeta;
+        }
+        private String resumenRuta() {
+            if (isCreandoRuta()) return nombre.getText().trim() + "\nAltitud máxima: " + altitud.getText().trim()
+                    + " m · " + terreno.getValue() + " · Dificultad técnica " + tecnica.getValue()
+                    + " · Dificultad física " + fisica.getValue() + "\nSin Checkpoints";
+            actualizarDetalle();
+            return rutas.getValue() == null ? "Sin Ruta seleccionada" : rutas.getValue().getNombre() + "\n" + detalle.getText();
+        }
+        private String resumenEquipamientoWizard() {
+            if (asignaciones.isEmpty()) return "Sin Equipamiento asignado";
+            return asignaciones.stream().map(a -> a.equipamiento().getNombre() + " × " + a.cantidad())
+                    .collect(java.util.stream.Collectors.joining("\n"));
+        }
+        private String resumenParticipantesWizard() {
+            if (participantes.isEmpty()) return "Sin Participantes asignados";
+            return participantes.stream().map(p -> p.cliente().getApellido() + ", " + p.cliente().getNombre()
+                    + " · DNI " + p.cliente().getDni()).collect(java.util.stream.Collectors.joining("\n"));
+        }
         private void renderEquipamiento() {
-            listaAsignaciones.setPrefHeight(150);
             listaAsignaciones.setMaxHeight(220);
             listaAsignaciones.setItems(FXCollections.observableArrayList(asignaciones));
-            Button agregar = new Button("Agregar elemento"); agregar.setOnAction(e -> agregarExistente());
-            Button quitar = new Button("Quitar seleccionado"); quitar.setOnAction(e -> {
+            listaAsignaciones.setPlaceholder(new Label("Todavía no hay Equipamiento asignado"));
+            listaAsignaciones.setPrefHeight(Math.min(Math.max(asignaciones.size(), 1) * 42, 190));
+            listaAsignaciones.setFixedCellSize(42);
+            Button agregar = new Button("Agregar elemento"); agregar.getStyleClass().add("wizard-secondary-button"); agregar.setOnAction(e -> agregarExistente());
+            Button quitar = new Button("Quitar seleccionado"); quitar.getStyleClass().add("wizard-secondary-button");
+            quitar.setDisable(asignaciones.isEmpty());
+            quitar.setOnAction(e -> {
                 AsignacionEquipamiento seleccionado = listaAsignaciones.getSelectionModel().getSelectedItem();
-                if (seleccionado != null) { asignaciones.remove(seleccionado); renderEquipamiento(); }
+                if (seleccionado != null) { asignaciones.remove(seleccionado); render(); }
             });
-            Button crear = new Button("Crear y agregar"); crear.setOnAction(e -> crearYAgregar());
-            content.getChildren().addAll(new Label("Elementos activos · disponible = total menos reservas"),
-                    new javafx.scene.layout.HBox(8, inventario, cantidadAsignada, agregar), listaAsignaciones, quitar, crear);
+            Button crear = new Button("Crear y agregar"); crear.getStyleClass().add("wizard-secondary-button"); crear.setOnAction(e -> crearYAgregar());
+            inventario.setPrefWidth(340);
+            inventario.setMaxWidth(Double.MAX_VALUE);
+            cantidadAsignada.setPrefWidth(110);
+            VBox tarjeta = tarjetaPaso("Equipamiento de la Salida", "Disponibilidad calculada según inventario y reservas.");
+            javafx.scene.layout.HBox controles = new javafx.scene.layout.HBox(8, inventario, cantidadAsignada, agregar, crear);
+            javafx.scene.layout.HBox.setHgrow(inventario, javafx.scene.layout.Priority.ALWAYS);
+            javafx.scene.layout.HBox encabezados = new javafx.scene.layout.HBox(8, new Label("Elemento"),
+                    new javafx.scene.layout.Region(), new Label("Disponible"), new Label("Asignar"));
+            encabezados.getStyleClass().add("wizard-equipment-header");
+            javafx.scene.layout.HBox.setHgrow(encabezados.getChildren().get(0), javafx.scene.layout.Priority.ALWAYS);
+            ((Label) encabezados.getChildren().get(2)).setPrefWidth(120);
+            ((Label) encabezados.getChildren().get(3)).setPrefWidth(70);
+            ((Label) encabezados.getChildren().get(3)).setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+            tarjeta.getChildren().addAll(new Label("Elementos disponibles"), controles, encabezados, listaAsignaciones, quitar);
+            content.getChildren().add(tarjeta);
         }
         private void renderParticipantes() {
             listaParticipantes.setPrefHeight(150);
@@ -677,18 +811,29 @@ public class SalidasController {
             buscarCliente.getStyleClass().add("list-search-field");
             actualizarClientesFiltrados();
             listaParticipantes.setItems(FXCollections.observableArrayList(participantes));
-            Button agregar = new Button("Agregar Cliente seleccionado");
+            listaParticipantes.setPlaceholder(new Label("Todavía no hay Participantes asignados"));
+            listaParticipantes.setPrefHeight(Math.min(Math.max(participantes.size(), 1) * 42, 190));
+            listaParticipantes.setFixedCellSize(42);
+            Button agregar = new Button("Agregar Cliente seleccionado"); agregar.getStyleClass().add("wizard-secondary-button");
             agregar.setOnAction(e -> agregarClienteExistente());
-            Button crear = new Button("Crear Cliente nuevo");
+            Button crear = new Button("+ Nuevo Cliente"); crear.getStyleClass().add("wizard-secondary-button");
             crear.setOnAction(e -> crearClienteParticipante());
-            Button quitar = new Button("Quitar seleccionado");
+            Button quitar = new Button("Quitar seleccionado"); quitar.getStyleClass().add("wizard-secondary-button");
+            quitar.setDisable(participantes.isEmpty());
             quitar.setOnAction(e -> {
                 AsignacionParticipante seleccionado = listaParticipantes.getSelectionModel().getSelectedItem();
                 if (seleccionado != null) { participantes.remove(seleccionado); render(); }
             });
-            content.getChildren().addAll(new Label("Clientes activos · puedes confirmar sin Participantes"),
-                    SearchFieldIcon.wrap(buscarCliente), clientes, agregar, crear,
-                    new Label("Participantes de esta Salida"), listaParticipantes, quitar);
+            VBox tarjeta = tarjetaPaso("Participantes", "Seleccioná los Clientes que participarán en esta Salida.");
+            javafx.scene.layout.HBox busqueda = new javafx.scene.layout.HBox(8, SearchFieldIcon.wrap(buscarCliente), crear);
+            javafx.scene.layout.HBox selector = new javafx.scene.layout.HBox(8, clientes, agregar);
+            javafx.scene.layout.HBox.setHgrow(busqueda.getChildren().get(0), javafx.scene.layout.Priority.ALWAYS);
+            javafx.scene.layout.HBox.setHgrow(clientes, javafx.scene.layout.Priority.ALWAYS);
+            clientes.setMaxWidth(Double.MAX_VALUE);
+            Label asignados = new Label("Participantes asignados · " + participantes.size());
+            asignados.getStyleClass().add("wizard-card-title");
+            tarjeta.getChildren().addAll(busqueda, selector, asignados, listaParticipantes, quitar);
+            content.getChildren().add(tarjeta);
         }
         private void actualizarClientesFiltrados() {
             String consulta = buscarCliente.getText() == null ? "" : buscarCliente.getText().trim().toLowerCase();
@@ -804,7 +949,7 @@ public class SalidasController {
             for (int i = 0; i < asignaciones.size(); i++) if (!asignaciones.get(i).nuevo() && asignaciones.get(i).equipamiento().getId() == seleccionado.getId()) indice = i;
             if (indice >= 0) { AsignacionEquipamiento anterior = asignaciones.get(indice); asignaciones.set(indice, new AsignacionEquipamiento(seleccionado, anterior.cantidad() + cantidad, false)); }
             else asignaciones.add(new AsignacionEquipamiento(seleccionado, cantidad, false));
-            cantidadAsignada.setText("1"); renderEquipamiento();
+            cantidadAsignada.setText("1"); render();
         }
         private void crearYAgregar() {
             Dialog<ButtonType> dialog = new Dialog<>();
@@ -835,7 +980,7 @@ public class SalidasController {
             }
             Equipamiento nuevo = new Equipamiento(0, nombre, categoria.getValue(), total, estado.getValue());
             asignaciones.add(new AsignacionEquipamiento(nuevo, cantidad, true));
-            renderEquipamiento();
+            render();
         }
         private void actualizarDetalle() {
             Ruta r = rutas.getValue();
@@ -908,6 +1053,6 @@ public class SalidasController {
                 actualizarIndicadores(); actualizarTabla(); cerrarWizard();
             } catch (SQLException | RuntimeException ex) { aviso(Alert.AlertType.ERROR,"No se pudo confirmar la Salida",ex.getMessage()); }
         }
-        private boolean isCreandoRuta() { return "Crear Ruta nueva".equals(modo.getValue()); }
+        private boolean isCreandoRuta() { return crearRuta.isSelected(); }
     }
 }

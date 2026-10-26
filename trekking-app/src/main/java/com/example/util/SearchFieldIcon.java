@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.SVGPath;
-import javafx.scene.transform.Scale;
+import javafx.scene.transform.Affine;
 
 /** Adds the shared search icon to a search field without intercepting input. */
 public final class SearchFieldIcon {
@@ -22,7 +22,13 @@ public final class SearchFieldIcon {
         if (!(field.getParent() instanceof StackPane container)) {
             throw new IllegalArgumentException("El campo de búsqueda debe estar dentro de un StackPane");
         }
-        container.getChildren().add(createIcon());
+        SVGPath icon = createIcon();
+        icon.setManaged(false);
+        icon.setLayoutX(12);
+        Runnable centrarIcono = () -> icon.setLayoutY(Math.max(0, (field.getHeight() - 16) / 2));
+        field.heightProperty().addListener((observable, anterior, actual) -> centrarIcono.run());
+        centrarIcono.run();
+        container.getChildren().add(icon);
     }
 
     public static StackPane wrap(TextField field) {
@@ -41,12 +47,10 @@ public final class SearchFieldIcon {
 
             SVGPath icon = new SVGPath();
             icon.setContent(matcher.group(1));
-            icon.getTransforms().add(new Scale(16.0 / 960.0, 16.0 / 960.0));
+            double scale = 16.0 / 960.0;
+            icon.getTransforms().add(new Affine(scale, 0, 0, 0, scale, 16));
             icon.getStyleClass().add("search-icon");
             icon.setMouseTransparent(true);
-            icon.setManaged(false);
-            icon.setLayoutX(10);
-            icon.setLayoutY(26);
             return icon;
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo leer el icono: " + ICON_RESOURCE, exception);
