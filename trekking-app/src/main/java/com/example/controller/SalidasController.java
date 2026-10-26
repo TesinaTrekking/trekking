@@ -19,6 +19,8 @@ import com.example.util.TableEmptyState;
 import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
 import com.example.util.AlertUtils;
+import com.example.util.FechaFormato;
+import com.example.util.ToastNotifications;
 import java.sql.SQLException;
 import java.io.File;
 import java.io.IOException;
@@ -62,12 +64,19 @@ public class SalidasController {
     private List<Salida> salidasOriginales = List.of();
 
     @FXML private void initialize() {
+        javafx.application.Platform.runLater(buscarField::requestFocus);
         configurarTarjetasIndicadores();
         SearchFieldIcon.install(buscarField);
         tablaSalidas.getStyleClass().add("listing-table");
         tablaSalidas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         colId.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().id()));
         colFecha.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().fecha()));
+        colFecha.setCellFactory(column -> new TableCell<>() {
+            @Override protected void updateItem(LocalDate fecha, boolean empty) {
+                super.updateItem(fecha, empty);
+                setText(empty || fecha == null ? null : FechaFormato.formatear(fecha));
+            }
+        });
         colRuta.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().rutaNombre()));
         colEstado.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().estado()));
         colParticipantes.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenParticipantes(data.getValue())));
@@ -76,7 +85,7 @@ public class SalidasController {
         colAcciones.setCellFactory(column -> new TableCell<>() {
             @Override protected void updateItem(Salida salida, boolean empty) {
                 super.updateItem(salida, empty);
-                if (empty || salida == null) { setGraphic(null); return; }
+                if (empty || salida == null) { com.example.util.RowActionCell.clear(this); return; }
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                 actions.getChildren().addAll(
                         com.example.util.RowActionButton.create("Editar salida", com.example.util.RowActionButton.Icon.EDIT, e -> { tablaSalidas.getSelectionModel().select(salida); editarSalida(); }),
@@ -183,7 +192,7 @@ public class SalidasController {
         if (archivo == null) return;
         try {
             fichaPDFService.exportar(salida.id(), archivo.toPath());
-            aviso(Alert.AlertType.INFORMATION, "Ficha generada", "La ficha operativa se guardó correctamente.");
+            ToastNotifications.show(tablaSalidas.getScene().getWindow(), "Ficha operativa guardada", ToastNotifications.Kind.SUCCESS);
         } catch (SQLException | IOException e) {
             aviso(Alert.AlertType.ERROR, "No se pudo generar la ficha", e.getMessage());
         }
@@ -317,6 +326,7 @@ public class SalidasController {
                 aviso(Alert.AlertType.ERROR, "No se pudo abrir la Salida", e.getMessage()); return;
             }
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
+            FechaFormato.configurar(fecha);
             fecha.setValue(original.fecha());
             fecha.valueProperty().addListener((o, anterior, nueva) -> {
                 if (!java.util.Objects.equals(anterior, nueva)) cambiosRealizados = true;
@@ -336,8 +346,12 @@ public class SalidasController {
             });
             detalleRuta.setWrapText(true); actualizarDetalle(); actualizarPuntos();
             configurarAsignaciones();
-            Button agregar = new Button("Agregar Checkpoint"), editar = new Button("Editar seleccionado"), quitar = new Button("Quitar seleccionado");
-            Button refrescar = new Button("Actualizar desde ruta");
+            Button agregar = new Button("Agregar checkpoint"), editar = new Button("Editar seleccionado"), quitar = new Button("Quitar seleccionado");
+            Button refrescar = new Button("Actualizar desde Ruta");
+            agregar.getStyleClass().add("secondary-button");
+            editar.getStyleClass().add("secondary-button");
+            quitar.getStyleClass().add("secondary-button");
+            refrescar.getStyleClass().add("warning-button");
             agregar.setOnAction(e -> editarCheckpoint(null));
             editar.setOnAction(e -> { Checkpoint cp = puntos.getSelectionModel().getSelectedItem(); if (cp != null) editarCheckpoint(cp); });
             quitar.setOnAction(e -> {
@@ -359,7 +373,7 @@ public class SalidasController {
                     checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(rutas.getValue().getId())); actualizarPuntos();
                 }
             });
-            content.setStyle("-fx-padding: 20;");
+            content.getStyleClass().add("salida-editor-content");
             puntos.setPrefHeight(150);
             puntos.setMaxHeight(220);
             listaEquipo.setPrefHeight(130);
@@ -382,9 +396,10 @@ public class SalidasController {
             scroll.setFitToHeight(true);
             scroll.getStyleClass().add("wizard-scroll");
             Button cancelar = new Button("Cancelar");
+            cancelar.getStyleClass().add("secondary-button");
             cancelar.setOnAction(e -> cancelarEdicion());
-            Button guardar = new Button("Guardar cambios");
-            guardar.getStyleClass().add("action-add");
+            Button guardar = new Button("Guardar");
+            guardar.getStyleClass().add("primary-button");
             guardar.setOnAction(e -> guardar());
             javafx.scene.layout.HBox acciones = new javafx.scene.layout.HBox(10, cancelar, guardar);
             acciones.getStyleClass().add("wizard-actions");
@@ -394,6 +409,7 @@ public class SalidasController {
             root.setBottom(acciones);
             NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
             NavigationShell.setRoot(escenaAplicacion, root, "salida-edicion");
+            javafx.application.Platform.runLater(fecha::requestFocus);
         }
 
         private void configurarAsignaciones() {
@@ -502,14 +518,25 @@ public class SalidasController {
             guardarRuta.setVisible(existente == null && activa && permiteGuardar);
             guardarRuta.setManaged(existente == null && activa && permiteGuardar);
             if (!activa) guardarRuta.setTooltip(new javafx.scene.control.Tooltip("La Ruta está inactiva."));
-            Dialog<ButtonType> dialog = new Dialog<>(); dialog.initOwner(escenaAplicacion.getWindow()); dialog.setTitle(existente == null ? "Agregar Checkpoint" : "Editar Checkpoint");
-            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.initOwner(escenaAplicacion.getWindow());
+            dialog.initModality(Modality.WINDOW_MODAL);
+            dialog.setTitle(existente == null ? "Agregar checkpoint" : "Editar checkpoint");
+            AlertUtils.applyTheme(dialog);
+            dialog.getDialogPane().getStyleClass().add("dialog-form-card");
+            dialog.getDialogPane().setPrefWidth(560);
+            ButtonType cancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+            ButtonType guardar = new ButtonType(
+                    existente == null ? "Agregar checkpoint" : "Guardar cambios",
+                    ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(cancelar, guardar);
             GridPane grid = new GridPane(); grid.setHgap(8); grid.setVgap(8);
+            grid.getStyleClass().add("form-grid");
             String[] labels = {"Nombre *", "Hora (HH:mm) *", "Latitud *", "Longitud *", "Altitud (m) *", "Descripción"};
             TextField[] fields = {nombre, hora, latitud, longitud, altitud, descripcion};
             for (int i = 0; i < fields.length; i++) { grid.add(new Label(labels[i]), 0, i); grid.add(fields[i], 1, i); }
             grid.add(guardarRuta, 1, fields.length); dialog.getDialogPane().setContent(grid);
-            if (dialog.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+            if (dialog.showAndWait().orElse(cancelar) != guardar) return;
             try {
                 double altitudMaxima = rutas.getValue().getId() == original.rutaId() && !actualizarDesdeRuta
                         ? original.rutaAltitudMaxima() : ruta.getAltitudMaxima();
@@ -539,6 +566,7 @@ public class SalidasController {
                 salidaDAO.actualizar(original.id(), fecha.getValue(), rutas.getValue().getId(), copia, List.copyOf(checkpointsGuardarEnRuta), actualizarDesdeRuta, List.copyOf(equipamiento), List.copyOf(participantes), java.util.Set.copyOf(refrescarEquipamiento), java.util.Set.copyOf(refrescarParticipantes));
                 NavigationShell.setNavigationGuard(escenaAplicacion, null);
                 volverAlListado();
+                ToastNotifications.show(escenaAplicacion.getWindow(), "Salida actualizada", ToastNotifications.Kind.SUCCESS);
             } catch (SQLException | RuntimeException e) { aviso(Alert.AlertType.ERROR, "No se pudo actualizar la Salida", e.getMessage()); }
         }
 
@@ -611,6 +639,7 @@ public class SalidasController {
         private List<Ruta> rutasActivas;
 
         WizardSalida() {
+            FechaFormato.configurar(fecha);
             usarRuta.setToggleGroup(modoRuta); crearRuta.setToggleGroup(modoRuta); usarRuta.setSelected(true);
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
             inventario.setConverter(new StringConverter<>() {
@@ -683,7 +712,10 @@ public class SalidasController {
             root.getBottom().getStyleClass().add("wizard-actions");
             NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
             NavigationShell.setRoot(escenaAplicacion, root, "salida-alta");
-            javafx.application.Platform.runLater(this::aplicarIconoCalendario);
+            javafx.application.Platform.runLater(() -> {
+                aplicarIconoCalendario();
+                fecha.requestFocus();
+            });
         }
         private void aplicarIconoCalendario() {
             fecha.applyCss();
@@ -697,8 +729,8 @@ public class SalidasController {
         }
         private void render() {
             String[] titulos = {"Datos", "Ruta", "Equipamiento", "Participantes", "Revisión"};
-            String[] descripciones = {"Definí cuándo se realizará la actividad.", "Elegí una Ruta existente o configurá una nueva.",
-                    "Asigná los elementos que se llevarán.", "Seleccioná los Clientes que participarán.", "Verificá la información antes de confirmar."};
+            String[] descripciones = {"Defina cuándo se realizará la actividad.", "Seleccione una Ruta existente o configure una nueva.",
+                    "Asigne los elementos que se llevarán.", "Seleccione los Clientes que participarán.", "Revise la información antes de confirmar."};
             heading.setText(titulos[paso]);
             progress.setText("Paso " + (paso + 1) + " de " + titulos.length);
             stepper.getChildren().clear();
@@ -730,13 +762,13 @@ public class SalidasController {
             descripcion.getStyleClass().add("wizard-description");
             content.getChildren().addAll(heading, descripcion);
             if (paso == 0) {
-                VBox tarjeta = tarjetaPaso("Datos de la salida", "Definí cuándo se realizará la actividad.");
+                VBox tarjeta = tarjetaPaso("Datos de la salida", "Defina cuándo se realizará la actividad.");
                 tarjeta.getChildren().add(campo("Fecha de la salida *", fecha));
                 fecha.setPromptText("Seleccionar fecha");
                 content.getChildren().add(tarjeta);
             }
             if (paso == 1) {
-                VBox tarjeta = tarjetaPaso("Seleccionar Ruta", "Elegí una Ruta existente o creá una nueva.");
+                VBox tarjeta = tarjetaPaso("Seleccionar Ruta", "Seleccione una Ruta existente o cree una nueva.");
                 tarjeta.getChildren().addAll(usarRuta, crearRuta);
                 if (isCreandoRuta()) {
                     tarjeta.getChildren().addAll(campo("Nombre *", nombre), campo("Altitud máxima (m) *", altitud),
@@ -754,7 +786,7 @@ public class SalidasController {
             if (paso == 3) renderParticipantes();
             if (paso == 4) {
                 content.getChildren().addAll(
-                        tarjetaRevision("Datos generales", "Fecha: " + fecha.getValue() + "\nEstado inicial: Planificada", 0),
+                        tarjetaRevision("Datos generales", "Fecha: " + FechaFormato.formatear(fecha.getValue()) + "\nEstado inicial: Planificada", 0),
                         tarjetaRevision("Ruta", resumenRuta(), 1),
                         tarjetaRevision("Equipamiento", resumenEquipamientoWizard(), 2),
                         tarjetaRevision("Participantes", resumenParticipantesWizard(), 3),
@@ -878,9 +910,9 @@ public class SalidasController {
             listaParticipantes.setPlaceholder(new Label("Todavía no hay Participantes asignados"));
             listaParticipantes.setPrefHeight(Math.min(Math.max(participantes.size(), 1) * 42, 190));
             listaParticipantes.setFixedCellSize(42);
-            Button agregar = new Button("Agregar Cliente seleccionado"); agregar.getStyleClass().add("wizard-secondary-button");
+            Button agregar = new Button("Agregar cliente seleccionado"); agregar.getStyleClass().add("wizard-secondary-button");
             agregar.setOnAction(e -> agregarClienteExistente());
-            Button crear = new Button("+ Nuevo Cliente"); crear.getStyleClass().add("wizard-secondary-button");
+            Button crear = new Button("+ Nuevo cliente"); crear.getStyleClass().add("wizard-secondary-button");
             crear.setOnAction(e -> crearClienteParticipante());
             Button quitar = new Button("Quitar seleccionado"); quitar.getStyleClass().add("wizard-secondary-button");
             quitar.setDisable(participantes.isEmpty());
@@ -888,7 +920,7 @@ public class SalidasController {
                 AsignacionParticipante seleccionado = listaParticipantes.getSelectionModel().getSelectedItem();
                 if (seleccionado != null) { participantes.remove(seleccionado); render(); }
             });
-            VBox tarjeta = tarjetaPaso("Participantes", "Seleccioná los Clientes que participarán en esta Salida.");
+            VBox tarjeta = tarjetaPaso("Participantes", "Seleccione los Clientes que participarán en esta Salida.");
             javafx.scene.layout.HBox busqueda = new javafx.scene.layout.HBox(8, SearchFieldIcon.wrap(buscarCliente), crear);
             javafx.scene.layout.HBox selector = new javafx.scene.layout.HBox(8, clientes, agregar);
             javafx.scene.layout.HBox.setHgrow(busqueda.getChildren().get(0), javafx.scene.layout.Priority.ALWAYS);
@@ -1094,7 +1126,7 @@ public class SalidasController {
                             + " / " + textoResumen(p.cliente().getContactoEmergenciaTelefono())
                             + " / " + textoResumen(p.cliente().getContactoEmergenciaRelacion()))
                     .collect(java.util.stream.Collectors.joining("\n"));
-            return "Revisa los datos antes de confirmar:\n\nFecha: " + fecha.getValue() + "\nRuta: " + ruta
+            return "Revisa los datos antes de confirmar:\n\nFecha: " + FechaFormato.formatear(fecha.getValue()) + "\nRuta: " + ruta
                     + (datosRuta.isBlank() ? "" : "\n" + datosRuta) + "\nCheckpoints:\n" + puntos
                     + "\nEstado inicial: planificada\nEquipamiento: " + equipo + "\nParticipantes: " + detalleParticipantes
                     + "\n\nAl confirmar se guardarán la Ruta nueva (si corresponde), los Elementos nuevos asociados, los Clientes nuevos seleccionados, las reservas, las copias operativas y la Salida en una sola operación.";
@@ -1115,6 +1147,7 @@ public class SalidasController {
                 else rutaId = rutas.getValue().getId();
                 salidaDAO.confirmar(fecha.getValue(), rutaId, nueva, List.copyOf(asignaciones), List.copyOf(participantes));
                 actualizarIndicadores(); actualizarTabla(); cerrarWizard();
+                ToastNotifications.show(escenaAplicacion.getWindow(), "Salida guardada", ToastNotifications.Kind.SUCCESS);
             } catch (SQLException | RuntimeException ex) { aviso(Alert.AlertType.ERROR,"No se pudo confirmar la Salida",ex.getMessage()); }
         }
         private boolean isCreandoRuta() { return crearRuta.isSelected(); }

@@ -5,10 +5,12 @@ import com.example.model.Checkpoint;
 import com.example.model.Ruta;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
+import com.example.util.ToastNotifications;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.application.Platform;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -56,13 +58,29 @@ public class ItinerarioRutaController {
         TextField lon = new TextField(original == null ? "" : Double.toString(original.getLongitud()));
         TextField alt = new TextField(original == null ? "0" : Double.toString(original.getAltitud()));
         TextArea descripcion = new TextArea(original == null ? "" : original.getDescripcion()); descripcion.setPrefRowCount(3);
-        GridPane grid = new GridPane(); grid.setHgap(10); grid.setVgap(8);
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(10);
+        grid.getStyleClass().add("form-grid");
         String[] labels = {"Nombre *", "Hora (HH:mm) *", "Latitud *", "Longitud *", "Altitud (m) *", "Descripción"};
         javafx.scene.Node[] fields = {nombre, hora, lat, lon, alt, descripcion};
         for (int i = 0; i < fields.length; i++) { grid.add(new Label(labels[i]), 0, i); grid.add(fields[i], 1, i); }
-        Dialog<ButtonType> dialog = new Dialog<>(); dialog.setTitle(original == null ? "Nuevo Checkpoint" : "Editar Checkpoint");
-        dialog.getDialogPane().setContent(grid); dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
-        if (dialog.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        dialog.initOwner(lista.getScene().getWindow());
+        dialog.setTitle(original == null ? "Nuevo Checkpoint" : "Editar Checkpoint");
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/com/example/fxml/styles.css").toExternalForm());
+        dialog.getDialogPane().getStyleClass().add("dialog-form-card");
+        dialog.getDialogPane().setPrefWidth(560);
+        dialog.getDialogPane().setContent(grid);
+        ButtonType cancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType guardar = new ButtonType(
+                original == null ? "Agregar checkpoint" : "Guardar cambios",
+                ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(cancelar, guardar);
+        Platform.runLater(nombre::requestFocus);
+        if (dialog.showAndWait().orElse(cancelar) != guardar) return;
         try {
             String h = hora.getText().trim();
             if (nombre.getText().isBlank() || !h.matches("(?:[01]\\d|2[0-3]):[0-5]\\d")) throw new IllegalArgumentException("Completa el nombre y usa hora HH:mm (24 horas).");
@@ -86,7 +104,11 @@ public class ItinerarioRutaController {
     }
     @FXML private void guardar() {
         if (puntos.size() == 1) { alerta("Itinerario incompleto", "El Itinerario necesita inicio y fin. Agrega otro Checkpoint o quita el único punto."); return; }
-        if (dao.reemplazarPorRuta(ruta.getId(), List.copyOf(puntos))) { cambios = false; refrescar(); alerta("Itinerario guardado", "Se guardaron todos los Checkpoints de «" + ruta.getNombre() + "»."); }
+        if (dao.reemplazarPorRuta(ruta.getId(), List.copyOf(puntos))) {
+            cambios = false;
+            refrescar();
+            ToastNotifications.show(lista.getScene().getWindow(), "Itinerario guardado", ToastNotifications.Kind.SUCCESS);
+        }
         else alerta("No se pudo guardar", "El Itinerario anterior se conserva. Verifica la altitud máxima y vuelve a intentar.");
     }
     @FXML private void volver() {

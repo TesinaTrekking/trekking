@@ -12,6 +12,7 @@ import com.example.model.Cliente;
 import com.example.util.FormValidation;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
+import com.example.util.FechaFormato;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -107,12 +108,14 @@ public class EditarClienteController {
 
     @FXML
     private void initialize() {
+        FechaFormato.configurar(fechaNacimientoPicker);
         sexoComboBox.getItems().addAll(
                 "Masculino",
                 "Femenino",
                 "No binario",
                 "Otro",
                 "Prefiero no decir");
+        javafx.application.Platform.runLater(nombreField::requestFocus);
 
         dniField.setText(textoSeguro(cliente.getDni()));
         nombreField.setText(textoSeguro(cliente.getNombre()));

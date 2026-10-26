@@ -11,6 +11,7 @@ import javafx.stage.Window;
 import java.net.URL;
 import java.util.Optional;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Button;
 
 /**
  * * Utilidades para mostrar alertas modales y aplicar el tema visual *
@@ -57,6 +58,8 @@ public final class AlertUtils {
     }
 
     public static Optional<ButtonType> showAndWait(Alert alert, Window owner) {
+        applyTheme(alert);
+        traducirBotonesEstandar(alert);
         if (owner != null) {
             alert.initOwner(owner);
             alert.initModality(Modality.WINDOW_MODAL);
@@ -75,6 +78,21 @@ public final class AlertUtils {
             });
         }
         return alert.showAndWait();
+    }
+
+    private static void traducirBotonesEstandar(Alert alert) {
+        for (ButtonType tipo : alert.getButtonTypes()) {
+            String texto = tipo == ButtonType.OK || tipo == ButtonType.YES ? "Aceptar"
+                    : tipo == ButtonType.CANCEL ? "Cancelar"
+                    : tipo == ButtonType.NO ? "No"
+                    : tipo == ButtonType.CLOSE ? "Cerrar" : null;
+            if (texto == null) continue;
+            javafx.scene.Node nodo = alert.getDialogPane().lookupButton(tipo);
+            if (nodo instanceof Button boton) {
+                boton.setText(texto);
+                boton.setAccessibleText(texto);
+            }
+        }
     }
 
     private static void showAlert(Alert.AlertType type, Window owner, String title, String message) {

@@ -11,23 +11,23 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ScrollPane?>
 
-<ScrollPane id="cliente-alta" fitToWidth="true" hbarPolicy="NEVER" xmlns="http://javafx.com/javafx/17"
+<ScrollPane id="cliente-alta" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/17"
     xmlns:fx="http://javafx.com/fxml/1"
     fx:controller="com.example.controller.AgregarClienteController"
     stylesheets="@styles.css"
     styleClass="pantalla-scroll">
     <content>
-        <VBox alignment="TOP_CENTER" spacing="20.0">
-            <Label text="Agregar cliente"
+        <VBox alignment="TOP_CENTER" spacing="20.0" styleClass="form-page form-card">
+            <Label text="Nuevo cliente"
                 styleClass="dialog-header-title" />
             <Label
                 text="Los campos marcados con * son obligatorios. El email y el contacto de emergencia son opcionales."
                 styleClass="dialog-header-subtitle" />
-<GridPane hgap="12" vgap="8">
+<GridPane hgap="12" vgap="8" styleClass="form-grid">
     <!-- DNI -->
-    <Label text="DNI" styleClass="form-label"
+    <Label text="DNI *" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="0" />
-    <TextField fx:id="dniField" promptText="7 u 8 numeros"
+    <TextField fx:id="dniField" promptText="7 u 8 números"
                GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
     <!-- NUEVO: aclara el formato admitido por ClienteValidator. -->
@@ -36,19 +36,19 @@
            GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
     <!-- Nombre -->
-    <Label text="Nombre" styleClass="form-label"
+    <Label text="Nombre *" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="2" />
     <TextField fx:id="nombreField"
                GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
     <!-- Apellido -->
-    <Label text="Apellido" styleClass="form-label"
+    <Label text="Apellido *" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="3" />
     <TextField fx:id="apellidoField"
                GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
     <!-- Fecha de nacimiento -->
-    <Label text="Fecha nacimiento" styleClass="form-label"
+    <Label text="Fecha de nacimiento *" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="4" />
     <DatePicker fx:id="fechaNacimientoPicker"
                 GridPane.columnIndex="1" GridPane.rowIndex="4" />
@@ -65,19 +65,19 @@
            GridPane.columnIndex="1" GridPane.rowIndex="6" />
 
     <!-- Teléfono -->
-    <Label text="Telefono" styleClass="form-label"
+    <Label text="Teléfono *" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="7" />
     <TextField fx:id="telefonoField"
                GridPane.columnIndex="1" GridPane.rowIndex="7" />
 
     <!-- Sexo -->
-    <Label text="Sexo" styleClass="form-label"
+    <Label text="Sexo *" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="8" />
     <ComboBox fx:id="sexoComboBox" maxWidth="Infinity"
               GridPane.columnIndex="1" GridPane.rowIndex="8" />
 
     <!-- Contacto de emergencia -->
-    <Label text="Contacto emergencia (opcional)"
+    <Label text="Contacto de emergencia (opcional)"
            styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="9" />
     <TextField fx:id="contactoNombreField"
@@ -91,7 +91,7 @@
                GridPane.columnIndex="1" GridPane.rowIndex="10" />
 
     <!-- Relación -->
-    <Label text="Relacion (opcional)" styleClass="form-label"
+    <Label text="Relación (opcional)" styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="11" />
     <TextField fx:id="contactoRelacionField"
                GridPane.columnIndex="1" GridPane.rowIndex="11" />
@@ -102,7 +102,7 @@
            GridPane.columnIndex="1" GridPane.rowIndex="12" />
 
     <!-- Ficha médica -->
-    <Label text="Ficha medica (PDF, maximo 2 MB)"
+    <Label text="Ficha médica (PDF, máximo 2 MB)"
            styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="13" />
     <HBox spacing="8" alignment="CENTER_LEFT"
@@ -113,7 +113,7 @@
     </HBox>
 
     <!-- Autorización de menores -->
-    <Label text="Autorizacion de menores"
+    <Label text="Autorización de menores"
            styleClass="form-label"
            GridPane.columnIndex="0" GridPane.rowIndex="14" />
     <CheckBox fx:id="autorizacionMenoresCheckBox"
@@ -152,8 +152,8 @@
                GridPane.columnIndex="1" GridPane.rowIndex="19" />
 </GridPane>
             <HBox spacing="8.0" alignment="CENTER" styleClass="crud-actions">
-                <Button text="Guardar cliente" onAction="#guardarCliente"
-                    styleClass="action-edit" />
+                <Button text="Guardar" onAction="#guardarCliente"
+                    styleClass="primary-button" />
                 <Button text="Cancelar" onAction="#irListaClientes"
                     styleClass="secondary-button" />
             </HBox>

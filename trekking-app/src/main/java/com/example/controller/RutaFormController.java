@@ -5,12 +5,12 @@ import com.example.model.Ruta;
 import com.example.util.FormValidation;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
+import com.example.util.ToastNotifications;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -33,9 +33,6 @@ public class RutaFormController {
         private Label tituloForm;
 
         @FXML
-        private Button guardarRutaButton;
-
-        @FXML
         private TextField nombreField;
 
         @FXML
@@ -52,6 +49,7 @@ public class RutaFormController {
 
         @FXML
         public void initialize() {
+                javafx.application.Platform.runLater(nombreField::requestFocus);
 
                 configurarCampos();
 
@@ -80,8 +78,6 @@ public class RutaFormController {
                 this.rutaEnEdicion = ruta;
                 if (ruta != null) {
                         tituloForm.setText("Editar ruta");
-                        guardarRutaButton.getStyleClass().remove("action-add");
-                        if (!guardarRutaButton.getStyleClass().contains("action-edit")) guardarRutaButton.getStyleClass().add("action-edit");
                         cargarRuta(ruta);
                 } else {
                         tituloForm.setText("Nueva ruta");
@@ -195,17 +191,17 @@ public class RutaFormController {
                         rutaId = ruta.getId();
                 }
 
-                mostrarInformacion(
-                                rutaEnEdicion == null ? "Ruta guardada" : "Ruta actualizada",
-                                rutaEnEdicion == null ? "Completa su Itinerario para poder usarla en una Salida." : "La Ruta se actualizó correctamente.");
+                var ventana = nombreField.getScene().getWindow();
                 if (rutaEnEdicion == null) {
                         ruta.setId(rutaId);
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/fxml/itinerario-ruta.fxml"));
                         Parent root = loader.load();
                         loader.<ItinerarioRutaController>getController().cargar(ruta);
                         NavigationShell.setRoot(nombreField.getScene(), root, "itinerario-ruta");
+                        ToastNotifications.show(ventana, "Ruta guardada. Complete el Itinerario para usarla en una Salida.", ToastNotifications.Kind.SUCCESS);
                 } else {
                         volverListado();
+                        ToastNotifications.show(ventana, "Ruta actualizada", ToastNotifications.Kind.SUCCESS);
                 }
         }
 
@@ -489,15 +485,4 @@ public class RutaFormController {
                 AlertUtils.showAndWait(alerta, nombreField);
         }
 
-        private void mostrarInformacion(
-                        String titulo,
-                        String mensaje) {
-
-                Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-
-                alerta.setTitle(titulo);
-                alerta.setHeaderText(null);
-                alerta.setContentText(mensaje);
-                AlertUtils.showAndWait(alerta, nombreField);
-        }
 }

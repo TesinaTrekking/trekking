@@ -96,6 +96,7 @@ public class CheckpointController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        javafx.application.Platform.runLater(filterField::requestFocus);
         SearchFieldIcon.install(filterField);
         tablaCheckpoints.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tablaCheckpoints.setItems(sortedList);

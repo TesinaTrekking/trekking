@@ -14,6 +14,7 @@ import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
 import com.example.util.AlertUtils;
 import com.example.util.SearchFieldIcon;
+import com.example.util.FechaFormato;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -77,6 +78,7 @@ public class ListaClientesController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
 
         SearchFieldIcon.install(buscarField);
+        javafx.application.Platform.runLater(buscarField::requestFocus);
 
         tablaClientes.getStyleClass().add("listing-table");
 
@@ -100,6 +102,12 @@ public class ListaClientesController implements Initializable {
 
         colFechaNacimiento.setCellValueFactory(
                 new PropertyValueFactory<>("fechaNacimiento"));
+        colFechaNacimiento.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override protected void updateItem(java.time.LocalDate fecha, boolean empty) {
+                super.updateItem(fecha, empty);
+                setText(empty || fecha == null ? null : FechaFormato.formatear(fecha));
+            }
+        });
 
         colSexo.setCellValueFactory(
                 new PropertyValueFactory<>("sexo"));
@@ -111,7 +119,7 @@ public class ListaClientesController implements Initializable {
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
             @Override protected void updateItem(Cliente cliente, boolean empty) {
                 super.updateItem(cliente, empty);
-                if (empty || cliente == null) { setGraphic(null); return; }
+                if (empty || cliente == null) { com.example.util.RowActionCell.clear(this); return; }
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                 actions.getChildren().addAll(
                         com.example.util.RowActionButton.create("Editar cliente", com.example.util.RowActionButton.Icon.EDIT, e -> abrirEdicion(cliente)),
@@ -180,7 +188,7 @@ public class ListaClientesController implements Initializable {
                 "Todavía no hay clientes", "Agrega un Cliente para empezar a planificar Salidas.",
                 "No hay clientes que coincidan", "Prueba con otro DNI, nombre o apellido.",
                 "GROUPOFF",
-                "+ Nuevo Cliente", event -> {
+                "+ Nuevo cliente", event -> {
                     try {
                         irAgregarCliente(event);
                     } catch (IOException e) {

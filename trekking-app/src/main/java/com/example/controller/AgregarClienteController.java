@@ -10,6 +10,7 @@ import com.example.dao.ClienteDAO;
 import com.example.util.FormValidation;
 import com.example.util.NavigationShell;
 import com.example.util.AlertUtils;
+import com.example.util.FechaFormato;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -92,6 +93,7 @@ public class AgregarClienteController {
 
     @FXML
     private void initialize() {
+        FechaFormato.configurar(fechaNacimientoPicker);
         sexoComboBox.getItems().addAll(
                 "Masculino",
                 "Femenino",
@@ -100,6 +102,7 @@ public class AgregarClienteController {
                 "Prefiero no decir");
         configurarValidacionesEnTiempoReal();
         actualizarCamposTutor();
+        javafx.application.Platform.runLater(dniField::requestFocus);
     }
 
     private void configurarValidacionesEnTiempoReal() {
