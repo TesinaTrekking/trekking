@@ -119,7 +119,7 @@ public class ListaClientesController implements Initializable {
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
             @Override protected void updateItem(Cliente cliente, boolean empty) {
                 super.updateItem(cliente, empty);
-                if (empty || cliente == null) { setGraphic(null); return; }
+                if (empty || cliente == null) { com.example.util.RowActionCell.clear(this); return; }
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                 actions.getChildren().addAll(
                         com.example.util.RowActionButton.create("Editar cliente", com.example.util.RowActionButton.Icon.EDIT, e -> abrirEdicion(cliente)),

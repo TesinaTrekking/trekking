@@ -85,7 +85,7 @@ public class SalidasController {
         colAcciones.setCellFactory(column -> new TableCell<>() {
             @Override protected void updateItem(Salida salida, boolean empty) {
                 super.updateItem(salida, empty);
-                if (empty || salida == null) { setGraphic(null); return; }
+                if (empty || salida == null) { com.example.util.RowActionCell.clear(this); return; }
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                 actions.getChildren().addAll(
                         com.example.util.RowActionButton.create("Editar salida", com.example.util.RowActionButton.Icon.EDIT, e -> { tablaSalidas.getSelectionModel().select(salida); editarSalida(); }),

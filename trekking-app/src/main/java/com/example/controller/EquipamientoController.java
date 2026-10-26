@@ -96,7 +96,7 @@ public class EquipamientoController {
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
             @Override protected void updateItem(Equipamiento item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) { setGraphic(null); return; }
+                if (empty || item == null) { com.example.util.RowActionCell.clear(this); return; }
                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                 if ("Inactivo".equals(estadoFiltroCombo.getValue())) {
                     actions.getChildren().add(com.example.util.RowActionButton.create(

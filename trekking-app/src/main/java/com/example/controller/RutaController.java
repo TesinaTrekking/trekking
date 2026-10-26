@@ -118,7 +118,7 @@ public class RutaController implements Initializable {
                 colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
                         @Override protected void updateItem(Ruta ruta, boolean empty) {
                                 super.updateItem(ruta, empty);
-                                if (empty || ruta == null) { setGraphic(null); return; }
+                                if (empty || ruta == null) { com.example.util.RowActionCell.clear(this); return; }
                                 boolean activa = rutaDAO.estaActiva(ruta.getId());
                                 javafx.scene.layout.HBox actions = new javafx.scene.layout.HBox(3);
                                 Button estado = com.example.util.RowActionButton.create(activa ? "Dar de baja" : "Reactivar",
