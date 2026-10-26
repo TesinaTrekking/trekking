@@ -27,7 +27,7 @@
             <Label text="Checkpoints" styleClass="form-section-title" />
             <Label fx:id="cantidad" styleClass="itinerary-count" />
           </HBox>
-          <Button text="＋  Agregar checkpoint" onAction="#agregar" styleClass="action-add" />
+          <Button fx:id="agregarButton" text="Agregar checkpoint" onAction="#agregar" styleClass="action-add itinerary-add-button" />
         </FlowPane>
         <Label fx:id="estado" styleClass="field-help" wrapText="true" />
       </VBox>

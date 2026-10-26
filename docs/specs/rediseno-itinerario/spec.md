@@ -83,7 +83,7 @@ Los Checkpoints se mostrarán por hora ascendente. No habrá controles para reor
 
 ## Implementación
 
-- La gestión del Itinerario presenta filas compactas con hora como texto libre, nombre, altitud, coordenadas y acciones de edición/quitar. Las acciones usan los iconos SVG compartidos del proyecto; no se usan cápsulas para las horas ni glifos de texto.
+- La gestión del Itinerario presenta filas compactas con hora como texto libre, alineada con el nombre, altitud, coordenadas y acciones de edición/quitar. La acción de alta usa `ADD.svg`; las acciones por fila usan `EDIT.svg` y `DELETE.svg`, y siguen el patrón de visibilidad de las tablas. No se usan cápsulas para las horas ni glifos de texto.
 - El formulario de Checkpoint reemplaza el contenido central dentro de la shell. Su confirmación actualiza el borrador del Itinerario; la persistencia sigue ocurriendo al guardar el conjunto completo.
 - Verificación: compilación Maven correcta; `mvn test` terminó correctamente e informó que no hay pruebas que ejecutar; los dos FXML pasaron validación XML y `git diff --check` no reportó errores.
 - Pendiente: recorrido visual manual de la aplicación JavaFX.

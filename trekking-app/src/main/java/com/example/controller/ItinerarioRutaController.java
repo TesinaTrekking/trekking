@@ -6,6 +6,7 @@ import com.example.model.Ruta;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
 import com.example.util.RowActionButton;
+import com.example.util.SidebarIcon;
 import com.example.util.ToastNotifications;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -40,12 +41,19 @@ public class ItinerarioRutaController {
     @FXML private Label estado;
     @FXML private Label cantidad;
     @FXML private ListView<Checkpoint> lista;
+    @FXML private Button agregarButton;
 
     private final RutaCheckpointDAO dao = new RutaCheckpointDAO();
     private final List<Checkpoint> puntos = new ArrayList<>();
     private Ruta ruta;
     private Scene scene;
     private boolean cambios;
+
+    @FXML
+    private void initialize() {
+        agregarButton.setGraphic(SidebarIcon.load("ADD.svg"));
+        agregarButton.setAccessibleText("Agregar checkpoint");
+    }
 
     public void cargar(Ruta ruta) {
         this.ruta = ruta;
@@ -81,7 +89,8 @@ public class ItinerarioRutaController {
             private final Button quitar = RowActionButton.create(
                     "Quitar Checkpoint", RowActionButton.Icon.DELETE,
                     event -> ItinerarioRutaController.this.quitar(getItem()));
-            private final HBox fila = new HBox(14, hora, datos, separador, editar, quitar);
+            private final HBox acciones = new HBox(4, editar, quitar);
+            private final HBox fila = new HBox(14, hora, datos, separador, acciones);
 
             {
                 hora.getStyleClass().add("itinerary-time");
@@ -90,9 +99,22 @@ public class ItinerarioRutaController {
                 nombre.setWrapText(true);
                 detalle.setWrapText(true);
                 quitar.getStyleClass().add("row-action-danger");
-                fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                fila.setAlignment(javafx.geometry.Pos.TOP_LEFT);
+                acciones.getStyleClass().add("row-actions");
+                acciones.setOpacity(0);
+                acciones.setMouseTransparent(true);
+                hoverProperty().addListener((obs, wasHovered, isHovered) -> actualizarVisibilidadAcciones());
+                selectedProperty().addListener((obs, wasSelected, isSelected) -> actualizarVisibilidadAcciones());
+                editar.focusedProperty().addListener((obs, wasFocused, isFocused) -> actualizarVisibilidadAcciones());
+                quitar.focusedProperty().addListener((obs, wasFocused, isFocused) -> actualizarVisibilidadAcciones());
                 HBox.setHgrow(datos, Priority.NEVER);
                 HBox.setHgrow(separador, Priority.ALWAYS);
+            }
+
+            private void actualizarVisibilidadAcciones() {
+                boolean visible = isHover() || isSelected() || editar.isFocused() || quitar.isFocused();
+                acciones.setOpacity(visible ? 1.0 : 0.0);
+                acciones.setMouseTransparent(!visible);
             }
 
             @Override

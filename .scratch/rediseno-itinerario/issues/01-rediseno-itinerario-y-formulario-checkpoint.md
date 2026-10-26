@@ -13,3 +13,4 @@ Especificación: [spec.md](../../../docs/specs/rediseno-itinerario/spec.md)
 - Implementación aplicada. `mvn compile` y `mvn test` concluyeron correctamente; Maven reportó que no hay pruebas que ejecutar. Los FXML pasaron validación XML y `git diff --check` fue correcto.
 - Pendiente revisión manual visual de JavaFX.
 - Ajuste visual solicitado: horas sin cápsula y acciones por fila con los iconos SVG existentes del proyecto.
+- Ajuste visual adicional: alta con `ADD.svg`, hora alineada con el nombre y acciones por fila con visibilidad hover como en las tablas.

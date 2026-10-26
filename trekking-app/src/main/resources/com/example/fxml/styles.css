@@ -1103,6 +1103,10 @@
     -fx-padding: 4px 0 0 0;
 }
 
+.itinerary-add-button .sidebar-icon {
+    -fx-fill: white;
+}
+
 .itinerary-count {
     -fx-text-fill: -color-text-muted;
     -fx-font-size: 13px;
@@ -1133,6 +1137,7 @@
 
 .list-view.itinerary-list .list-cell {
     -fx-background-color: -color-surface;
+    -fx-alignment: TOP_LEFT;
     -fx-padding: 10px 14px;
     -fx-border-color: transparent transparent #e7ebf1 transparent;
     -fx-border-width: 0 0 1px 0;
