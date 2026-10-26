@@ -124,16 +124,43 @@
 .form-card .combo-box,
 .form-card .date-picker {
   -fx-pref-height: 38px;
+  -fx-background-color: #ffffff;
+  -fx-background-insets: 0;
   -fx-background-radius: 6px;
   -fx-border-radius: 6px;
   -fx-border-color: -color-border;
 }
 
+.form-card .combo-box-base > .list-cell,
+.form-card .date-picker > .text-field {
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+  -fx-text-fill: -color-text;
+}
+
+.form-card .combo-box-base > .arrow-button,
+.form-card .date-picker > .arrow-button {
+  -fx-background-color: #ffffff;
+  -fx-background-insets: 0;
+  -fx-background-radius: 0 6px 6px 0;
+  -fx-border-color: transparent;
+  -fx-min-width: 36px;
+}
+
+.form-card .combo-box-base > .arrow-button:hover,
+.form-card .date-picker > .arrow-button:hover {
+  -fx-background-color: #f1f3f4;
+}
+
+.form-card .combo-box-base > .arrow-button > .arrow {
+  -fx-background-color: -color-text-muted;
+}
+
 .form-card .text-field:focused,
 .form-card .combo-box:focused,
 .form-card .date-picker:focused {
-  -fx-border-color: -color-secondary;
-  -fx-effect: dropshadow(gaussian, rgba(26, 115, 232, 0.18), 5, 0, 0, 0);
+  -fx-border-color: -color-primary;
+  -fx-effect: none;
 }
 
 .button.primary-button,
