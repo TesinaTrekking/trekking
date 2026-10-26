@@ -1089,6 +1089,126 @@
     -fx-background-color: white;
     -fx-border-color: transparent transparent #e3e8ef transparent;
 }
+
+.itinerary-page {
+    -fx-spacing: 18px;
+    -fx-background-color: -color-background;
+}
+
+.itinerary-title {
+    -fx-font-size: 24px;
+}
+
+.itinerary-list-header {
+    -fx-padding: 4px 0 0 0;
+}
+
+.itinerary-count {
+    -fx-text-fill: -color-text-muted;
+    -fx-font-size: 13px;
+}
+
+.itinerary-list-card {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 10px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 10px;
+    -fx-padding: 1px;
+}
+
+.list-view.itinerary-list,
+.list-view.itinerary-list .virtual-flow,
+.list-view.itinerary-list .virtual-flow .clipped-container,
+.list-view.itinerary-list .virtual-flow .clipped-container .sheet {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+}
+
+.list-view.itinerary-list {
+    -fx-fixed-cell-size: 82px;
+    -fx-border-width: 0;
+    -fx-background-radius: 10px;
+}
+
+.list-view.itinerary-list .list-cell {
+    -fx-background-color: -color-surface;
+    -fx-padding: 10px 14px;
+    -fx-border-color: transparent transparent #e7ebf1 transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.list-view.itinerary-list .list-cell:filled:selected,
+.list-view.itinerary-list .list-cell:filled:selected:hover,
+.list-view.itinerary-list .list-cell:filled:hover {
+    -fx-background-color: #f8fafc;
+}
+
+.itinerary-time {
+    -fx-background-color: #111827;
+    -fx-background-radius: 8px;
+    -fx-padding: 7px 8px;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+}
+
+.itinerary-checkpoint-name {
+    -fx-text-fill: -color-text;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.itinerary-checkpoint-detail {
+    -fx-text-fill: -color-text-muted;
+    -fx-font-size: 12px;
+}
+
+.button.itinerary-icon-button {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-padding: 4px 7px;
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-text-muted;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
+.button.itinerary-icon-button:hover {
+    -fx-background-color: #edf1f5;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -color-text;
+}
+
+.button.itinerary-remove-button {
+    -fx-text-fill: -color-danger;
+}
+
+.button.itinerary-remove-button:hover {
+    -fx-background-color: #fcecea;
+    -fx-text-fill: -color-danger;
+}
+
+.itinerary-footer {
+    -fx-padding: 12px 0 0 0;
+    -fx-border-color: -color-border transparent transparent transparent;
+    -fx-border-width: 1px 0 0 0;
+}
+
+.checkpoint-form-fields .text-area {
+    -fx-background-color: white;
+    -fx-background-radius: 6px;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 6px;
+}
+
+.checkpoint-form-fields .text-area:focused {
+    -fx-border-color: -color-primary;
+}
+
+.form-card .text-area {
+    -fx-min-width: 0;
+}
+
 .wizard-header > .label:first-child {
     -fx-font-size: 24px;
     -fx-font-weight: bold;

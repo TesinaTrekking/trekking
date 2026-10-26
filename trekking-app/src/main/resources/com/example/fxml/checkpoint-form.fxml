@@ -1,141 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.geometry.Insets?>
 
-<ScrollPane fitToWidth="true"
-    hbarPolicy="NEVER"
-    vbarPolicy="AS_NEEDED"
-    xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1"
-    fx:controller="com.example.controller.CheckpointFormController"
-    stylesheets="@styles.css">
-
-    <content>
-
-        <VBox spacing="12.0">
-            <children>
-                <VBox spacing="2.0">
-                    <Label fx:id="tituloLabel" text="Nuevo Checkpoint"
-                        styleClass="dialog-header-title" />
-                    <Label fx:id="subtituloLabel"
-                        text="Ingrese los datos del nuevo punto de control para la bitácora."
-                        wrapText="true" styleClass="dialog-header-subtitle" />
-                </VBox>
-                <HBox fx:id="errorBanner" spacing="8.0" alignment="CENTER_LEFT"
-                    visible="false" managed="false" styleClass="error-banner">
-                    <Label text="⚠️" styleClass="error-banner-icon" />
-                    <Label fx:id="errorText" wrapText="true" styleClass="error-banner-text" />
-                </HBox>
-                <GridPane hgap="12.0" vgap="8.0" styleClass="dialog-form-card">
-
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="140.0" prefWidth="140.0" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                    </columnConstraints>
-
-                    <!-- Nombre del checkpoint: se conserva el campo original. -->
-                    <Label text="Nombre"
-                        GridPane.columnIndex="0"
-                        GridPane.rowIndex="0" />
-
-                    <TextField fx:id="txtNombre"
-                        promptText="Ej. Checkpoint Alfa"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="0" />
-
-                    <!-- Hora: se conserva el campo original. -->
-                    <Label text="Hora (HH:mm)"
-                        GridPane.columnIndex="0"
-                        GridPane.rowIndex="1" />
-
-                    <TextField fx:id="txtHora"
-                        promptText="Ej. 14:30"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="1" />
-
-                    <!-- NUEVO: ayuda para indicar el formato de hora esperado. -->
-                    <Label text="Formato de 24 horas. Ejemplo: 14:30."
-                        styleClass="field-help"
-                        wrapText="true"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="2" />
-
-                    <!-- Latitud: se conserva el campo original. -->
-                    <Label text="Latitud"
-                        GridPane.columnIndex="0"
-                        GridPane.rowIndex="3" />
-
-                    <TextField fx:id="txtLatitud"
-                        promptText="Ej. -31.4135"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="3" />
-
-                    <!-- NUEVO: informa el rango válido de latitud. -->
-                    <Label text="Grados decimales, entre -90 y 90."
-                        styleClass="field-help"
-                        wrapText="true"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="4" />
-
-                    <!-- Longitud: se conserva el campo original. -->
-                    <Label text="Longitud"
-                        GridPane.columnIndex="0"
-                        GridPane.rowIndex="5" />
-
-                    <TextField fx:id="txtLongitud"
-                        promptText="Ej. -64.1810"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="5" />
-
-                    <!-- NUEVO: informa el rango válido de longitud. -->
-                    <Label text="Grados decimales, entre -180 y 180."
-                        styleClass="field-help"
-                        wrapText="true"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="6" />
-
-                    <!-- Descripción: se conserva el campo original y sigue siendo opcional. -->
-                    <Label text="Descripción"
-                        GridPane.columnIndex="0"
-                        GridPane.rowIndex="7" />
-
-                    <TextArea fx:id="txtDescripcion"
-                        promptText="Descripción opcional de la parada o control..."
-                        prefRowCount="3"
-                        wrapText="true"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="7" />
-
-                </GridPane>
-
-                <HBox spacing="8.0"
-                    alignment="CENTER"
-                    styleClass="crud-actions">
-
-                    <Button fx:id="guardarButton" text="Guardar"
-                        styleClass="action-edit"
-                        onAction="#guardarCheckpoint" />
-
-                    <Button text="Cancelar"
-                        styleClass="secondary-button"
-                        onAction="#cancelar" />
-
-                </HBox>
-            </children>
-            <padding>
-                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-            </padding>
+<ScrollPane id="checkpoint-form" fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="pantalla-scroll" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.CheckpointFormController" stylesheets="@styles.css">
+  <content>
+    <VBox alignment="TOP_CENTER" styleClass="form-page">
+      <VBox styleClass="form-content">
+        <Label fx:id="tituloLabel" text="Nuevo Checkpoint" styleClass="dialog-header-title" />
+        <Label fx:id="subtituloLabel" text="Completa los datos del punto de control de la Ruta." styleClass="dialog-header-subtitle" wrapText="true" />
+        <VBox styleClass="form-card">
+          <Label text="Datos del Checkpoint" styleClass="form-section-title" />
+          <VBox spacing="12" styleClass="checkpoint-form-fields">
+            <VBox styleClass="form-field">
+              <Label text="Nombre *" styleClass="form-label" />
+              <TextField fx:id="txtNombre" promptText="Ej. Refugio de montaña" />
+            </VBox>
+            <VBox styleClass="form-field">
+              <Label text="Hora *" styleClass="form-label" />
+              <TextField fx:id="txtHora" promptText="HH:mm" />
+              <Label text="Formato de 24 horas. Ejemplo: 14:30." styleClass="field-help" wrapText="true" />
+            </VBox>
+            <VBox styleClass="form-field">
+              <Label text="Latitud *" styleClass="form-label" />
+              <TextField fx:id="txtLatitud" promptText="Ej. -31.4135" />
+              <Label text="Grados decimales, entre -90 y 90." styleClass="field-help" wrapText="true" />
+            </VBox>
+            <VBox styleClass="form-field">
+              <Label text="Longitud *" styleClass="form-label" />
+              <TextField fx:id="txtLongitud" promptText="Ej. -64.1810" />
+              <Label text="Grados decimales, entre -180 y 180." styleClass="field-help" wrapText="true" />
+            </VBox>
+            <VBox styleClass="form-field">
+              <Label text="Altitud (m) *" styleClass="form-label" />
+              <TextField fx:id="txtAltitud" promptText="Ej. 1350" />
+              <Label fx:id="ayudaAltitud" text="Metros sobre el nivel del mar." styleClass="field-help" wrapText="true" />
+            </VBox>
+            <VBox styleClass="form-field">
+              <Label text="Descripción" styleClass="form-label" />
+              <TextArea fx:id="txtDescripcion" promptText="Descripción opcional del punto de control." prefRowCount="3" wrapText="true" />
+            </VBox>
+          </VBox>
+          <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="crud-actions">
+            <Button text="Cancelar" onAction="#cancelar" styleClass="secondary-button" />
+            <Button fx:id="guardarButton" text="Agregar checkpoint" onAction="#guardarCheckpoint" styleClass="primary-button" />
+          </HBox>
+          <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
         </VBox>
-
-    </content>
-
+      </VBox>
+    </VBox>
+  </content>
 </ScrollPane>

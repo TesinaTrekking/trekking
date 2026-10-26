@@ -6,124 +6,231 @@ import com.example.model.Ruta;
 import com.example.util.AlertUtils;
 import com.example.util.NavigationShell;
 import com.example.util.ToastNotifications;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 /** Edición pendiente y guardado atómico del Itinerario de una Ruta. */
 public class ItinerarioRutaController {
-    @FXML private Label titulo, resumen, estado;
+
+    @FXML private ScrollPane root;
+    @FXML private Label titulo;
+    @FXML private Label resumen;
+    @FXML private Label estado;
+    @FXML private Label cantidad;
     @FXML private ListView<Checkpoint> lista;
+
     private final RutaCheckpointDAO dao = new RutaCheckpointDAO();
-    private Ruta ruta;
     private final List<Checkpoint> puntos = new ArrayList<>();
+    private Ruta ruta;
+    private Scene scene;
     private boolean cambios;
 
     public void cargar(Ruta ruta) {
         this.ruta = ruta;
         titulo.setText("Itinerario · " + ruta.getNombre());
-        resumen.setText(String.format("Altitud máxima %.0f m · %s · Dificultad %s / %s", ruta.getAltitudMaxima(), ruta.getTipoTerreno(), ruta.getDificultadTecnica(), ruta.getDificultadFisica()));
+        resumen.setText(String.format(
+                "Altitud máxima %.0f m · %s · Dificultad %s / %s",
+                ruta.getAltitudMaxima(), ruta.getTipoTerreno(),
+                ruta.getDificultadTecnica(), ruta.getDificultadFisica()));
+        puntos.clear();
         puntos.addAll(dao.obtenerPorRuta(ruta.getId()));
-        javafx.application.Platform.runLater(() -> NavigationShell.setNavigationGuard(lista.getScene(), this::confirmarSalida));
-        lista.setCellFactory(v -> new ListCell<>() {
-            @Override protected void updateItem(Checkpoint cp, boolean empty) {
-                super.updateItem(cp, empty);
-                setText(empty || cp == null ? null : String.format("%s  ·  %s  ·  %.0f m  ·  %.5f, %.5f", cp.getHora(), cp.getNombre(), cp.getAltitud(), cp.getLatitud(), cp.getLongitud()));
+        ordenarPorHora();
+        configurarFilas();
+        refrescar();
+        Platform.runLater(() -> {
+            scene = root.getScene();
+            if (scene != null) {
+                NavigationShell.setNavigationGuard(scene, this::confirmarSalida);
             }
         });
-        refrescar();
+    }
+
+    private void configurarFilas() {
+        lista.setPlaceholder(new Label("Esta Ruta todavía no tiene Checkpoints."));
+        lista.setCellFactory(view -> new ListCell<>() {
+            private final Label hora = new Label();
+            private final Label nombre = new Label();
+            private final Label detalle = new Label();
+            private final VBox datos = new VBox(4, nombre, detalle);
+            private final Region separador = new Region();
+            private final Button editar = new Button("✎");
+            private final Button quitar = new Button("×");
+            private final HBox fila = new HBox(14, hora, datos, separador, editar, quitar);
+
+            {
+                hora.getStyleClass().add("itinerary-time");
+                nombre.getStyleClass().add("itinerary-checkpoint-name");
+                detalle.getStyleClass().add("itinerary-checkpoint-detail");
+                nombre.setWrapText(true);
+                detalle.setWrapText(true);
+                editar.getStyleClass().add("itinerary-icon-button");
+                quitar.getStyleClass().addAll("itinerary-icon-button", "itinerary-remove-button");
+                editar.setTooltip(new Tooltip("Editar Checkpoint"));
+                editar.setAccessibleText("Editar Checkpoint");
+                quitar.setTooltip(new Tooltip("Quitar Checkpoint"));
+                quitar.setAccessibleText("Quitar Checkpoint");
+                fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                HBox.setHgrow(datos, Priority.NEVER);
+                HBox.setHgrow(separador, Priority.ALWAYS);
+                editar.setOnAction(event -> editar(getItem()));
+                quitar.setOnAction(event -> quitar(getItem()));
+            }
+
+            @Override
+            protected void updateItem(Checkpoint checkpoint, boolean empty) {
+                super.updateItem(checkpoint, empty);
+                if (empty || checkpoint == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                hora.setText(checkpoint.getHora());
+                nombre.setText(checkpoint.getNombre());
+                detalle.setText(String.format("%.0f m · %.5f, %.5f",
+                        checkpoint.getAltitud(), checkpoint.getLatitud(), checkpoint.getLongitud()));
+                setGraphic(fila);
+                setText(null);
+            }
+        });
     }
 
     private void refrescar() {
+        ordenarPorHora();
         lista.setItems(FXCollections.observableArrayList(puntos));
-        estado.setText((puntos.isEmpty() ? "Borrador · sin Checkpoints" : puntos.size() + " Checkpoints") + (cambios ? " · Cambios sin guardar" : "") + " · La Ruta necesita cero o al menos dos Checkpoints.");
+        cantidad.setText("(" + puntos.size() + ")");
+        estado.setText(puntos.isEmpty()
+                ? "Borrador · agrega dos o más Checkpoints para usar esta Ruta en una Salida."
+                : "La Ruta puede guardarse sin Checkpoints o con al menos dos.");
+        lista.setPrefHeight(puntos.isEmpty()
+                ? 92
+                : Math.min(420, Math.max(82, puntos.size() * 82.0)));
     }
 
-    @FXML private void agregar() { editar(null); }
-    @FXML private void editar() { Checkpoint cp = lista.getSelectionModel().getSelectedItem(); if (cp != null) editar(cp); }
-    @FXML private void quitar() {
-        Checkpoint cp = lista.getSelectionModel().getSelectedItem();
-        if (cp != null) { puntos.remove(cp); cambios = true; refrescar(); }
+    private void ordenarPorHora() {
+        // List.sort es estable: conserva el orden explícito entre horas iguales.
+        puntos.sort(Comparator.comparing(Checkpoint::getHora));
     }
+
+    @FXML
+    private void agregar() {
+        editar(null);
+    }
+
     private void editar(Checkpoint original) {
-        TextField nombre = new TextField(original == null ? "" : original.getNombre());
-        TextField hora = new TextField(original == null ? "" : original.getHora());
-        TextField lat = new TextField(original == null ? "" : Double.toString(original.getLatitud()));
-        TextField lon = new TextField(original == null ? "" : Double.toString(original.getLongitud()));
-        TextField alt = new TextField(original == null ? "0" : Double.toString(original.getAltitud()));
-        TextArea descripcion = new TextArea(original == null ? "" : original.getDescripcion()); descripcion.setPrefRowCount(3);
-        GridPane grid = new GridPane();
-        grid.setHgap(12);
-        grid.setVgap(10);
-        grid.getStyleClass().add("form-grid");
-        String[] labels = {"Nombre *", "Hora (HH:mm) *", "Latitud *", "Longitud *", "Altitud (m) *", "Descripción"};
-        javafx.scene.Node[] fields = {nombre, hora, lat, lon, alt, descripcion};
-        for (int i = 0; i < fields.length; i++) { grid.add(new Label(labels[i]), 0, i); grid.add(fields[i], 1, i); }
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
-        dialog.initOwner(lista.getScene().getWindow());
-        dialog.setTitle(original == null ? "Nuevo Checkpoint" : "Editar Checkpoint");
-        dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("/com/example/fxml/styles.css").toExternalForm());
-        dialog.getDialogPane().getStyleClass().add("dialog-form-card");
-        dialog.getDialogPane().setPrefWidth(560);
-        dialog.getDialogPane().setContent(grid);
-        ButtonType cancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
-        ButtonType guardar = new ButtonType(
-                original == null ? "Agregar checkpoint" : "Guardar cambios",
-                ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(cancelar, guardar);
-        Platform.runLater(nombre::requestFocus);
-        if (dialog.showAndWait().orElse(cancelar) != guardar) return;
         try {
-            String h = hora.getText().trim();
-            if (nombre.getText().isBlank() || !h.matches("(?:[01]\\d|2[0-3]):[0-5]\\d")) throw new IllegalArgumentException("Completa el nombre y usa hora HH:mm (24 horas).");
-            double latitude = Double.parseDouble(lat.getText().trim().replace(',', '.'));
-            double longitude = Double.parseDouble(lon.getText().trim().replace(',', '.'));
-            double altitude = Double.parseDouble(alt.getText().trim().replace(',', '.'));
-            if (!Double.isFinite(latitude) || latitude < -90 || latitude > 90 || !Double.isFinite(longitude) || longitude < -180 || longitude > 180 || !Double.isFinite(altitude) || altitude < 0 || altitude > ruta.getAltitudMaxima()) throw new IllegalArgumentException("Revisa coordenadas y altitud. La altitud debe estar entre 0 y " + ruta.getAltitudMaxima() + " m.");
-            Checkpoint cp = original == null ? new Checkpoint(0L, nombre.getText().trim(), h, latitude, longitude, altitude, descripcion.getText().trim()) : original;
-            cp.setNombre(nombre.getText().trim()); cp.setHora(h); cp.setLatitud(latitude); cp.setLongitud(longitude); cp.setAltitud(altitude); cp.setDescripcion(descripcion.getText().trim());
-            if (original == null) puntos.add(cp);
-            puntos.sort(Comparator.comparing(Checkpoint::getHora));
-            cambios = true; refrescar(); lista.getSelectionModel().select(cp);
-        } catch (IllegalArgumentException ex) { alerta("Checkpoint inválido", ex.getMessage()); }
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/example/fxml/checkpoint-form.fxml"));
+            Parent formulario = loader.load();
+            CheckpointFormController controller = loader.getController();
+            controller.cargarCheckpointParaItinerario(
+                    original,
+                    ruta.getAltitudMaxima(),
+                    actualizado -> guardarCheckpointPendiente(original, actualizado),
+                    this::volverAlItinerario,
+                    this::confirmarSalida);
+            scene = lista.getScene();
+            NavigationShell.setNavigationGuard(scene, controller::confirmarNavegacion);
+            NavigationShell.setRoot(scene, formulario,
+                    original == null ? "checkpoint-ruta-alta" : "checkpoint-ruta-edicion");
+        } catch (IOException | RuntimeException ex) {
+            alerta("No se pudo abrir el formulario", "No se pudo abrir el formulario del Checkpoint.");
+        }
     }
-    @FXML private void subir() { mover(-1); }
-    @FXML private void bajar() { mover(1); }
-    private void mover(int delta) {
-        int i = lista.getSelectionModel().getSelectedIndex(), j = i + delta;
-        if (i < 0 || j < 0 || j >= puntos.size() || !puntos.get(i).getHora().equals(puntos.get(j).getHora())) return;
-        java.util.Collections.swap(puntos, i, j); cambios = true; refrescar(); lista.getSelectionModel().select(j);
+
+    private void guardarCheckpointPendiente(Checkpoint original, Checkpoint actualizado) {
+        if (original == null) {
+            puntos.add(actualizado);
+        } else {
+            for (int i = 0; i < puntos.size(); i++) {
+                if (puntos.get(i) == original) {
+                    puntos.set(i, actualizado);
+                    break;
+                }
+            }
+        }
+        cambios = true;
+        volverAlItinerario();
+        refrescar();
     }
-    @FXML private void guardar() {
-        if (puntos.size() == 1) { alerta("Itinerario incompleto", "El Itinerario necesita inicio y fin. Agrega otro Checkpoint o quita el único punto."); return; }
+
+    private void volverAlItinerario() {
+        if (scene == null) return;
+        NavigationShell.setNavigationGuard(scene, this::confirmarSalida);
+        NavigationShell.setRoot(scene, root, "itinerario-ruta");
+    }
+
+    private void quitar(Checkpoint checkpoint) {
+        if (checkpoint != null) {
+            puntos.remove(checkpoint);
+            cambios = true;
+            refrescar();
+        }
+    }
+
+    @FXML
+    private void guardar() {
+        if (puntos.size() == 1) {
+            alerta("Itinerario incompleto",
+                    "El Itinerario necesita inicio y fin. Agrega otro Checkpoint o quita el único punto.");
+            return;
+        }
         if (dao.reemplazarPorRuta(ruta.getId(), List.copyOf(puntos))) {
             cambios = false;
             refrescar();
-            ToastNotifications.show(lista.getScene().getWindow(), "Itinerario guardado", ToastNotifications.Kind.SUCCESS);
+            ToastNotifications.show(scene.getWindow(), "Itinerario guardado",
+                    ToastNotifications.Kind.SUCCESS);
+        } else {
+            alerta("No se pudo guardar",
+                    "El Itinerario anterior se conserva. Verifica la altitud máxima y vuelve a intentar.");
         }
-        else alerta("No se pudo guardar", "El Itinerario anterior se conserva. Verifica la altitud máxima y vuelve a intentar.");
     }
-    @FXML private void volver() {
-        NavigationShell.navigate(lista.getScene(), "routes");
-    }
+
     private boolean confirmarSalida() {
         if (cambios) {
-            ButtonType guardar = new ButtonType("Guardar"), descartar = new ButtonType("Descartar"), seguir = new ButtonType("Seguir editando", ButtonBar.ButtonData.CANCEL_CLOSE);
-            Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Hay cambios pendientes en el Itinerario.", guardar, descartar, seguir); a.setTitle("Cambios sin guardar"); a.setHeaderText("¿Qué quieres hacer?");
-            ButtonType respuesta = AlertUtils.showAndWait(a, lista).orElse(seguir);
+            ButtonType guardar = new ButtonType("Guardar");
+            ButtonType descartar = new ButtonType("Descartar");
+            ButtonType seguir = new ButtonType("Seguir editando", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Hay cambios pendientes en el Itinerario.", guardar, descartar, seguir);
+            confirmacion.setTitle("Cambios sin guardar");
+            confirmacion.setHeaderText("¿Qué quieres hacer?");
+            ButtonType respuesta = AlertUtils.showAndWait(confirmacion, scene.getWindow()).orElse(seguir);
             if (respuesta == seguir) return false;
-            if (respuesta == guardar) { guardar(); if (cambios) return false; }
+            if (respuesta == guardar) {
+                guardar();
+                if (cambios) return false;
+            }
         }
-        NavigationShell.setNavigationGuard(lista.getScene(), null);
+        NavigationShell.setNavigationGuard(scene, null);
         return true;
     }
-    private void alerta(String titulo, String texto) { Alert a = new Alert(Alert.AlertType.INFORMATION, texto); a.setTitle(titulo); a.setHeaderText(null); AlertUtils.showAndWait(a, lista); }
+
+    private void alerta(String titulo, String texto) {
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION, texto);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        AlertUtils.showAndWait(alerta, lista);
+    }
 }

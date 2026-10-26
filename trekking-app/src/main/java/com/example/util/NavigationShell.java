@@ -52,6 +52,8 @@ public final class NavigationShell {
             Map.entry("ruta-alta", new Screen("Alta de Ruta", "routes", "ruta-form.fxml", List.of("Rutas", "Nueva ruta"))),
             Map.entry("ruta-edicion", new Screen("Edición de Ruta", "routes", "ruta-form.fxml", List.of("Rutas", "Editar ruta"))),
             Map.entry("itinerario-ruta", new Screen("Itinerario", "routes", "itinerario-ruta.fxml", List.of("Salidas", "Rutas", "Itinerario"))),
+            Map.entry("checkpoint-ruta-alta", new Screen("Nuevo Checkpoint", "routes", "checkpoint-form.fxml", List.of("Salidas", "Rutas", "Nuevo Checkpoint"))),
+            Map.entry("checkpoint-ruta-edicion", new Screen("Editar Checkpoint", "routes", "checkpoint-form.fxml", List.of("Salidas", "Rutas", "Editar Checkpoint"))),
             Map.entry("inventario-alta", new Screen("Alta de Elemento", "inventory", "equipamiento-form.fxml", List.of("Inventario", "Nuevo elemento"))),
             Map.entry("inventario-edicion", new Screen("Edición de Elemento", "inventory", "equipamiento-form.fxml", List.of("Inventario", "Editar elemento"))));
 
