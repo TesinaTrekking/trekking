@@ -1,3 +1,98 @@
+.root {
+  -color-primary: #188038;
+  -color-primary-hover: #137333;
+  -color-secondary: #1a73e8;
+  -color-danger: #d93025;
+  -color-warning: #e37400;
+  -color-success: #188038;
+  -color-text: #172b4d;
+  -color-text-muted: #68778d;
+  -color-background: #f5f7fa;
+  -color-surface: #ffffff;
+  -color-border: #d8e0ea;
+}
+
+.app-shell {
+  -fx-background-color: -color-background;
+}
+
+.form-page {
+  -fx-padding: 24px;
+  -fx-alignment: top-center;
+  -fx-spacing: 16px;
+}
+
+.form-card {
+  -fx-background-color: -color-surface;
+  -fx-background-radius: 8px;
+  -fx-border-color: -color-border;
+  -fx-border-radius: 8px;
+  -fx-padding: 24px;
+  -fx-spacing: 16px;
+}
+
+.form-card .dialog-header-title {
+  -fx-padding: 0 0 4px 0;
+}
+
+.form-card .form-grid {
+  -fx-hgap: 16px;
+  -fx-vgap: 12px;
+}
+
+.form-card .text-field,
+.form-card .combo-box,
+.form-card .date-picker {
+  -fx-pref-height: 38px;
+  -fx-background-radius: 6px;
+  -fx-border-radius: 6px;
+  -fx-border-color: -color-border;
+}
+
+.form-card .text-field:focused,
+.form-card .combo-box:focused,
+.form-card .date-picker:focused {
+  -fx-border-color: -color-secondary;
+  -fx-effect: dropshadow(gaussian, rgba(26, 115, 232, 0.18), 5, 0, 0, 0);
+}
+
+.button.primary-button,
+.button.action-save {
+  -fx-background-color: -color-primary;
+  -fx-text-fill: white;
+  -fx-background-radius: 6px;
+  -fx-min-height: 38px;
+  -fx-padding: 9px 18px;
+  -fx-cursor: hand;
+}
+
+.button.primary-button:hover,
+.button.action-save:hover {
+  -fx-background-color: -color-primary-hover;
+}
+
+.button.secondary-button {
+  -fx-background-color: #f1f3f4;
+  -fx-text-fill: -color-text;
+  -fx-background-radius: 6px;
+  -fx-min-height: 38px;
+  -fx-padding: 9px 18px;
+  -fx-cursor: hand;
+}
+
+.button.danger-button {
+  -fx-background-color: -color-danger;
+  -fx-text-fill: white;
+  -fx-background-radius: 6px;
+  -fx-min-height: 38px;
+  -fx-padding: 9px 18px;
+  -fx-cursor: hand;
+}
+
+.button:focused {
+  -fx-effect: dropshadow(gaussian, rgba(26, 115, 232, 0.38), 6, 0, 0, 0);
+}
+
 .dashboard-header {
   -fx-background-color: #ffffff;
   -fx-border-color: #e1e5eb;
