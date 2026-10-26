@@ -195,7 +195,7 @@
   -fx-font-weight: bold;
   -fx-text-fill: white;
   -fx-graphic-text-gap: 8px;
-  -fx-padding: 0 8px 18px 8px;
+  -fx-padding: 0 14px 18px 14px;
 }
 
 .sidebar-brand .sidebar-icon {

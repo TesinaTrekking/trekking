@@ -13,7 +13,7 @@
   stylesheets="@styles.css">
   <left>
     <VBox fx:id="appSidebar" styleClass="app-sidebar" minWidth="230.0" prefWidth="230.0" maxWidth="230.0">
-      <Label fx:id="sidebarBrand" text="TrekRisk" styleClass="sidebar-brand" />
+      <Label fx:id="sidebarBrand" text="TrekRisk" maxWidth="Infinity" styleClass="sidebar-brand" />
       <VBox fx:id="navigationBox" styleClass="sidebar-navigation" VBox.vgrow="ALWAYS">
         <Button fx:id="btnSalidas" text="Salidas" onAction="#onSalidas"
           maxWidth="Infinity" styleClass="sidebar-button" />
