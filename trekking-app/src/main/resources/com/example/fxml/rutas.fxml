@@ -86,10 +86,6 @@
 
                                 <columns>
 
-                                        <TableColumn fx:id="colId"
-                                                prefWidth="50.0"
-                                                text="ID" />
-
                                         <TableColumn fx:id="colNombre"
                                                 prefWidth="150.0"
                                                 text="Nombre" />

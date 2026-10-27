@@ -57,7 +57,6 @@ public class SalidasController {
     private final FichaOperativaPDFService fichaPDFService = new FichaOperativaPDFService();
     private final RutaDAO rutaDAO = new RutaDAO();
     @FXML private TableView<Salida> tablaSalidas;
-    @FXML private TableColumn<Salida, Integer> colId;
     @FXML private TableColumn<Salida, LocalDate> colFecha;
     @FXML private TableColumn<Salida, String> colRuta;
     @FXML private TableColumn<Salida, String> colEstado;
@@ -78,7 +77,6 @@ public class SalidasController {
         SearchFieldIcon.install(buscarField);
         tablaSalidas.getStyleClass().add("listing-table");
         tablaSalidas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colId.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().id()));
         colFecha.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().fecha()));
         colFecha.setCellFactory(column -> new TableCell<>() {
             @Override protected void updateItem(LocalDate fecha, boolean empty) {

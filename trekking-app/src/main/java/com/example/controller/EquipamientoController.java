@@ -32,9 +32,6 @@ public class EquipamientoController {
     private TableView<Equipamiento> tablaEquipamiento;
 
     @FXML
-    private TableColumn<Equipamiento, Integer> colId;
-
-    @FXML
     private TableColumn<Equipamiento, String> colNombre;
 
     @FXML
@@ -70,9 +67,6 @@ public class EquipamientoController {
 
         tablaEquipamiento.getStyleClass().add("listing-table");
         tablaEquipamiento.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        colId.setCellValueFactory(
-                new PropertyValueFactory<>("id"));
 
         colNombre.setCellValueFactory(
                 new PropertyValueFactory<>("nombre"));

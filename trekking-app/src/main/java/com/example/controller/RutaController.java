@@ -54,9 +54,6 @@ public class RutaController implements Initializable {
         private TableView<Ruta> tablaRutas;
 
         @FXML
-        private TableColumn<Ruta, Integer> colId;
-
-        @FXML
         private TableColumn<Ruta, String> colNombre;
 
         @FXML
@@ -97,9 +94,6 @@ public class RutaController implements Initializable {
 
                 tablaRutas.getStyleClass().add("listing-table");
                 tablaRutas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-                colId.setCellValueFactory(
-                                new PropertyValueFactory<>("id"));
 
                 colNombre.setCellValueFactory(
                                 new PropertyValueFactory<>("nombre"));

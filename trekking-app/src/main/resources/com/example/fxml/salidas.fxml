@@ -39,7 +39,6 @@
     </HBox>
     <TableView fx:id="tablaSalidas" prefHeight="500">
         <columns>
-            <TableColumn fx:id="colId" text="ID" prefWidth="70"/>
             <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
             <TableColumn fx:id="colRuta" text="Ruta" prefWidth="320"/>
             <TableColumn fx:id="colParticipantes" text="Participantes" prefWidth="260"/>
