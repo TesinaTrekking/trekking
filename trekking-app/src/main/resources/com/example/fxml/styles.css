@@ -1047,12 +1047,12 @@
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #e1ded5;
+    -fx-background-color: -color-hover;
 }
 
 .table-view .column-header,
 .table-view .filler {
-    -fx-background-color: #e1ded5;
+    -fx-background-color: -color-hover;
     -fx-border-color: transparent transparent -color-border transparent;
     -fx-border-width: 0 0 1px 0;
     -fx-size: 36px;
