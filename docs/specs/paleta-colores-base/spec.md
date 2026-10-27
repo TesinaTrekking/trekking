@@ -1,6 +1,6 @@
 # Especificación funcional: paleta de colores base
 
-**Estado:** Cerrada — implementación completada  
+**Estado:** Cerrada — implementación completada
 **Fecha:** 27/10/2026  
 **Alcance:** Tema visual global de la interfaz JavaFX de TrekRisk.
 
@@ -33,13 +33,14 @@ Las pantallas conservarán su estructura. Se ajustarán colores de interacción,
 - La paleta base global incluye verde oscuro `#202116`, verde oscuro-medio `#32321f`, verde medio `#454425`, verde claro `#6e6928`, verde claro-blanco `#aca680`, `#cfcab7`, `#e1ded5`, tono claro neutro `#eae9e4` y fondo casi blanco `#f4f4f4`.
 - El verde oscuro-medio reemplaza el azul de fondo de la sidebar; el verde medio distingue la sección activa y el verde oscuro se usa para texto y elementos oscuros; el verde claro se usa en acciones principales y acentos; el casi blanco se usa como fondo general.
 - Los tonos claros `#aca680`, `#cfcab7`, `#e1ded5` y `#eae9e4` permiten diferenciar superficies, selecciones y estados con variaciones sutiles hacia el blanco, evitando contrastes bruscos. Su asignación concreta puede ajustarse según el componente, manteniendo esa progresión visual.
-- El tono claro neutro `#eae9e4` se usa en las selecciones de tablas, listas, opciones de filtros y menús desplegables; texto y marcas permanecen oscuros para conservar legibilidad.
-- El hover de una selección activa en tablas, listas y filtros usa el fondo general `#f4f4f4`; las opciones no seleccionadas conservan su superficie normal. Sin hover, las selecciones usan `#eae9e4`. La diferencia entre ambos estados debe ser perceptible pero sutil, coherente con la variedad de tonos claros de la paleta.
+- Las selecciones en tablas, listas y opciones de filtros y menús desplegables usan `#e1ded5`; texto y marcas permanecen oscuros para conservar legibilidad.
+- El hover de elementos no seleccionados en tablas, listas y opciones de filtros y menús desplegables usa `#eae9e4`. Un elemento seleccionado conserva `#e1ded5` mientras está bajo el cursor y al retirarlo; el hover de otros elementos se muestra de forma independiente.
 - Las tarjetas y formularios pueden conservar superficies blancas como neutro adicional para separarse del fondo.
 - Los colores funcionales para errores, advertencias y éxitos se conservan. La paleta define la identidad visual base, no limita la interfaz a cuatro colores.
 - Los tonos neutros de borde, texto secundario y controles pueden ajustarse cuando sea necesario para mantener jerarquía visual y contraste.
 - El tema se integra en el estilo compartido y cubre pantallas, navegación, formularios, tablas, diálogos y notificaciones; también se revisan colores puntuales que eviten el estilo común.
 - Los estados hover, foco y selección deben integrarse con la paleta y seguir siendo distinguibles.
+- En tablas, listas y opciones desplegadas de filtros de estado, selección y hover son estados visuales independientes: selección conserva `#e1ded5`, mientras hover aplica `#eae9e4` solo a elementos no seleccionados. Al quitar el cursor, la selección mantiene su color.
 - Se conserva la distribución actual de las pantallas y el comportamiento existente de controles y flujos.
 - La especificación cubre la interfaz JavaFX. No requiere cambios en persistencia, lógica de negocio ni datos de dominio.
 
