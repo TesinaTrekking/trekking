@@ -217,20 +217,30 @@
   -fx-cursor: hand;
 }
 
-.salida-editor-content {
-  -fx-padding: 20px;
-  -fx-spacing: 10px;
-  -fx-background-color: -color-background;
+.form-section.form-section-last {
+  -fx-padding: 0;
+  -fx-border-width: 0;
 }
 
-.salida-editor-content > .text-field,
-.salida-editor-content > .combo-box,
-.salida-editor-content > .date-picker {
-  -fx-pref-height: 38px;
+.salida-ruta-resumen {
+  -fx-font-size: 13px;
+  -fx-text-fill: -color-text-muted;
+}
+
+.salida-lista .list-cell,
+.salida-lista .list-cell:filled:hover,
+.salida-lista .list-cell:filled:selected,
+.salida-lista .list-cell:filled:selected:hover {
   -fx-background-color: -color-surface;
-  -fx-border-color: -color-border;
-  -fx-border-radius: 6px;
-  -fx-background-radius: 6px;
+  -fx-padding: 6px 12px;
+}
+
+.salida-lista .placeholder .label {
+  -fx-text-fill: -color-text-muted;
+}
+
+.secondary-button .row-action-icon {
+  -fx-fill: -color-text;
 }
 
 .toast-notification {

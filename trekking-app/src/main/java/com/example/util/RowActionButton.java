@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.StackPane;
@@ -29,7 +30,8 @@ public final class RowActionButton {
         RESTORE("RESTORE.svg"),
         MAP("MAP.svg"),
         CHECK("CHECK-CIRCLE.svg"),
-        CANCEL("CANCEL.svg");
+        CANCEL("CANCEL.svg"),
+        ADD("ADD.svg");
 
         private final String fileName;
         private String path;
@@ -45,6 +47,17 @@ public final class RowActionButton {
     private RowActionButton() { }
 
     public static Button create(String label, Icon icon, EventHandler<ActionEvent> action) {
+        Button button = new Button();
+        button.getStyleClass().add("row-action-button");
+        button.setGraphic(graphic(icon));
+        button.setTooltip(new Tooltip(label));
+        button.setAccessibleText(label);
+        button.setOnAction(action);
+        return button;
+    }
+
+    /** Icon graphic for buttons that also carry a text label. */
+    public static Node graphic(Icon icon) {
         SVGPath graphic = new SVGPath();
         graphic.setContent(icon.path());
         double scale = ICON_SIZE / VIEWBOX_SIZE;
@@ -56,13 +69,7 @@ public final class RowActionButton {
         iconContainer.setPrefSize(ICON_SIZE, ICON_SIZE);
         iconContainer.setMaxSize(ICON_SIZE, ICON_SIZE);
         iconContainer.getStyleClass().add("row-action-icon-container");
-        Button button = new Button();
-        button.getStyleClass().add("row-action-button");
-        button.setGraphic(iconContainer);
-        button.setTooltip(new Tooltip(label));
-        button.setAccessibleText(label);
-        button.setOnAction(action);
-        return button;
+        return iconContainer;
     }
 
     private static String loadPath(String fileName) {

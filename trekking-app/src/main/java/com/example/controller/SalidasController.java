@@ -20,6 +20,8 @@ import com.example.util.TableHeight;
 import com.example.util.ComboBoxDisplayLabel;
 import com.example.util.AlertUtils;
 import com.example.util.FechaFormato;
+import com.example.util.FormValidation;
+import com.example.util.RowActionButton;
 import com.example.util.ToastNotifications;
 import java.sql.SQLException;
 import java.io.File;
@@ -36,7 +38,14 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.Node;
+import javafx.geometry.Pos;
+import javafx.geometry.VPos;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
@@ -300,7 +309,7 @@ public class SalidasController {
     private final class EditorSalida {
         private final Salida original;
         private final Scene escenaAplicacion = tablaSalidas.getScene();
-        private final VBox content = new VBox(10);
+        private static final double ALTO_FILA_LISTA = 40;
         private final DatePicker fecha = new DatePicker();
         private final ComboBox<Ruta> rutas = new ComboBox<>();
         private final ListView<Checkpoint> puntos = new ListView<>();
@@ -350,72 +359,234 @@ public class SalidasController {
                 }
                 actualizarDetalle();
             });
-            detalleRuta.setWrapText(true); actualizarDetalle(); actualizarPuntos();
+            detalleRuta.setWrapText(true);
+            detalleRuta.getStyleClass().add("salida-ruta-resumen");
+            configurarListas();
             configurarAsignaciones();
-            Button agregar = new Button("Agregar checkpoint"), editar = new Button("Editar seleccionado"), quitar = new Button("Quitar seleccionado");
-            Button refrescar = new Button("Actualizar desde Ruta");
-            agregar.getStyleClass().add("secondary-button");
-            editar.getStyleClass().add("secondary-button");
-            quitar.getStyleClass().add("secondary-button");
-            refrescar.getStyleClass().add("warning-button");
-            agregar.setOnAction(e -> editarCheckpoint(null));
-            editar.setOnAction(e -> { Checkpoint cp = puntos.getSelectionModel().getSelectedItem(); if (cp != null) editarCheckpoint(cp); });
-            quitar.setOnAction(e -> {
-                Checkpoint cp = puntos.getSelectionModel().getSelectedItem();
-                if (cp != null) {
-                    cambiosRealizados = true;
-                    checkpoints.remove(cp);
-                    checkpointsGuardarEnRuta.remove(cp);
-                    actualizarPuntos();
-                }
-            });
-            refrescar.setOnAction(e -> {
-                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Se reemplazarán los datos copiados de Ruta y todos sus Checkpoints. Se perderán las modificaciones locales de Checkpoints. Equipamiento y Participantes se conservarán.", ButtonType.CANCEL, ButtonType.OK);
-                confirm.setTitle("Actualizar desde ruta"); confirm.setHeaderText("¿Reemplazar la copia operativa?");
-                if (AlertUtils.showAndWait(confirm, tablaSalidas).orElse(ButtonType.CANCEL) == ButtonType.OK && rutas.getValue() != null) {
-                    cambiosRealizados = true;
-                    actualizarDesdeRuta = true;
-                    checkpointsGuardarEnRuta.clear();
-                    checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(rutas.getValue().getId())); actualizarPuntos();
-                }
-            });
-            content.getStyleClass().add("salida-editor-content");
-            puntos.setPrefHeight(150);
-            puntos.setMaxHeight(220);
-            listaEquipo.setPrefHeight(130);
-            listaEquipo.setMaxHeight(200);
-            listaParticipantes.setPrefHeight(130);
-            listaParticipantes.setMaxHeight(200);
-            content.getChildren().addAll(new Label("Fecha de la Salida"), fecha, new Label("Ruta"), rutas, detalleRuta,
-                    new Label("Checkpoints operativos (se admite una lista vacía o de cualquier tamaño)"), puntos,
-                    new javafx.scene.layout.HBox(8, agregar, editar, quitar), refrescar,
-                    new Label("Equipamiento"), new javafx.scene.layout.HBox(8, selectorEquipo, cantidadEquipo, boton("Agregar", this::agregarEquipo)), listaEquipo,
-                    boton("Quitar equipamiento seleccionado", this::quitarEquipoSeleccionado),
-                    new Label("Participantes"), new javafx.scene.layout.HBox(8, selectorCliente, boton("Agregar", this::agregarParticipante)), listaParticipantes,
-                    boton("Quitar participante seleccionado", this::quitarParticipanteSeleccionado));
-            Label titulo = new Label("Editar Salida " + original.id());
-            titulo.getStyleClass().add("dashboard-title");
-            VBox encabezado = new VBox(titulo);
-            encabezado.getStyleClass().add("wizard-header");
-            ScrollPane scroll = new ScrollPane(content);
-            scroll.setFitToWidth(true);
-            scroll.setFitToHeight(true);
-            scroll.getStyleClass().add("wizard-scroll");
+            actualizarDetalle(); actualizarPuntos();
+
+            VBox campoFecha = campo("Fecha de la Salida *", fecha);
+            VBox campoRuta = campo("Ruta *", rutas);
+            FormValidation.watch(fecha, fecha.valueProperty(),
+                    () -> fecha.getValue() == null ? "La fecha de la Salida es obligatoria." : null);
+            FormValidation.watch(rutas, rutas.valueProperty(),
+                    () -> rutas.getValue() == null ? "Selecciona una Ruta." : null);
+            fecha.setPromptText("Selecciona una fecha");
+            rutas.setPromptText("Seleccione una Ruta");
+
+            Button agregarCheckpoint = botonConIcono("Agregar checkpoint", RowActionButton.Icon.ADD, () -> editarCheckpoint(null));
+            Button refrescar = botonConIcono("Actualizar desde Ruta", RowActionButton.Icon.RESTORE, this::actualizarCopiaDesdeRuta);
+            Label ayudaCheckpoints = new Label("Es la copia operativa de la Salida y admite cualquier cantidad de checkpoints, incluso ninguno.");
+            ayudaCheckpoints.getStyleClass().add("field-help");
+            ayudaCheckpoints.setWrapText(true);
+
+            VBox seccionDatos = seccion(false, encabezadoSeccion("Datos de la Salida"), campoFecha);
+            VBox seccionRuta = seccion(false, encabezadoSeccion("Ruta e itinerario", agregarCheckpoint, refrescar),
+                    campoRuta, detalleRuta, ayudaCheckpoints, puntos);
+            VBox seccionEquipo = seccion(false, encabezadoSeccion("Equipamiento"),
+                    filaAgregado(campo("Elemento", selectorEquipo), campo("Cantidad", cantidadEquipo),
+                            botonAgregar(this::agregarEquipo)),
+                    listaEquipo);
+            VBox seccionParticipantes = seccion(true, encabezadoSeccion("Participantes"),
+                    filaAgregado(campo("Cliente", selectorCliente), botonAgregar(this::agregarParticipante)),
+                    listaParticipantes);
+
+            Button guardar = new Button("Guardar cambios");
+            guardar.getStyleClass().add("primary-button");
+            guardar.setOnAction(e -> guardar());
             Button cancelar = new Button("Cancelar");
             cancelar.getStyleClass().add("secondary-button");
             cancelar.setOnAction(e -> cancelarEdicion());
-            Button guardar = new Button("Guardar");
-            guardar.getStyleClass().add("primary-button");
-            guardar.setOnAction(e -> guardar());
-            javafx.scene.layout.HBox acciones = new javafx.scene.layout.HBox(10, cancelar, guardar);
-            acciones.getStyleClass().add("wizard-actions");
-            javafx.scene.layout.BorderPane root = new javafx.scene.layout.BorderPane();
-            root.setTop(encabezado);
-            root.setCenter(scroll);
-            root.setBottom(acciones);
+            VBox pie = new VBox();
+            pie.getStyleClass().add("crud-actions");
+
+            VBox tarjeta = new VBox(seccionDatos, seccionRuta, seccionEquipo, seccionParticipantes, pie);
+            tarjeta.getStyleClass().add("form-card");
+            tarjeta.widthProperty().addListener((o, a, ancho) -> disponerAcciones(pie, ancho.doubleValue() < 480, guardar, cancelar));
+            disponerAcciones(pie, false, guardar, cancelar);
+
+            Label titulo = new Label("Editar salida");
+            titulo.getStyleClass().add("dialog-header-title");
+            Label subtitulo = new Label("Modifica la fecha, la Ruta, el equipamiento y los Participantes de la Salida.");
+            subtitulo.getStyleClass().add("dialog-header-subtitle");
+            subtitulo.setWrapText(true);
+            VBox contenido = new VBox(titulo, subtitulo, tarjeta);
+            contenido.getStyleClass().add("form-content");
+            VBox pagina = new VBox(contenido);
+            pagina.setAlignment(Pos.TOP_CENTER);
+            pagina.getStyleClass().add("form-page");
+            ScrollPane scroll = new ScrollPane(pagina);
+            scroll.setFitToWidth(true);
+            scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            scroll.getStyleClass().add("pantalla-scroll");
             NavigationShell.setNavigationGuard(escenaAplicacion, this::confirmarCambioDeSeccion);
-            NavigationShell.setRoot(escenaAplicacion, root, "salida-edicion");
+            NavigationShell.setRoot(escenaAplicacion, scroll, "salida-edicion");
             javafx.application.Platform.runLater(fecha::requestFocus);
+        }
+
+        private VBox campo(String etiqueta, Control control) {
+            Label label = new Label(etiqueta);
+            label.getStyleClass().add("form-label");
+            label.setLabelFor(control);
+            control.setMaxWidth(Double.MAX_VALUE);
+            VBox campo = new VBox(label, control);
+            campo.getStyleClass().add("form-field");
+            return campo;
+        }
+
+        private VBox seccion(boolean ultima, Node... hijos) {
+            VBox seccion = new VBox(hijos);
+            seccion.getStyleClass().add("form-section");
+            if (ultima) seccion.getStyleClass().add("form-section-last");
+            return seccion;
+        }
+
+        private HBox encabezadoSeccion(String titulo, Node... acciones) {
+            Label label = new Label(titulo);
+            label.getStyleClass().add("form-section-title");
+            label.setMinWidth(Region.USE_PREF_SIZE);
+            HBox encabezado = new HBox(12, label);
+            encabezado.setAlignment(Pos.CENTER_LEFT);
+            if (acciones.length > 0) {
+                FlowPane botones = new FlowPane(8, 8, acciones);
+                botones.setAlignment(Pos.CENTER_RIGHT);
+                HBox.setHgrow(botones, Priority.ALWAYS);
+                encabezado.getChildren().add(botones);
+            }
+            return encabezado;
+        }
+
+        private Button botonConIcono(String texto, RowActionButton.Icon icono, Runnable accion) {
+            Button boton = new Button(texto, RowActionButton.graphic(icono));
+            boton.getStyleClass().add("secondary-button");
+            boton.setGraphicTextGap(8);
+            boton.setOnAction(e -> accion.run());
+            return boton;
+        }
+
+        private Button botonAgregar(Runnable accion) {
+            Button boton = new Button("Agregar");
+            boton.getStyleClass().add("secondary-button");
+            boton.setOnAction(e -> accion.run());
+            return boton;
+        }
+
+        /** Campos y botón de agregado en una fila que se apila en un ancho estrecho. */
+        private GridPane filaAgregado(Node... nodos) {
+            GridPane fila = new GridPane();
+            fila.getStyleClass().add("form-grid");
+            ColumnConstraints principal = new ColumnConstraints();
+            principal.setHgrow(Priority.ALWAYS);
+            fila.getColumnConstraints().add(principal);
+            boolean[] apilada = {false};
+            disponerFila(fila, false, nodos);
+            fila.widthProperty().addListener((o, a, ancho) -> {
+                boolean estrecha = ancho.doubleValue() < 600;
+                if (estrecha != apilada[0]) { apilada[0] = estrecha; disponerFila(fila, estrecha, nodos); }
+            });
+            return fila;
+        }
+
+        private void disponerFila(GridPane fila, boolean apilada, Node... nodos) {
+            fila.getChildren().clear();
+            fila.setHgap(apilada ? 0 : 16);
+            fila.setVgap(12);
+            for (int i = 0; i < nodos.length; i++) {
+                Node nodo = nodos[i];
+                GridPane.setValignment(nodo, VPos.BOTTOM);
+                fila.add(nodo, apilada ? 0 : i, apilada ? i : 0);
+            }
+            if (nodos[nodos.length - 1] instanceof Button boton) {
+                boton.setMaxWidth(apilada ? Double.MAX_VALUE : Region.USE_COMPUTED_SIZE);
+            }
+        }
+
+        private void disponerAcciones(VBox pie, boolean estrecho, Button guardar, Button cancelar) {
+            Pane contenedor = estrecho ? new VBox(8) : new HBox(8);
+            if (contenedor instanceof HBox caja) caja.setAlignment(Pos.CENTER_RIGHT);
+            for (Button boton : List.of(guardar, cancelar)) boton.setMaxWidth(estrecho ? Double.MAX_VALUE : Region.USE_COMPUTED_SIZE);
+            contenedor.getChildren().setAll(guardar, cancelar);
+            pie.getChildren().setAll(contenedor);
+        }
+
+        private void configurarListas() {
+            for (ListView<?> lista : List.of(puntos, listaEquipo, listaParticipantes)) {
+                lista.getStyleClass().add("salida-lista");
+                lista.setFixedCellSize(ALTO_FILA_LISTA);
+                lista.setFocusTraversable(false);
+            }
+            puntos.setPlaceholder(new Label("Sin checkpoints"));
+            listaEquipo.setPlaceholder(new Label("Sin equipamiento asignado"));
+            listaParticipantes.setPlaceholder(new Label("Sin participantes asignados"));
+            puntos.setCellFactory(v -> new ListCell<>() { @Override protected void updateItem(Checkpoint cp, boolean empty) {
+                super.updateItem(cp, empty);
+                setText(null);
+                if (empty || cp == null) { setGraphic(null); return; }
+                Button editar = RowActionButton.create("Editar checkpoint " + cp.getNombre(), RowActionButton.Icon.EDIT, e -> editarCheckpoint(cp));
+                Button quitar = RowActionButton.create("Quitar checkpoint " + cp.getNombre(), RowActionButton.Icon.DELETE, e -> quitarCheckpoint(cp));
+                quitar.getStyleClass().add("row-action-danger");
+                setGraphic(filaLista(List.of(etiquetaFila(cp.getHora(), 56), etiquetaFila(cp.getNombre(), -1), etiquetaFila(cp.getAltitud() + " m", 80)), editar, quitar));
+            }});
+            listaEquipo.setCellFactory(v -> new ListCell<>() { @Override protected void updateItem(AsignacionEquipamiento a, boolean empty) {
+                super.updateItem(a, empty);
+                setText(null);
+                if (empty || a == null) { setGraphic(null); return; }
+                Button quitar = RowActionButton.create("Quitar equipamiento " + a.equipamiento().getNombre(), RowActionButton.Icon.DELETE, e -> quitarEquipo(a));
+                quitar.getStyleClass().add("row-action-danger");
+                setGraphic(filaLista(List.of(etiquetaFila(a.equipamiento().getNombre(), -1), etiquetaFila("Cantidad: " + a.cantidad(), 110)), quitar));
+            }});
+            listaParticipantes.setCellFactory(v -> new ListCell<>() { @Override protected void updateItem(AsignacionParticipante a, boolean empty) {
+                super.updateItem(a, empty);
+                setText(null);
+                if (empty || a == null) { setGraphic(null); return; }
+                Cliente c = a.cliente();
+                Button quitar = RowActionButton.create("Quitar participante " + c.getApellido() + ", " + c.getNombre(), RowActionButton.Icon.DELETE, e -> quitarParticipante(a));
+                quitar.getStyleClass().add("row-action-danger");
+                setGraphic(filaLista(List.of(etiquetaFila(c.getApellido() + ", " + c.getNombre(), -1), etiquetaFila("DNI " + c.getDni(), 110)), quitar));
+            }});
+        }
+
+        /** Etiqueta de una fila de lista; con ancho negativo ocupa el espacio sobrante. */
+        private Label etiquetaFila(String texto, double ancho) {
+            Label label = new Label(texto);
+            label.setMinWidth(0);
+            label.setTextOverrun(OverrunStyle.ELLIPSIS);
+            if (ancho < 0) { label.setMaxWidth(Double.MAX_VALUE); HBox.setHgrow(label, Priority.ALWAYS); }
+            else { label.setMinWidth(ancho); label.setPrefWidth(ancho); }
+            return label;
+        }
+
+        private HBox filaLista(List<Label> datos, Button... acciones) {
+            HBox fila = new HBox(8);
+            fila.setAlignment(Pos.CENTER_LEFT);
+            fila.getChildren().addAll(datos);
+            HBox botones = new HBox(3, acciones);
+            botones.setMinWidth(Region.USE_PREF_SIZE);
+            fila.getChildren().add(botones);
+            return fila;
+        }
+
+        private void ajustarAltura(ListView<?> lista, int filas) {
+            lista.setPrefHeight(Math.max(1, filas) * ALTO_FILA_LISTA + 2);
+        }
+
+        private void quitarCheckpoint(Checkpoint cp) {
+            cambiosRealizados = true;
+            checkpoints.remove(cp);
+            checkpointsGuardarEnRuta.remove(cp);
+            actualizarPuntos();
+        }
+
+        private void actualizarCopiaDesdeRuta() {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Se reemplazarán los datos copiados de Ruta y todos sus Checkpoints. Se perderán las modificaciones locales de Checkpoints. Equipamiento y Participantes se conservarán.", ButtonType.CANCEL, ButtonType.OK);
+            confirm.setTitle("Actualizar desde ruta"); confirm.setHeaderText("¿Reemplazar la copia operativa?");
+            if (AlertUtils.showAndWait(confirm, tablaSalidas).orElse(ButtonType.CANCEL) == ButtonType.OK && rutas.getValue() != null) {
+                cambiosRealizados = true;
+                actualizarDesdeRuta = true;
+                checkpointsGuardarEnRuta.clear();
+                checkpoints.clear(); checkpoints.addAll(new RutaCheckpointDAO().obtenerPorRuta(rutas.getValue().getId())); actualizarPuntos();
+            }
         }
 
         private void configurarAsignaciones() {
@@ -431,13 +602,15 @@ public class SalidasController {
             todos.stream().filter(Cliente::isActivo).forEach(clientes::add);
             participantes.forEach(a -> { if(clientes.stream().noneMatch(c->c.getId()==a.cliente().getId())) clientes.add(a.cliente()); });
             selectorCliente.setItems(FXCollections.observableArrayList(clientes));
-            listaEquipo.setCellFactory(v->new ListCell<>(){@Override protected void updateItem(AsignacionEquipamiento a,boolean empty){super.updateItem(a,empty);setText(empty||a==null?null:a.equipamiento().getNombre()+" · "+a.cantidad());}});
-            listaParticipantes.setCellFactory(v->new ListCell<>(){@Override protected void updateItem(AsignacionParticipante a,boolean empty){super.updateItem(a,empty);setText(empty||a==null?null:a.cliente().getApellido()+", "+a.cliente().getNombre()+" · DNI "+a.cliente().getDni());}});
             renderAsignaciones();
         }
 
-        private void renderAsignaciones(){listaEquipo.setItems(FXCollections.observableArrayList(equipamiento));listaParticipantes.setItems(FXCollections.observableArrayList(participantes));}
-        private Button boton(String texto,Runnable accion){Button b=new Button(texto);b.setOnAction(e->accion.run());return b;}
+        private void renderAsignaciones(){
+            listaEquipo.setItems(FXCollections.observableArrayList(equipamiento));
+            listaParticipantes.setItems(FXCollections.observableArrayList(participantes));
+            ajustarAltura(listaEquipo, equipamiento.size());
+            ajustarAltura(listaParticipantes, participantes.size());
+        }
         private void agregarEquipo() {
             try {
                 Equipamiento item = selectorEquipo.getValue();
@@ -461,9 +634,7 @@ public class SalidasController {
             }
         }
 
-        private void quitarEquipoSeleccionado() {
-            AsignacionEquipamiento asignacion = listaEquipo.getSelectionModel().getSelectedItem();
-            if (asignacion == null) return;
+        private void quitarEquipo(AsignacionEquipamiento asignacion) {
             cambiosRealizados = true;
             equipamiento.remove(asignacion);
             refrescarEquipamiento.add(asignacion.equipamiento().getId());
@@ -485,9 +656,7 @@ public class SalidasController {
             renderAsignaciones();
         }
 
-        private void quitarParticipanteSeleccionado() {
-            AsignacionParticipante asignacion = listaParticipantes.getSelectionModel().getSelectedItem();
-            if (asignacion == null) return;
+        private void quitarParticipante(AsignacionParticipante asignacion) {
             cambiosRealizados = true;
             participantes.remove(asignacion);
             refrescarParticipantes.add(asignacion.cliente().getId());
@@ -499,14 +668,13 @@ public class SalidasController {
 
         private void actualizarPuntos() {
             puntos.setItems(FXCollections.observableArrayList(checkpoints));
-            puntos.setCellFactory(v -> new ListCell<>() { @Override protected void updateItem(Checkpoint cp, boolean empty) {
-                super.updateItem(cp, empty); setText(empty || cp == null ? null : cp.getHora() + " · " + cp.getNombre() + " · " + cp.getAltitud() + " m");
-            }});
+            ajustarAltura(puntos, checkpoints.size());
         }
 
         private void actualizarDetalle() {
             Ruta r = rutas.getValue();
-            if (r != null) detalleRuta.setText(r.getNombre() + " · altitud máxima " + r.getAltitudMaxima() + " m · " + r.getTipoTerreno() + " · " + r.getDificultadTecnica() + "/" + r.getDificultadFisica());
+            if (r != null) detalleRuta.setText("Altitud máxima " + r.getAltitudMaxima() + " m · Terreno " + r.getTipoTerreno()
+                    + " · Dificultad técnica " + r.getDificultadTecnica() + " · Dificultad física " + r.getDificultadFisica());
         }
 
         private void editarCheckpoint(Checkpoint existente) {
@@ -567,6 +735,12 @@ public class SalidasController {
         }
 
         private void guardar() {
+            boolean fechaValida = FormValidation.validateNow(fecha);
+            boolean rutaValida = FormValidation.validateNow(rutas);
+            if (!fechaValida || !rutaValida) {
+                (fechaValida ? rutas : fecha).requestFocus();
+                return;
+            }
             try {
                 List<Checkpoint> copia = List.copyOf(checkpoints);
                 salidaDAO.actualizar(original.id(), fecha.getValue(), rutas.getValue().getId(), copia, List.copyOf(checkpointsGuardarEnRuta), actualizarDesdeRuta, List.copyOf(equipamiento), List.copyOf(participantes), java.util.Set.copyOf(refrescarEquipamiento), java.util.Set.copyOf(refrescarParticipantes));
