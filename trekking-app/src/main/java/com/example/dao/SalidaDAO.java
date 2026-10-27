@@ -270,8 +270,11 @@ public class SalidaDAO {
         Map<Integer, ResumenOperativo> resumenes = new HashMap<>();
         String sql = """
                 SELECT s.id,
-                    COALESCE((SELECT GROUP_CONCAT(sp.apellido_copia || ', ' || sp.nombre_copia || ' ' || sp.dni_copia, ' ')
-                        FROM salida_participantes sp WHERE sp.salida_id = s.id), '') AS participantes,
+                    COALESCE((SELECT GROUP_CONCAT(participante.nombre, ', ')
+                        FROM (SELECT sp.nombre_copia || ' ' || sp.apellido_copia AS nombre
+                            FROM salida_participantes sp
+                            WHERE sp.salida_id = s.id
+                            ORDER BY sp.apellido_copia COLLATE NOCASE, sp.nombre_copia COLLATE NOCASE) participante), '') AS participantes,
                     COALESCE((SELECT GROUP_CONCAT(se.nombre_copia || ' × ' || se.cantidad, ', ')
                         FROM salida_equipamiento se WHERE se.salida_id = s.id), '') AS equipamiento
                 FROM salidas s
