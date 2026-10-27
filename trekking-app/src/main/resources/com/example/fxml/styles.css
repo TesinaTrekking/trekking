@@ -1265,9 +1265,6 @@
     -fx-alignment: center;
     -fx-spacing: 0;
 }
-.wizard-step {
-    -fx-alignment: top-center;
-}
 .wizard-step-reachable {
     -fx-cursor: hand;
 }
