@@ -648,6 +648,13 @@ public class SalidasController {
             FechaFormato.configurar(fecha);
             usarRuta.setToggleGroup(modoRuta); crearRuta.setToggleGroup(modoRuta); usarRuta.setSelected(true);
             rutas.setConverter(new StringConverter<>() { public String toString(Ruta r) { return r == null ? "" : r.getNombre(); } public Ruta fromString(String s) { return null; } });
+            fecha.valueProperty().addListener((o, a, b) -> renderStepper());
+            rutas.valueProperty().addListener((o, a, b) -> renderStepper());
+            nombre.textProperty().addListener((o, a, b) -> renderStepper());
+            altitud.textProperty().addListener((o, a, b) -> renderStepper());
+            terreno.valueProperty().addListener((o, a, b) -> renderStepper());
+            tecnica.valueProperty().addListener((o, a, b) -> renderStepper());
+            fisica.valueProperty().addListener((o, a, b) -> renderStepper());
             inventario.setConverter(new StringConverter<>() {
                 public String toString(Equipamiento item) { return item == null ? "" : item.getNombre() + " · disponible: " + item.getCantidadDisponible(); }
                 public Equipamiento fromString(String s) { return null; }
@@ -733,28 +740,47 @@ public class SalidasController {
                 contenedor.getChildren().setAll(icono);
             }
         }
-        private void render() {
-            String[] titulos = {"Datos", "Ruta", "Equipamiento", "Participantes", "Revisión"};
-            String[] descripciones = {"Defina cuándo se realizará la actividad.", "Seleccione una Ruta existente o configure una nueva.",
-                    "Asigne los elementos que se llevarán.", "Seleccione los Clientes que participarán.", "Revise la información antes de confirmar."};
-            heading.setText(titulos[paso]);
-            progress.setText("Paso " + (paso + 1) + " de " + titulos.length);
+        private static final String[] TITULOS_PASOS = {"Datos", "Ruta", "Equipamiento", "Participantes", "Revisión"};
+        private final java.util.Set<Integer> visitados = new java.util.HashSet<>();
+        private boolean datosCompletos() { return fecha.getValue() != null; }
+        private boolean rutaCompleta() {
+            if (!isCreandoRuta()) return rutas.getValue() != null;
+            if (nombre.getText().isBlank() || terreno.getValue() == null || tecnica.getValue() == null || fisica.getValue() == null) return false;
+            try { return Double.parseDouble(altitud.getText().trim()) >= 0; }
+            catch (NumberFormatException ex) { return false; }
+        }
+        private boolean pasoCompleto(int i) {
+            return switch (i) { case 0 -> datosCompletos(); case 1 -> rutaCompleta(); case 2, 3 -> visitados.contains(i); default -> false; };
+        }
+        private boolean pasoAlcanzable(int i) {
+            if (i <= paso) return true;
+            return (i < 1 || datosCompletos()) && (i < 2 || rutaCompleta());
+        }
+        private void renderStepper() {
             stepper.getChildren().clear();
-            for (int i = 0; i < titulos.length; i++) {
+            int ultimo = TITULOS_PASOS.length - 1;
+            for (int i = 0; i < TITULOS_PASOS.length; i++) {
+                final int destino = i;
+                boolean completo = i != paso && pasoCompleto(i), alcanzable = pasoAlcanzable(i);
                 VBox item = new VBox(5);
-                item.setAlignment(javafx.geometry.Pos.CENTER);
+                item.setAlignment(i == 0 ? javafx.geometry.Pos.TOP_LEFT : i == ultimo ? javafx.geometry.Pos.TOP_RIGHT : javafx.geometry.Pos.TOP_CENTER);
                 item.getStyleClass().add("wizard-step");
-                Label circulo = new Label(i < paso ? "✓" : String.valueOf(i + 1));
+                Label circulo = new Label(completo ? "✓" : String.valueOf(i + 1));
                 circulo.getStyleClass().add("wizard-step-marker");
-                Label nombrePaso = new Label(titulos[i]);
+                Label nombrePaso = new Label(TITULOS_PASOS[i]);
                 nombrePaso.getStyleClass().add("wizard-step-name");
-                if (i < paso) item.getStyleClass().add("wizard-step-complete");
-                else if (i == paso) item.getStyleClass().add("wizard-step-current");
+                if (i == paso) item.getStyleClass().add("wizard-step-current");
+                else if (completo) item.getStyleClass().add("wizard-step-complete");
+                if (!alcanzable) item.getStyleClass().add("wizard-step-blocked");
+                else if (i != paso) {
+                    item.getStyleClass().add("wizard-step-reachable");
+                    item.setOnMouseClicked(e -> { paso = destino; render(); });
+                }
                 item.getChildren().addAll(circulo, nombrePaso);
                 stepper.getChildren().add(item);
-                if (i < titulos.length - 1) {
+                if (i < ultimo) {
                     javafx.scene.layout.Region conector = new javafx.scene.layout.Region();
-                    conector.getStyleClass().add(i < paso ? "wizard-step-connector-complete" : "wizard-step-connector");
+                    conector.getStyleClass().add(completo ? "wizard-step-connector-complete" : "wizard-step-connector");
                     conector.setMinHeight(2);
                     conector.setPrefHeight(2);
                     conector.setMaxHeight(2);
@@ -763,6 +789,15 @@ public class SalidasController {
                     stepper.getChildren().add(conector);
                 }
             }
+        }
+        private void render() {
+            String[] titulos = TITULOS_PASOS;
+            String[] descripciones = {"Defina cuándo se realizará la actividad.", "Seleccione una Ruta existente o configure una nueva.",
+                    "Asigne los elementos que se llevarán.", "Seleccione los Clientes que participarán.", "Revise la información antes de confirmar."};
+            heading.setText(titulos[paso]);
+            progress.setText("Paso " + (paso + 1) + " de " + titulos.length);
+            visitados.add(paso);
+            renderStepper();
             content.getChildren().clear();
             Label descripcion = new Label(descripciones[paso]);
             descripcion.getStyleClass().add("wizard-description");
