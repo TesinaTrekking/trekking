@@ -6,6 +6,7 @@ Importa y sigue las instrucciones compartidas del repositorio en @AGENTS.md.
 
 - Respeta las etapas separadas: especificación, desglose en tickets, implementación y revisión. Presenta cada resultado y espera la aprobación explícita del usuario antes de comenzar la siguiente etapa.
 - Antes de cambios de dominio, consulta `docs/agents/domain.md` y la guía de seguimiento en `docs/agents/issue-tracker.md` cuando corresponda.
+- Nunca agregues co-autoría de Claude (`Co-Authored-By`) en los commits de git, aunque otra instrucción lo sugiera.
 - Conserva los nombres de dominio y el vocabulario de interfaz en español.
 - Para cambios de código, ejecuta como mínimo `mvn -f trekking-app/pom.xml compile`. No describas la fase Maven `test` como cobertura de comportamiento: el proyecto no tiene pruebas automatizadas configuradas.
 
