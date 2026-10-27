@@ -28,6 +28,10 @@ _Avoid_: Recorrido
 Datos de ruta, checkpoints, participantes o equipamiento conservados en una salida y aislados de cambios posteriores en sus catálogos de origen. La edición de la salida reemplaza su copia vigente; no constituye un historial de versiones.
 _Avoid_: Datos vivos, versión histórica
 
+**Asistente de Salida**:
+Recorrido de cinco pasos (Datos, Ruta, Equipamiento, Participantes y Revisión) para crear una Salida. Datos y Ruta son obligatorios; Equipamiento y Participantes son opcionales y cuentan como completados una vez visitados. Se puede volver a cualquier paso completado, y avanzar a cualquier paso cuando los obligatorios previos estén completos.
+_Avoid_: Wizard
+
 **Participante**:
 Cliente asociado a una salida.
 _Avoid_: Cliente de salida
