@@ -10,7 +10,7 @@ La interfaz usa una combinación de verdes, azules y neutros que no refleja la p
 
 ## Solution
 
-Integrar los colores de `COLORSCHEME.md` como base visual global de la interfaz. El verde oscuro-medio reemplaza el azul de la sidebar, el verde claro identifica acciones principales y acentos, el verde oscuro sirve para texto y elementos oscuros, y el casi blanco establece el fondo general. Se conservan superficies blancas y colores funcionales para errores, advertencias y éxitos.
+Integrar la paleta de colores definida en `styles.css` como base visual global de la interfaz. El verde oscuro-medio reemplaza el azul de la sidebar, el verde claro identifica acciones principales y acentos, el verde oscuro sirve para texto y elementos oscuros, y el casi blanco establece el fondo general. Se conservan superficies blancas y colores funcionales para errores, advertencias y éxitos.
 
 Las pantallas conservarán su estructura. Se ajustarán colores de interacción, bordes y contraste para que la paleta se aplique de forma coherente en navegación, controles y estados de hover, foco y selección.
 
@@ -63,6 +63,6 @@ Las pantallas conservarán su estructura. Se ajustarán colores de interacción,
 
 ## Further Notes
 
-- La paleta de referencia está en `COLORSCHEME.md`.
+- Los colores de la paleta están definidos en `trekking-app/src/main/resources/com/example/fxml/styles.css`.
 - El glosario del proyecto no requiere cambios: esta especificación no agrega ni modifica conceptos del dominio.
 - La revisión visual acordada se realiza manualmente en JavaFX; no hay infraestructura automatizada para pruebas de UI.

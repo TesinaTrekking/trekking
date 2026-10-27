@@ -79,6 +79,12 @@ public class SalidasController {
         });
         colRuta.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().rutaNombre()));
         colEstado.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().estado()));
+        colEstado.setCellFactory(column -> com.example.util.EstadoCell.<Salida, String>create(estado -> switch (estado) {
+            case "planificada" -> com.example.util.EstadoCell.Tono.INFORMACION;
+            case "realizada" -> com.example.util.EstadoCell.Tono.EXITO;
+            case "cancelada" -> com.example.util.EstadoCell.Tono.PELIGRO;
+            default -> null;
+        }, estado -> estado.isEmpty() ? estado : Character.toUpperCase(estado.charAt(0)) + estado.substring(1)));
         colParticipantes.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenParticipantes(data.getValue())));
         colEquipamiento.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(resumenEquipamiento(data.getValue())));
         colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));

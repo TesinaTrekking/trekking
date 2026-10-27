@@ -7,4 +7,5 @@ target/
 fichas_medicas/
 
 .agents/
+.claude/
 skills-lock.json

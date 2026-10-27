@@ -13,6 +13,7 @@
   -color-danger: #d93025;
   -color-warning: #e37400;
   -color-success: #188038;
+  -color-info: #1a6fb0;
   -color-text: -color-dark;
   -color-text-muted: #625f50;
   -color-background: #f4f4f4;
@@ -1458,3 +1459,14 @@
 .button.wizard-secondary-button:disabled {
     -fx-opacity: 0.55;
 }
+
+.table-view .table-row-cell .table-cell.estado-exito,
+.table-view .table-row-cell:filled:selected .table-cell.estado-exito { -fx-text-fill: #188038; }
+.table-view .table-row-cell .table-cell.estado-advertencia,
+.table-view .table-row-cell:filled:selected .table-cell.estado-advertencia { -fx-text-fill: #b45f00; }
+.table-view .table-row-cell .table-cell.estado-peligro,
+.table-view .table-row-cell:filled:selected .table-cell.estado-peligro { -fx-text-fill: #c5221f; }
+.table-view .table-row-cell .table-cell.estado-informacion,
+.table-view .table-row-cell:filled:selected .table-cell.estado-informacion { -fx-text-fill: #1a6fb0; }
+.table-view .table-row-cell .table-cell.estado-neutro,
+.table-view .table-row-cell:filled:selected .table-cell.estado-neutro { -fx-text-fill: #625f50; }

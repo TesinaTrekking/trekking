@@ -91,6 +91,13 @@ public class EquipamientoController {
 
         colEstado.setCellValueFactory(
                 new PropertyValueFactory<>("estado"));
+        colEstado.setCellFactory(column -> com.example.util.EstadoCell.create(estado -> switch (estado) {
+            case "Disponible" -> com.example.util.EstadoCell.Tono.EXITO;
+            case "Asignado" -> com.example.util.EstadoCell.Tono.INFORMACION;
+            case "En Inspección", "En Reparación" -> com.example.util.EstadoCell.Tono.ADVERTENCIA;
+            case "Fuera de Servicio", "Extraviado" -> com.example.util.EstadoCell.Tono.PELIGRO;
+            default -> null;
+        }));
         colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
 
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {

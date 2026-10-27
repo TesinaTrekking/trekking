@@ -114,6 +114,9 @@ public class ListaClientesController implements Initializable {
 
         colActivo.setCellValueFactory(
                 new PropertyValueFactory<>("activo"));
+        colActivo.setCellFactory(column -> com.example.util.EstadoCell.create(
+                activo -> activo ? com.example.util.EstadoCell.Tono.EXITO : com.example.util.EstadoCell.Tono.NEUTRO,
+                activo -> activo ? "Activo" : "Inactivo"));
         colAcciones.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue()));
 
         colAcciones.setCellFactory(column -> new javafx.scene.control.TableCell<>() {

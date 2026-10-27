@@ -41,6 +41,15 @@ public class RutaController implements Initializable {
         private ObservableList<Ruta> rutas;
         private FilteredList<Ruta> rutasFiltradas;
 
+        private com.example.util.EstadoCell.Tono tonoDificultad(String dificultad) {
+                return switch (dificultad) {
+                        case "Baja" -> com.example.util.EstadoCell.Tono.EXITO;
+                        case "Media" -> com.example.util.EstadoCell.Tono.ADVERTENCIA;
+                        case "Alta" -> com.example.util.EstadoCell.Tono.PELIGRO;
+                        default -> null;
+                };
+        }
+
         @FXML
         private TableView<Ruta> tablaRutas;
 
@@ -109,6 +118,8 @@ public class RutaController implements Initializable {
 
                 colDificultadFisica.setCellValueFactory(
                                 new PropertyValueFactory<>("dificultadFisica"));
+                colDificultadTecnica.setCellFactory(column -> com.example.util.EstadoCell.create(this::tonoDificultad));
+                colDificultadFisica.setCellFactory(column -> com.example.util.EstadoCell.create(this::tonoDificultad));
                 colEstadoItinerario.setCellValueFactory(data -> {
                         int cantidad = rutaCheckpointDAO.obtenerPorRuta(data.getValue().getId()).size();
                         return new javafx.beans.property.SimpleStringProperty(cantidad == 0 ? "Borrador · 0" : cantidad + " Checkpoints · Completa");
