@@ -10,7 +10,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.beans.value.ChangeListener;
 
-/** Shared layout for centered action buttons in table rows. */
+/** Shared layout for right-aligned action buttons in table rows. */
 public final class RowActionCell {
     private static final Object VISIBILITY_TRACKER_KEY = RowActionCell.class;
 
@@ -23,8 +23,8 @@ public final class RowActionCell {
         }
         actions.getStyleClass().add("row-actions");
         actions.setMaxWidth(Double.MAX_VALUE);
-        actions.setAlignment(Pos.CENTER);
-        cell.setAlignment(Pos.CENTER);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+        cell.setAlignment(Pos.CENTER_RIGHT);
         cell.setGraphic(actions);
 
         TableRow<?> row = cell.getTableRow();

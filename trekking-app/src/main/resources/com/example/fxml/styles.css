@@ -676,11 +676,11 @@
 }
 
 .table-cell.row-actions-cell {
-  -fx-alignment: CENTER;
+  -fx-alignment: CENTER-RIGHT;
 }
 
 .row-actions {
-  -fx-alignment: CENTER;
+  -fx-alignment: CENTER-RIGHT;
 }
 
 .button,
