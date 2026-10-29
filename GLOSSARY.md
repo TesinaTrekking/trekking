@@ -32,6 +32,10 @@ _Avoid_: Datos vivos, versión histórica
 Recorrido de cinco pasos (Datos, Ruta, Equipamiento, Participantes y Revisión) para crear una Salida. Datos y Ruta son obligatorios; Equipamiento y Participantes son opcionales y cuentan como completados una vez visitados. Se puede volver a cualquier paso completado, y avanzar a cualquier paso cuando los obligatorios previos estén completos.
 _Avoid_: Wizard
 
+**Ficha operativa**:
+Documento PDF imprimible que exporta la copia operativa vigente de una salida, sin incorporar adjuntos médicos.
+_Avoid_: Reporte, Exportable
+
 **Participante**:
 Cliente asociado a una salida.
 _Avoid_: Cliente de salida
