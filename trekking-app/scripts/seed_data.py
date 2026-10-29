@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Carga aditiva de datos demostrativos para Trekking App (Python 3 stdlib)."""
+"""Carga aditiva de salidas de trekking en Córdoba para Trekking App (Python 3 stdlib)."""
 from __future__ import annotations
 
 import argparse
@@ -8,61 +8,69 @@ from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+import unicodedata
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / "trekking-app"
 DEFAULT_DB = ROOT / "trekking.db"
-MANIFEST = "__seed_demo_owned"
+MANIFEST = "__seed_owned"
 
 ROUTES = [
-    ("demo-ruta-condorito", "Demo Quebrada del Condorito", 2100, "Rocoso", "Media", "Media", 1),
-    ("demo-ruta-champqui", "Demo Villa Alpina y Cerro Champaquí", 2790, "Mixto", "Alta", "Alta", 1),
-    ("demo-ruta-gigantes", "Demo Los Gigantes", 2370, "Rocoso", "Alta", "Alta", 1),
-    ("demo-ruta-uritorco", "Demo Cerro Uritorco", 1979, "Mixto", "Media", "Alta", 1),
-    ("demo-ruta-alpina", "Demo paseo serrano de Villa Alpina", 1600, "Boscoso", "Baja", "Baja", 1),
-    ("demo-ruta-borrador", "Ruta demo borrador", 1450, "Sendero", "Baja", "Baja", 1),
-    ("demo-ruta-inactiva", "Ruta demo inactiva", 1200, "Boscoso", "Baja", "Baja", 0),
+    ("ruta-condorito", "Quebrada del Condorito", 2200, "Rocoso", "Media", "Media", 1),
+    ("ruta-champaqui", "Cerro Champaquí desde Villa Alpina", 2790, "Mixto", "Alta", "Alta", 1),
+    ("ruta-gigantes", "Cerro Los Gigantes", 2374, "Rocoso", "Alta", "Alta", 1),
+    ("ruta-uritorco", "Cerro Uritorco", 1979, "Mixto", "Media", "Alta", 1),
+    ("ruta-wank", "Cerro Wank y Cascada Almbach (La Cumbrecita)", 1715, "Boscoso", "Baja", "Baja", 1),
+    ("ruta-pan-de-azucar", "Cerro Pan de Azúcar (Cosquín)", 1260, "Mixto", "Baja", "Media", 1),
+    ("ruta-terrones", "Los Terrones (Capilla del Monte)", 1300, "Rocoso", "Baja", "Baja", 1),
+    ("ruta-aspero", "Cerro Áspero (Alpa Corral)", 2200, "Mixto", "Media", "Alta", 1),
+    ("ruta-colorado", "Cerro Colorado y pinturas rupestres", 700, "Sendero", "Baja", "Baja", 0),
 ]
+# Coordenadas y altitudes aproximadas, tomadas como referencia de cada lugar.
 POINTS = {
-    "demo-ruta-condorito": [("Ingreso al Parque", "08:00", -31.650, -64.700, 1500, "Coordenada aproximada de demostración."), ("Balcon Norte", "11:00", -31.630, -64.750, 1900, "Punto representativo; no es navegación."), ("Mirador de la Quebrada", "14:00", -31.620, -64.780, 2000, "Referencia demostrativa.")],
-    "demo-ruta-champqui": [("Villa Alpina", "07:00", -31.900, -64.780, 1350, "Inicio representativo."), ("Refugio de montaña", "12:00", -31.930, -64.820, 2300, "Ubicación aproximada."), ("Cerro Champaqui", "16:00", -31.980, -64.930, 2790, "Coordenada aproximada de demostración.")],
-    "demo-ruta-gigantes": [("Playa de los Rios", "08:00", -31.380, -64.800, 1900, "Referencia de acceso."), ("El Mogote", "12:00", -31.390, -64.820, 2300, "Punto representativo."), ("Cerro Los Gigantes", "15:00", -31.400, -64.830, 2370, "Coordenada aproximada de demostración.")],
-    "demo-ruta-uritorco": [("Capilla del Monte", "08:00", -30.860, -64.520, 980, "Punto de encuentro demostrativo."), ("Mirador del Uritorco", "11:00", -30.870, -64.530, 1500, "Referencia aproximada."), ("Cumbre del Uritorco", "14:00", -30.880, -64.540, 1979, "Coordenada aproximada de demostración.")],
-    "demo-ruta-alpina": [("Villa Alpina", "09:00", -31.900, -64.780, 1350, "Referencia demostrativa."), ("Arroyo serrano", "11:00", -31.910, -64.790, 1450, "Coordenada aproximada.")],
+    "ruta-condorito": [("Portada del Parque Nacional", "08:00", -31.6667, -64.6444, 2100, "Centro de visitantes y control de ingreso al Parque Nacional Quebrada del Condorito."), ("Balcón Norte", "10:30", -31.6389, -64.6556, 2120, "Mirador sobre el borde norte de la quebrada."), ("Mirador del Cóndor", "13:00", -31.6444, -64.6361, 1900, "Vista a la garganta del Condorito y a la zona de nidificación de cóndores.")],
+    "ruta-champaqui": [("Villa Alpina", "07:00", -31.9667, -64.8000, 1400, "Inicio del sendero, último punto con servicios."), ("Campamento base", "12:00", -31.9750, -64.8700, 2300, "Zona de vivac y descanso antes del ascenso final."), ("Cumbre del Champaquí", "16:00", -31.9833, -64.9333, 2790, "Punto más alto de la provincia de Córdoba.")],
+    "ruta-gigantes": [("Playa de los Ríos", "08:00", -31.3667, -64.8167, 1900, "Acceso al macizo y punto de encuentro del grupo."), ("El Mogote", "12:00", -31.3833, -64.8333, 2300, "Afloramiento rocoso intermedio con vista a las gemelas."), ("Cumbre Cerro Los Gigantes", "15:00", -31.4000, -64.8500, 2374, "Cumbre del macizo de Los Gigantes.")],
+    "ruta-uritorco": [("Ingreso a la Reserva", "08:00", -30.8328, -64.4944, 1070, "Control de ingreso y registro de visitantes en la base del cerro."), ("Paso del Indio", "11:00", -30.8367, -64.4850, 1600, "Tramo intermedio con vista al valle de Capilla del Monte."), ("Cumbre del Uritorco", "14:00", -30.8333, -64.4667, 1979, "Cumbre del cerro, con vista panorámica del Valle de Punilla.")],
+    "ruta-wank": [("Centro de La Cumbrecita", "09:00", -31.8997, -64.7767, 1450, "Villa peatonal y punto de partida."), ("Cascada Almbach", "10:30", -31.8944, -64.7722, 1500, "Cascada sobre el río Almbach."), ("Mirador Cerro Wank", "12:30", -31.9000, -64.7500, 1715, "Mirador con vista a las sierras de Calamuchita.")],
+    "ruta-pan-de-azucar": [("Plaza de Cosquín", "08:30", -31.2420, -64.4650, 720, "Punto de encuentro en el centro de Cosquín."), ("Base del Pan de Azúcar", "09:30", -31.2250, -64.4350, 900, "Inicio del sendero de ascenso."), ("Cumbre del Pan de Azúcar", "11:30", -31.2200, -64.4200, 1260, "Mirador natural sobre Cosquín y el Valle de Punilla.")],
+    "ruta-terrones": [("Ingreso a Los Terrones", "09:00", -30.8900, -64.5500, 1000, "Acceso al paraje de formaciones rocosas rojizas."), ("Mirador Los Terrones", "11:00", -30.8883, -64.5617, 1300, "Vista a las formaciones erosionadas y al Cerro Uritorco.")],
+    "ruta-aspero": [("Alpa Corral", "07:30", -32.6667, -64.7833, 800, "Pueblo de partida y último punto con servicios."), ("Paso intermedio", "11:00", -32.7000, -64.7500, 1500, "Tramo de transición entre el valle y la sierra alta."), ("Cumbre del Cerro Áspero", "15:00", -32.7333, -64.7167, 2200, "Cumbre de las sierras de Comechingones.")],
 }
 GEAR = [
-    ("demo-equipo-carpa", "Carpa demo", "Campamento", 8, "Disponible", 1),
-    ("demo-equipo-dormir", "Bolsa de dormir demo", "Campamento", 16, "Disponible", 1),
-    ("demo-equipo-gps", "GPS demo", "Navegación", 4, "Disponible", 1),
-    ("demo-equipo-mapa", "Mapa topográfico demo", "Navegación", 2, "En Inspección", 1),
-    ("demo-equipo-radio", "Radio VHF demo", "Comunicación", 6, "Disponible", 1),
-    ("demo-equipo-casco", "Casco demo", "Seguridad", 12, "Disponible", 1),
-    ("demo-equipo-cuerda", "Cuerda demo", "Escalada", 4, "En Reparación", 1),
-    ("demo-equipo-campera", "Campera impermeable demo", "Vestimenta", 10, "Disponible", 1),
-    ("demo-equipo-filtro", "Filtro de agua demo", "Hidratación", 3, "Disponible", 1),
-    ("demo-equipo-botiquin", "Botiquín demo", "Primeros Auxilios", 5, "Disponible", 1),
+    ("equipo-carpa", "Carpa 3 personas cuatro estaciones", "Campamento", 8, "Disponible", 1),
+    ("equipo-dormir", "Bolsa de dormir -5 °C", "Campamento", 16, "Disponible", 1),
+    ("equipo-gps", "GPS de mano", "Navegación", 4, "Disponible", 1),
+    ("equipo-mapa", "Cartas topográficas IGN 1:50.000", "Navegación", 2, "En Inspección", 1),
+    ("equipo-radio", "Radio VHF portátil", "Comunicación", 6, "Disponible", 1),
+    ("equipo-casco", "Casco de escalada", "Seguridad", 12, "Disponible", 1),
+    ("equipo-cuerda", "Cuerda dinámica 60 m", "Escalada", 4, "En Reparación", 1),
+    ("equipo-campera", "Campera impermeable", "Vestimenta", 10, "Disponible", 1),
+    ("equipo-filtro", "Filtro de agua portátil", "Hidratación", 3, "Disponible", 1),
+    ("equipo-botiquin", "Botiquín de primeros auxilios", "Primeros Auxilios", 5, "Disponible", 1),
 ]
+# Datos personales ficticios: (DNI, nombre, apellido, sexo, fecha de nacimiento).
 CLIENTS = [
-    ("40100001", "Lucía", "Demo", "Femenino"), ("40100002", "Mateo", "Demo", "Masculino"),
-    ("40100003", "Sofía", "Demo", "Femenino"), ("40100004", "Tomás", "Demo", "Masculino"),
-    ("40100005", "Valentina", "Demo", "Femenino"), ("40100006", "Julián", "Demo", "Masculino"),
-    ("40100007", "Camila", "Demo", "Femenino"), ("40100008", "Nicolás", "Demo", "Masculino"),
-    ("40100009", "Agustina", "Demo", "Femenino"), ("40100010", "Bruno", "Demo", "Masculino"),
-    ("40100011", "Florencia", "Demo", "No binario"), ("40100012", "Santiago", "Demo", "Masculino"),
-    ("40100013", "Martina", "Demo", "Femenino"), ("40100014", "Facundo", "Demo", "Masculino"),
-    ("40100015", "Julieta", "Demo", "Prefiero no decir"),
+    ("38120451", "Lucía", "Fernández", "Femenino", "1994-03-12"), ("36745918", "Mateo", "Gómez", "Masculino", "1992-07-25"),
+    ("40233176", "Sofía", "Rodríguez", "Femenino", "1997-11-02"), ("35618842", "Tomás", "Pereyra", "Masculino", "1991-01-18"),
+    ("41390527", "Valentina", "Sosa", "Femenino", "1999-05-30"), ("33987264", "Julián", "Acosta", "Masculino", "1988-09-14"),
+    ("39456013", "Camila", "Romero", "Femenino", "1996-02-08"), ("37281695", "Nicolás", "Díaz", "Masculino", "1993-12-21"),
+    ("42105738", "Agustina", "Luna", "Femenino", "2000-06-16"), ("34872509", "Bruno", "Herrera", "Masculino", "1989-10-04"),
+    ("40876321", "Florencia", "Medina", "No binario", "1998-04-27"), ("32654187", "Santiago", "Ruiz", "Masculino", "1986-08-09"),
+    ("38904672", "Martina", "Castro", "Femenino", "1995-01-23"), ("36127450", "Facundo", "Ortiz", "Masculino", "1992-03-05"),
+    ("41562083", "Julieta", "Vega", "Prefiero no decir", "1999-12-11"),
 ]
 TRIPS = [
-    ("demo-salida-1", 0, -2, "planificada", [0, 1, 2], [("demo-equipo-gps", 1), ("demo-equipo-radio", 2)]),
-    ("demo-salida-2", 1, 5, "planificada", [3, 4, 5, 6], [("demo-equipo-carpa", 2), ("demo-equipo-casco", 4)]),
-    ("demo-salida-3", 2, 12, "planificada", [7, 8], [("demo-equipo-gps", 1), ("demo-equipo-botiquin", 1)]),
-    ("demo-salida-4", 3, -5, "planificada", [0, 4], [("demo-equipo-radio", 1)]),
-    ("demo-salida-5", 0, -8, "realizada", [1, 2, 3, 5], [("demo-equipo-filtro", 1)]),
-    ("demo-salida-6", 1, -35, "realizada", [6, 7, 8], [("demo-equipo-carpa", 1)]),
-    ("demo-salida-7", 2, -60, "realizada", [], []),
-    ("demo-salida-8", 3, 20, "cancelada", [9], []),
-    ("demo-salida-9", 4, 30, "cancelada", [], [("demo-equipo-dormir", 2)]),
+    ("salida-1", 0, -2, "planificada", [0, 1, 2], [("equipo-gps", 1), ("equipo-radio", 2)]),
+    ("salida-2", 1, 5, "planificada", [3, 4, 5, 6], [("equipo-carpa", 2), ("equipo-casco", 4)]),
+    ("salida-3", 2, 12, "planificada", [7, 8], [("equipo-gps", 1), ("equipo-botiquin", 1)]),
+    ("salida-4", 3, -5, "planificada", [0, 4], [("equipo-radio", 1)]),
+    ("salida-5", 0, -8, "realizada", [1, 2, 3, 5], [("equipo-filtro", 1)]),
+    ("salida-6", 4, -35, "realizada", [6, 7, 8], [("equipo-carpa", 1)]),
+    ("salida-7", 5, -60, "realizada", [], []),
+    ("salida-8", 7, 20, "cancelada", [9], []),
+    ("salida-9", 6, 30, "cancelada", [], [("equipo-dormir", 2)]),
 ]
 
 
@@ -89,6 +97,10 @@ def initialize_schema(db: Path | None = None, *, cwd: Path = ROOT, compile_app: 
         command.append(f"-Dtrekking.db={db}")
     command.extend(["-cp", java_classpath(), "com.example.database.ConexionDB"])
     subprocess.run(command, cwd=cwd, check=True)
+
+
+def ascii_slug(text: str) -> str:
+    return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower().replace(" ", "")
 
 
 def own(conn: sqlite3.Connection, entity: str, key: str) -> int | None:
@@ -133,9 +145,9 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
         if rid is not None: routes[key] = (rid, vals)
     sexos = dict(conn.execute("SELECT nombre,id FROM sexos"))
     clients: dict[int, tuple[int, tuple]] = {}
-    for i, (dni, name, surname, sex) in enumerate(CLIENTS):
-        vals = (dni, name, surname, "1990-01-01", f"{dni}@demo.invalid", f"+54 351 555-{i:04d}", sexos[sex], sex, 1)
-        cid, result = upsert_owned_row(conn, "cliente", f"demo-cliente-{dni}", "clientes", ("dni", "nombre", "apellido", "fecha_nacimiento", "email", "telefono", "sexo_id", "sexo", "activo"), vals, "SELECT id FROM clientes WHERE dni=?", dni)
+    for i, (dni, name, surname, sex, birth) in enumerate(CLIENTS):
+        vals = (dni, name, surname, birth, f"{ascii_slug(name)}.{ascii_slug(surname)}@example.com", f"+54 351 555-{i:04d}", sexos[sex], sex, 1)
+        cid, result = upsert_owned_row(conn, "cliente", f"cliente-{dni}", "clientes", ("dni", "nombre", "apellido", "fecha_nacimiento", "email", "telefono", "sexo_id", "sexo", "activo"), vals, "SELECT id FROM clientes WHERE dni=?", dni)
         note(result)
         if cid is not None: clients[i] = (cid, vals)
     gear: dict[str, tuple[int, tuple]] = {}
@@ -189,7 +201,7 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
             if associated:
                 copied.append(point)
         route_checkpoints[route_key] = copied
-    # Each demo Salida owns its operational snapshot and child rows.
+    # Each seeded Salida owns its operational snapshot and child rows.
     for index, (key, route_index, offset, state, participant_indices, assignments) in enumerate(TRIPS):
         route_key = ROUTES[route_index][0]
         if route_key not in routes or any(i not in clients for i in participant_indices) or any(k not in gear for k, _ in assignments):
@@ -253,7 +265,7 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Prepara datos demo de Trekking App.")
+    parser = argparse.ArgumentParser(description="Carga salidas de trekking en Córdoba en Trekking App.")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB, help="Base SQLite (por defecto trekking.db en la raíz).")
     args = parser.parse_args(argv)
     db = args.db.expanduser().resolve()
@@ -265,11 +277,11 @@ def main(argv: list[str] | None = None) -> int:
             result = seed(conn)
             conn.commit()
             totals = {table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in ("rutas", "clientes", "equipamiento", "salidas")}
-        print("Demo lista. " + ", ".join(f"{k}: {v}" for k, v in result.items()))
+        print("Datos cargados. " + ", ".join(f"{k}: {v}" for k, v in result.items()))
         print("Totales de tabla (incluyen registros ajenos): " + ", ".join(f"{k}: {v}" for k, v in totals.items()))
         return 0
     except (OSError, sqlite3.Error, subprocess.CalledProcessError) as exc:
-        print(f"No se pudo cargar la base demo: {exc}", file=sys.stderr)
+        print(f"No se pudo cargar la base: {exc}", file=sys.stderr)
         return 1
 
 
